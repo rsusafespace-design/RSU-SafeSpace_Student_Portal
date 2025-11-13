@@ -5,14 +5,14 @@
   // Firebase config for rsu-safespace (used by verification pages)
   // NOTE: keep this file out of public repos if these keys are sensitive for your workflow.
   var firebaseConfig = {
-    apiKey: "AIzaSyAhGG1-VyUOD5BllSzDxrPEcd_mhqSNxj0",
-    authDomain: "safespace-fbd7f.firebaseapp.com",
-    databaseURL: "https://safespace-fbd7f-default-rtdb.firebaseio.com",
-    projectId: "safespace-fbd7f",
-    storageBucket: "safespace-fbd7f.firebasestorage.app",
-    messagingSenderId: "16930797102",
-    appId: "1:16930797102:web:c0b10204cc5e31a06cd1bf",
-    measurementId: "G-PH0HHKTD34"
+    apiKey: "AIzaSyD4eMHzsieWnIH6nHLgBl1PDTiIETeVmnA",
+    authDomain: "rsu-safespace.firebaseapp.com",
+    databaseURL: "https://rsu-safespace-default-rtdb.firebaseio.com",
+    projectId: "rsu-safespace",
+    storageBucket: "rsu-safespace.firebasestorage.app",
+    messagingSenderId: "490237933031",
+    appId: "1:490237933031:web:0d17829f4359da952db942",
+    measurementId: "G-YY33W1QM2N"
   };
 
   try {
@@ -232,4 +232,5 @@
   } catch (err) {
     console.error('Error initializing Firebase in firebase_config.js', err);
   }
+
 })();
