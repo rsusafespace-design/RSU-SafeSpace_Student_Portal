@@ -33,7 +33,7 @@
     // Lightweight global incoming-call notifier
     // Listens for consultations belonging to the signed-in student and shows a browser
     // notification when a counselor sets roomStatus === 1. This runs on any page that
-    // includes firebase_config.js (appointments.html, messages.html, etc.) so the
+    // includes firebase_config.js (index.html, messages.html, etc.) so the
     // student will receive notifications even when the chat page isn't open.
     try{
       if (window.firebase && firebase.auth && window.db){
@@ -234,3 +234,4 @@
   }
 
 })();
+
