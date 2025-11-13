@@ -555,7 +555,7 @@
       animation: slideInLeft 0.8s ease-out;
     }
 
-    /* slideInLeft animation used by appointments.html — add here so resources matches animation on mobile */
+    /* slideInLeft animation used by index.html — add here so resources matches animation on mobile */
     @keyframes slideInLeft {
       from { opacity: 0; transform: translateX(-30px); }
       to { opacity: 1; transform: translateX(0); }
@@ -1584,7 +1584,7 @@
       <div class="logo"><img src="safespace.png" alt="SafeSpace logo"></div>
       <span>SafeSpace</span>
     </div>
-    <a href="appointments.html" data-emoji="📅"><span>Appointments</span></a>
+    <a href="index.html" data-emoji="📅"><span>Appointments</span></a>
     <a href="history.html" data-emoji="📋"><span>History</span></a>
     <a href="assessments.html" data-emoji="📝"><span>Assessments</span></a>
     <a href="resources.html" class="active" data-emoji="📚"><span>Resources</span></a>
@@ -1665,9 +1665,9 @@
     </div>
   </div>
 
-  <!-- Bottom Navigation from appointments.html -->
+  <!-- Bottom Navigation from index.html -->
   <div class="bottom-nav">
-    <a href="appointments.html"><span class="bn-emoji">📅</span><span class="bn-label">Appointments</span></a>
+    <a href="index.html"><span class="bn-emoji">📅</span><span class="bn-label">Appointments</span></a>
     <a href="history.html"><span class="bn-emoji">📋</span><span class="bn-label">History</span></a>
     <a href="assessments.html"><span class="bn-emoji">📝</span><span class="bn-label">Assessments</span></a>
     <a href="resources.html" class="active"><span class="bn-emoji">📚</span><span class="bn-label">Resources</span></a>
@@ -1790,7 +1790,7 @@
     // Navigation
     function goToSection(sectionId) {
       if (sectionId === 'appointments') {
-        window.location.href = 'appointments.html';
+        window.location.href = 'index.html';
       } else if (sectionId === 'history') {
         window.location.href = 'history.html';
       } else if (sectionId === 'assessments') {
@@ -2108,4 +2108,5 @@
     })();
   </script>
 </body>
+
 </html>
