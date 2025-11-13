@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Student Profile | SafeSpace</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Shared responsive styles used by other portal pages (matches appointments.html) -->
+  <!-- Shared responsive styles used by other portal pages (matches index.html) -->
   <link rel="stylesheet" href="responsive.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
@@ -30,7 +30,7 @@
     .topbar.shrink{left:80px}
     .content.shrink{margin-left:80px}
 
-    /* Mobile: hide sidebar and make content full width; show bottom nav styles matching appointments.html */
+    /* Mobile: hide sidebar and make content full width; show bottom nav styles matching index.html */
     @media (max-width:768px){
       .sidebar{display:none !important;transform:translateX(-100%)}
       .topbar{left:0;padding:10px 12px}
@@ -55,7 +55,7 @@
     }
   </style>
   <style>
-    /* Additional overrides to exactly match appointments.html sizes and header/sidebar look on mobile */
+    /* Additional overrides to exactly match index.html sizes and header/sidebar look on mobile */
     :root{ --topbar-height:60px; }
     .topbar{height:var(--topbar-height);padding:10px 30px}
     .topbar .mobile-logo{display:none;width:44px;height:44px;border-radius:6px;align-items:center;justify-content:center;margin-right:0.5rem}
@@ -69,7 +69,7 @@
     .bottom-nav a .fa { font-size:22px; line-height:1 }
     .bottom-notif-badge{ position:absolute; top:6px; right:18px; width:9px; height:9px; background:#ef4444; border-radius:50%; border:2px solid var(--topbar-bg); display:inline-block }
 
-    /* Sidebar brand/logo sizing consistent with appointments.html */
+    /* Sidebar brand/logo sizing consistent with index.html */
     .sidebar .brand{height:60px;align-items:center;padding:10px 12px;background:#1e8e3e;color:#fff;gap:12px}
     .sidebar .logo img{height:64px;max-height:64px;object-fit:contain}
 
@@ -79,7 +79,7 @@
       .content{margin-left:250px}
     }
 
-    /* Hide hamburger on small screens similar to appointments.html */
+    /* Hide hamburger on small screens similar to index.html */
     @media (max-width:768px){
       .hamburger{display:none}
       .mobile-logo{display:flex}
@@ -207,7 +207,7 @@
       <div class="logo"><img src="safespace.png" alt="SafeSpace logo"></div>
       <span>SafeSpace</span>
     </div>
-    <a href="appointments.html" data-emoji="📅"><span>Appointments</span></a>
+    <a href="index.html" data-emoji="📅"><span>Appointments</span></a>
     <a href="history.html" data-emoji="📋"><span>History</span></a>
     <a href="assessments.html" data-emoji="📝"><span>Assessments</span></a>
     <a href="resources.html" data-emoji="📚"><span>Resources</span></a>
@@ -4305,15 +4305,15 @@
   .content { padding-bottom: 0 !important; }
     #actionCard, .sidebar-overlay, .cropModal { display: none !important; }
   </style>
-  <!-- Mobile bottom navigation: use emoji menu, same as appointments.html -->
+  <!-- Mobile bottom navigation: use emoji menu, same as index.html -->
   <style>
-    /* Ensure bottom-nav color, emoji sizing and spacing match appointments.html */
+    /* Ensure bottom-nav color, emoji sizing and spacing match index.html */
     .bottom-nav { background: var(--topbar-bg) !important; }
     .bottom-nav .emoji { font-size: 1.45rem; display:inline-block; line-height:1; }
     .bottom-nav a { padding: 0.25rem 0.5rem; }
   </style>
   <div class="bottom-nav" id="bottomNav" role="navigation" aria-label="Mobile navigation">
-    <a href="appointments.html" aria-label="Appointments" class="active"><span class="emoji" aria-hidden="true">📅</span></a>
+    <a href="index.html" aria-label="Appointments" class="active"><span class="emoji" aria-hidden="true">📅</span></a>
     <a href="history.html" aria-label="History"><span class="emoji" aria-hidden="true">📋</span></a>
     <a href="assessments.html" aria-label="Assessments"><span class="emoji" aria-hidden="true">📝</span></a>
     <a href="resources.html" aria-label="Resources"><span class="emoji" aria-hidden="true">📚</span></a>
@@ -4321,4 +4321,5 @@
     <a href="settings.html" aria-label="Settings"><span class="emoji" aria-hidden="true">⚙️</span></a>
   </div>
 </body>
+
 </html>
