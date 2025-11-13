@@ -1718,7 +1718,7 @@
   </style>
   <style id="mobile-bottomnav-active">
     @media (max-width: 768px) {
-      /* Make the active bottom-nav item visually highlighted like appointments.html */
+      /* Make the active bottom-nav item visually highlighted like index.html */
       .bottom-nav a.active { 
         color: #ffc107 !important;
         background: rgba(255,255,255,0.06) !important;
@@ -1747,7 +1747,7 @@
     }
   </style>
   <style id="sync-mobile-sizes">
-    /* Make topbar and sidebar mobile sizing identical to appointments.html */
+    /* Make topbar and sidebar mobile sizing identical to index.html */
     @media (max-width: 768px) {
       /* Topbar sizing */
       .topbar { left: 0 !important; height: 60px !important; padding: 8px 12px !important; }
@@ -1758,7 +1758,7 @@
       .hamburger { font-size: 1.2rem !important; padding: 0.3rem !important; }
       .profile { width: 38px !important; height: 38px !important; }
 
-      /* Mobile logo exactly like appointments.html */
+      /* Mobile logo exactly like index.html */
       .mobile-logo { display: flex !important; width: 44px !important; height: 44px !important; }
       .mobile-logo img { height: 40px !important; width: auto !important; object-fit: contain !important; }
 
@@ -1815,7 +1815,7 @@
     }
   </style>
   <style>
-    /* slideInLeft animation used by appointments.html — add here so history matches animation on mobile */
+    /* slideInLeft animation used by index.html — add here so history matches animation on mobile */
     @keyframes slideInLeft {
       from { opacity: 0; transform: translateX(-30px); }
       to   { opacity: 1; transform: translateX(0); }
@@ -1824,7 +1824,7 @@
   <style id="mobile-page-title-smaller">
     @media (max-width: 768px) {
       /* Make the page title and subtitle more compact on mobile */
-      /* Match appointments.html mobile sizes: title slightly larger and spacing aligned */
+      /* Match index.html mobile sizes: title slightly larger and spacing aligned */
       .page-header { margin-bottom: 24px !important; }
       .page-title { font-size: 22px !important; margin-bottom: 8px !important; line-height: 1.1 !important; animation: slideInLeft 0.6s ease-out !important; }
       .page-subtitle { font-size: 14px !important; margin-top: 4px !important; line-height: 1.1 !important; opacity: 0.95 !important; animation: slideInLeft 0.8s ease-out !important; }
@@ -1833,7 +1833,7 @@
 
   <style id="mobile-page-title-smaller-420">
     @media (max-width: 420px) {
-      /* Very small screens should match appointments.html tiny breakpoint */
+      /* Very small screens should match index.html tiny breakpoint */
       .page-header { margin-bottom: 12px !important; }
       .page-title { font-size: 18px !important; margin-bottom: 6px !important; animation: slideInLeft 0.6s ease-out !important; }
       .page-subtitle { font-size: 14px !important; margin-top: 3px !important; animation: slideInLeft 0.8s ease-out !important; }
@@ -1853,7 +1853,7 @@
         position: relative !important;
         z-index: 1 !important;
       }
-      /* Match appointments.html footer font-size on mobile */
+      /* Match index.html footer font-size on mobile */
       .content-footer > div { font-size: 0.85rem !important; color: var(--text-light) !important; }
       /* make sure bottom-nav sits above content but not hide it visually */
       .bottom-nav { z-index: 2000 !important; }
@@ -1861,13 +1861,13 @@
   </style>
 </head>
 <body>
-  <!-- Sidebar from appointments.html -->
+  <!-- Sidebar from index.html -->
   <div class="sidebar" id="sidebar">
     <div class="brand">
       <div class="logo">SS</div>
       <span>SafeSpace</span>
     </div>
-    <a href="appointments.html" data-emoji="📅"><span>Appointments</span></a> 
+    <a href="index.html" data-emoji="📅"><span>Appointments</span></a> 
     <a href="history.html" class="active" data-emoji="📋"><span>History</span></a>
     <a href="assessments.html" data-emoji="📝"><span>Assessments</span></a>
     <a href="resources.html" data-emoji="📚"><span>Resources</span></a>
@@ -1875,7 +1875,7 @@
     <a href="settings.html" data-emoji="⚙️"><span>Settings</span></a>
   </div>
 
-  <!-- Topbar (copied from appointments.html for identical mobile/desktop appearance) -->
+  <!-- Topbar (copied from index.html for identical mobile/desktop appearance) -->
   <div class="topbar" id="topbar">
     <div class="topbar-left">
       <div class="hamburger">
@@ -1976,9 +1976,9 @@
       </div>
     </div>
   
-  <!-- Bottom Navigation (copied from appointments.html; history link marked active) -->
+  <!-- Bottom Navigation (copied from index.html; history link marked active) -->
   <div class="bottom-nav">
-    <a href="appointments.html" aria-label="Appointments"><span class="emoji" aria-hidden="true">📅</span></a>
+    <a href="index.html" aria-label="Appointments"><span class="emoji" aria-hidden="true">📅</span></a>
     <a href="history.html" aria-label="History" class="active"><span class="emoji" aria-hidden="true">📋</span></a>
     <a href="assessments.html" aria-label="Assessments"><span class="emoji" aria-hidden="true">📝</span></a>
     <a href="resources.html" aria-label="Resources"><span class="emoji" aria-hidden="true">📚</span></a>
@@ -2819,7 +2819,7 @@
     // Navigation
     function goToSection(sectionId) {
       if (sectionId === 'appointments') {
-        window.location.href = 'appointments.html';
+        window.location.href = 'index.html';
       } else if (sectionId === 'history') {
         window.location.href = 'history.html';
       } else if (sectionId === 'assessments') {
@@ -3198,4 +3198,5 @@
     })();
   </script>
 </body>
+
 </html>
