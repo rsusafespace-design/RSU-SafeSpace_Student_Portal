@@ -1,0 +1,3201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>History - SafeSpace Portal</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <style>
+    /* ===== Sidebar (admin-like style) ===== */
+    .sidebar {
+      position:fixed; top:0; left:0;
+      width:250px; height:100%;
+      background:#f0f3f6; color:#1f2937;
+      padding:12px;
+      border-right:1px solid rgba(0,0,0,0.06);
+      display:flex; flex-direction:column;
+      transition:width 0.3s ease, transform 0.3s ease;
+      z-index:1200;
+    }
+
+    .sidebar .brand {
+      display:flex; align-items:center; gap:0.6rem;
+      margin-bottom:1rem; padding:8px 4px;
+    }
+
+    .sidebar .logo {
+      width:40px; height:40px; background:transparent;
+      border-radius:8px; display:flex; align-items:center; justify-content:center;
+      color:#10b981; font-weight:700; font-size:0.95rem;
+      flex-shrink:0; box-shadow:0 1px 2px rgba(0,0,0,0.04);
+    }
+
+    .sidebar .brand span { font-weight:700; font-size:1rem; color:#374151; }
+
+    /* collapsed (narrow) sidebar */
+    .sidebar.shrink { width:80px; padding:12px 8px; }
+    .sidebar.shrink .brand span { display:none; }
+    .sidebar.shrink a { text-align:center; font-size:1.1rem; }
+    .sidebar.shrink a span { display:none; }
+
+    /* nav items (anchors) styled similar to admin .nav-item */
+    .sidebar a {
+      display:flex; align-items:center; gap:12px; color:#1f2937;
+      text-decoration:none; margin:8px 0; font-size:15px;
+      padding:12px 10px; border-radius:8px; background:transparent;
+      transition:background 0.18s ease, color 0.18s ease;
+    }
+
+  .sidebar a .fa,
+  .sidebar a i { width:28px; text-align:center; font-size:18px; color:#1f2937; background:transparent; }
+
+    .sidebar a span { color:inherit; display:inline-block; white-space:nowrap; overflow:hidden; }
+
+    .sidebar a:hover,
+    .sidebar a.active {
+      background: rgba(15,122,52,0.08); color:#0f7a34; font-weight:600;
+    }
+
+    /* Admin-like header & sidebar overrides (no HTML changes) */
+    .header-and-sidebar-top {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      z-index: 1000;
+      display: flex;
+      background-color: #1e8e3e;
+      color: white;
+      height: 60px;
+      transition: left 0.3s ease;
+    }
+
+    .sidebar-top {
+      width: 250px;
+      display: flex;
+      align-items: center;
+      padding: 10px 20px;
+      box-sizing: border-box;
+      border-right: 1px solid rgba(255, 255, 255, 0.3);
+      height: 60px;
+      transition: width 0.3s ease;
+    }
+
+    .sidebar {
+      position: fixed; /* ensure sidebar spans full height and brand sits at top */
+      top: 0;
+      left: 0;
+      width: 250px;
+      height: 100vh;
+      background: #f0f3f6;
+      border-right: none; /* remove full-height border so brand can appear flush */
+      z-index: 1002; /* sit above topbar so brand overlays header area */
+      overflow: auto;
+    }
+
+    /* Hide the native scrollbar for the sidebar while keeping content scrollable */
+    .sidebar {
+      scrollbar-width: none; /* Firefox */
+      -ms-overflow-style: none; /* IE 10+ */
+    }
+    .sidebar::-webkit-scrollbar {
+      width: 0px;
+      height: 0px;
+      background: transparent;
+    }
+
+    /* vertical divider only below the brand area */
+    .sidebar::after {
+      content: '';
+      position: absolute;
+      left: 249px; /* 1px inside right edge */
+      top: 60px; /* start after brand/topbar */
+      width: 1px;
+      height: calc(100vh - 60px);
+      background: rgba(0,0,0,0.06);
+      z-index: 1001;
+    }
+
+    .nav-item, .sidebar a {
+      color: #1f2937;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 10px;
+      border-radius: 8px;
+      background: transparent;
+      cursor: pointer;
+      font-weight: 400;
+      font-size: 15px;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .nav-item:hover, .sidebar a:hover {
+      background: rgba(15,122,52,0.08) !important;
+      color: #0f7a34 !important;
+      font-weight: 400 !important;
+    }
+
+    .nav-item.active {
+      background: rgba(15,122,52,0.12) !important;
+      color: #0f7a34 !important;
+      font-weight: 600 !important;
+    }
+
+    /* adjust content to sit below the fixed topbar and to the right of the sidebar */
+    .content { margin-top: 60px; margin-left: 250px; }
+    .content.shrink { margin-left: 80px; }
+
+    /* Logo and brand name styling to mirror admin */
+    .sidebar .logo {
+      background: transparent url("../Admin_side/safespace.png") center center / contain no-repeat;
+      width:44px; height:44px; border-radius:6px; box-shadow:none; color:transparent;
+    }
+
+    /* keep brand/logo aligned with topbar height (60px) */
+    .sidebar .brand {
+      height: 60px;
+      align-items: center;
+      padding: 0 12px;
+      background: #1e8e3e; /* match topbar background for a seamless look */
+      color: white;
+      gap: 12px;
+    }
+
+    .sidebar .brand span { color: white; font-weight:700; margin-left:4px; }
+
+    /* push nav content below the brand area */
+    #nav { padding-top: 12px; margin-top: 60px; }
+
+    /* make the small top-area logo visible in header-like layout */
+    .header-and-sidebar-top .sidebar-logo span { color: white; font-weight:700; font-size:1.1rem; }
+
+    /* ===== Topbar (admin-like appearance) ===== */
+    .topbar {
+      position: fixed;
+      top: 0;
+      left: 250px; /* sit to the right of the fixed sidebar */
+      right: 0;
+      height: 60px;
+      background-color: #1e8e3e;
+      color: white;
+      padding: 10px 30px;
+      display: flex; justify-content: space-between; align-items: center;
+      z-index: 1001;
+      transition: left 0.3s ease, margin-left 0.3s ease;
+    }
+    .topbar.shrink { left: 80px; }
+
+    .topbar-left { display:flex; align-items:center; gap:0.15rem; }
+    .hamburger {
+      font-size: 1.05rem;
+      cursor: pointer;
+      /* pixel-tuned padding so the hamburger sits slightly closer to the title */
+      padding: 0.12rem;
+      border-radius: 4px;
+      transition: background 0.2s;
+    }
+    .hamburger:hover { background: rgba(255,255,255,0.1); }
+  .portal-title { display:flex; flex-direction:column; line-height:1.2; margin-left:0; }
+    .portal-title strong span.safespace { display:none; margin-right:0.3rem; }
+    .portal-title small { font-size:0.75rem; opacity:0.9; }
+
+    /* Show SafeSpace text when sidebar is shrunk */
+    .topbar.shrink .portal-title strong span.safespace { display: inline; }
+
+    /* Mobile logo styling */
+    .mobile-logo {
+      display: none;
+      width: 28px;
+      height: 28px;
+      background: white;
+      border-radius: 50%;
+      align-items: center;
+      justify-content: center;
+      color: #00723f;
+      font-weight: bold;
+      font-size: 0.8rem;
+      /* slightly smaller margin for pixel parity */
+      margin-right: 0.2rem;
+    }
+
+    /* Profile + Notifications */
+    .profile { width:38px; height:38px; border-radius:50%; background:#004c27;
+      display:flex; align-items:center; justify-content:center; font-weight:bold; cursor:pointer; }
+    .notif-wrapper { position:relative; cursor:pointer; font-size:1.3rem; color:white; }
+    .notif-badge {
+      position:absolute; bottom:0; right:0;
+      width:10px; height:10px; background:red;
+      border-radius:50%; border:2px solid #00723f;
+    }
+    .notif-badge.hidden { display:none; }
+
+    .notif-dropdown {
+      position:absolute; top:48px; right:0;
+      background:white; color:#333;
+      width:260px; border-radius:8px;
+      box-shadow:0 4px 10px rgba(0,0,0,0.15);
+      display:none; flex-direction:column;
+      overflow:hidden; z-index:2000;
+    }
+    .notif-dropdown.active { display:flex; }
+    .notif-header { background:#00723f; color:white; padding:0.6rem; font-weight:bold; }
+    .notif-list { max-height:220px; overflow-y:auto; }
+    .notif-item {
+      padding:0.6rem 0.8rem; border-bottom:1px solid #eee;
+      font-size:0.9rem; cursor:pointer;
+    }
+    .notif-item:hover { background:#f1f1f1; }
+
+    /* --- START: NEW ADMIN SYNC STYLES --- */
+    .sidebar {
+        width: 250px;
+        background: #f0f3f6;
+        border-right: 1px solid rgba(0,0,0,0.06);
+        position: fixed;
+        top: 60px; /* Starts below the header */
+        left: 0;
+        height: calc(100vh - 60px);
+        z-index: 999;
+        padding: 12px;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        transition: width 0.3s ease, transform 0.3s ease;
+    }
+    
+    .sidebar .brand {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 250px;
+        height: 60px;
+        background-color: #1e8e3e;
+        color: white;
+        display: flex;
+        align-items: center;
+        padding: 10px 20px;
+        box-sizing: border-box;
+        z-index: 1002;
+        border-right: 1px solid rgba(255, 255, 255, 0.3);
+        transition: width 0.3s ease;
+    }
+    
+  .sidebar .brand .logo {
+    height: 40px;
+    width: 40px;
+    background: transparent url("safespace.png") center/contain no-repeat;
+    color: transparent;
+    border-radius: 8px;
+  }
+    
+    .sidebar .brand span {
+        font-weight: bold;
+        font-size: 1.2rem;
+        color: white;
+        white-space: nowrap;
+        margin-left: 10px;
+        transition: opacity 0.3s ease, width 0.3s ease;
+    }
+    
+    .sidebar a {
+        margin: 0; /* Nav links start at the top of the sidebar container */
+    }
+    
+    .topbar {
+        position: fixed;
+        top: 0;
+        left: 250px;
+        right: 0;
+        height: 60px;
+        background-color: #1e8e3e;
+        color: white;
+        padding: 10px 30px;
+        z-index: 1000;
+        transition: left 0.3s ease;
+    }
+    
+    .content {
+        margin-top: 60px;
+        margin-left: 250px;
+        transition: margin-left 0.3s ease;
+    }
+    
+   /* --- Collapsed State --- */
+.sidebar.collapsed {
+  width: 80px;
+  padding: 12px 8px;
+}
+
+.sidebar.collapsed .brand {
+  width: 80px;
+  justify-content: center;
+}
+
+.sidebar.collapsed .brand span {
+  opacity: 0;
+  pointer-events: none;
+  width: 0;
+}
+
+.sidebar.collapsed a span {
+  display: none;
+}
+.sidebar.collapsed a {
+  justify-content: center;
+}
+
+/* ADD THIS NEW CODE RIGHT HERE - Keep emoji icons visible when collapsed */
+.sidebar.collapsed a::before {
+  content: attr(data-emoji);
+  font-size: 1.3rem;
+}
+
+.sidebar a::before {
+  content: attr(data-emoji);
+  margin-right: 8px;
+}
+
+.sidebar.collapsed a::before {
+  margin-right: 0;
+}
+/* END OF NEW CSS CODE */
+    
+    .sidebar.collapsed a span {
+        display: none;
+    }
+    .sidebar.collapsed a {
+        justify-content: center;
+    }
+    
+    .topbar.shifted {
+        left: 80px;
+    }
+    
+    .content.shifted {
+        margin-left: 80px;
+    }
+    
+    /* --- Mobile Overlay & Sidebar --- */
+    .sidebar-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 998;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    
+    .sidebar-overlay.active {
+        display: block;
+        opacity: 1;
+    }
+    
+    @media (max-width: 768px) {
+        .sidebar {
+            top: 0; /* On mobile, the sidebar is full height */
+            height: 100vh;
+            width: 280px;
+            transform: translateX(-100%);
+            box-shadow: 4px 0 15px rgba(0, 0, 0, 0.2);
+            z-index: 1200; /* Above overlay */
+        }
+    
+        .sidebar.mobile-open {
+            transform: translateX(0);
+        }
+    
+        /* Prevent collapsing on mobile view */
+        .sidebar.collapsed {
+            width: 280px;
+            transform: translateX(-100%);
+        }
+    
+        .sidebar .brand {
+            width: 280px; /* Brand takes full width of mobile sidebar */
+        }
+    
+        .sidebar .brand.collapsed {
+            width: 280px;
+            justify-content: flex-start;
+        }
+    
+        .sidebar .brand.collapsed span {
+            opacity: 1;
+            pointer-events: auto;
+            width: auto;
+        }
+    
+        .topbar, .topbar.shifted {
+            left: 0;
+        }
+        .content, .content.shifted {
+            margin-left: 0;
+        }
+    }
+    /* --- END: NEW ADMIN SYNC STYLES --- */
+
+    :root {
+      --primary: #0f7a34;
+      --primary-light: #e8f5e9;
+      --primary-dark: #0a5a26;
+      --secondary: #4361ee;
+      --accent: #7209b7;
+      --text: #2d3748;
+      --text-light: #718096;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      --card-shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.12);
+      --radius: 16px;
+      --radius-sm: 8px;
+      --sidebar-width: 280px;
+      --collapsed-width: 80px;
+      --topbar-height: 70px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      font-size: 16px;
+      color: var(--text);
+    }
+
+    body {
+      background: var(--bg);
+      overflow-x: hidden;
+    }
+
+    /* Content area */
+    .content {
+      padding: 30px;
+      /* reduce extra internal top padding so content sits closer under the fixed topbar */
+      padding-top: 12px;
+      max-width: 1400px;
+    }
+
+    .page-header {
+      margin-bottom: 24px;
+    }
+
+    .page-title {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 8px;
+      /* animate on desktop/windows view to match mobile behavior */
+      animation: slideInLeft 0.6s ease-out;
+    }
+
+    .page-subtitle {
+      color: var(--text-light);
+      font-size: 16px;
+      /* subtitle animates slightly after the title for a pleasant stagger */
+      animation: slideInLeft 0.8s ease-out;
+      animation-delay: 0.06s;
+    }
+
+    .history-container {
+      display: flex;
+      gap: 24px;
+      /* make the two columns stretch to equal height */
+      align-items: stretch;
+      height: calc(100vh - 120px);
+    }
+
+    /* Progress Sidebar - Sticky */
+    .progress-sidebar {
+      width: 500px;
+      flex-shrink: 0;
+      position: sticky;
+      /* align just below the topbar with a small gap */
+      top: calc(60px + 12px);
+      /* take the full height of the parent .history-container so both columns match */
+      height: 100%;
+      overflow: hidden; /* outer container shouldn't scroll */
+      /* ensure scrollbar appears inside the card body */
+      padding: 12px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      min-height: 0; /* allow flex children to shrink for proper internal scrolling */
+    }
+
+    /* Make the progress card header stay visible; the .card-body will scroll */
+    .progress-sidebar .card h3 {
+      position: relative;
+      background: var(--card-bg);
+      z-index: 5;
+      margin: 0 0 12px 0;
+      padding: 8px 0;
+      border-radius: 8px;
+    }
+
+    /* The scrollable inner area under the header */
+    .progress-sidebar .card-body {
+      overflow-y: auto;
+      flex: 1 1 auto;
+      padding-right: 6px; /* room for scrollbar */
+      min-height: 0; /* allow proper flexbox scrolling */
+    }
+
+    /* Ensure the progress sidebar itself doesn't create a second scroll context */
+    .progress-sidebar { overflow: hidden; }
+
+    /* Make the progress card and the sessions card fill the column height so both columns match */
+    .progress-sidebar .card,
+    .sessions-main > .card {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      margin-bottom: 0; /* avoid extra gap at bottom */
+    }
+
+    /* Ensure sessions container and progress card-body share flex behavior */
+    .sessions-main .sessions-container {
+      flex: 1 1 auto;
+      overflow-y: auto;
+      min-height: 0;
+      padding-right: 8px;
+    }
+
+    /* small visual cue: match inner card padding so cards align neatly */
+    .progress-sidebar .card { padding: 16px; }
+    .sessions-main > .card { padding: 16px; }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      box-shadow: var(--card-shadow);
+      padding: 24px;
+      transition: transform 0.3s, box-shadow 0.3s;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      margin-bottom: 24px;
+    }
+
+    .card:hover {
+      box-shadow: var(--card-shadow-hover);
+      transform: translateY(-2px);
+    }
+
+    .card h3 {
+      margin: 0 0 16px 0;
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .card h3 i {
+      color: var(--primary);
+    }
+
+    /* Progress Section */
+    .questionnaire-progress {
+      margin-bottom: 24px;
+      padding-bottom: 20px;
+      border-bottom: 2px solid var(--primary-light);
+    }
+    
+    .questionnaire-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--primary);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .chart-container {
+      position: relative;
+      height: 200px;
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-bottom: 16px;
+      border: 1px solid var(--primary-light);
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+    }
+    
+    .chart-svg {
+      width: 100%;
+      height: 100%;
+      filter: drop-shadow(0 1px 3px rgba(0,0,0,0.1));
+    }
+    
+    .chart-line {
+      fill: none;
+      stroke: url(#lineGradient);
+      stroke-width: 3;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      filter: drop-shadow(0 2px 4px rgba(0,114,63,0.3));
+    }
+    
+    .chart-dot {
+      fill: var(--primary);
+      stroke: white;
+      stroke-width: 3;
+      r: 6;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+    }
+    
+    .chart-dot:hover {
+      r: 8;
+      fill: var(--primary-dark);
+      stroke: #ffc107;
+      stroke-width: 3;
+      transform-origin: center;
+      animation: pulse 0.6s ease-in-out;
+    }
+    
+    @keyframes pulse {
+      0% { r: 6; }
+      50% { r: 10; }
+      100% { r: 8; }
+    }
+    
+    .chart-grid {
+      stroke: #d6d8db;
+      stroke-width: 1;
+      stroke-dasharray: 3,3;
+      opacity: 0.6;
+    }
+    
+    .chart-axis {
+      stroke: #495057;
+      stroke-width: 2;
+    }
+    
+    .chart-label {
+      fill: #495057;
+      font-size: 11px;
+      text-anchor: middle;
+      font-weight: 500;
+    }
+
+    /* Y-axis specific SVG label styling to increase contrast and size */
+    .chart-y-label {
+      fill: #374151; /* slightly darker */
+      font-size: 12px;
+      font-weight: 700;
+      text-anchor: end; /* right-aligned so it sits to the left of axis */
+    }
+    
+    .chart-value {
+      fill: white;
+      font-size: 11px;
+      text-anchor: middle;
+      font-weight: bold;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+    }
+    
+    .questionnaire-summary {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      background: var(--primary-light);
+      padding: 16px;
+      border-radius: var(--radius-sm);
+      font-size: 0.9rem;
+      margin-bottom: 16px;
+    }
+    
+    .summary-item {
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    
+    .summary-label {
+      font-size: 0.8rem;
+      color: var(--text-light);
+      margin-bottom: 4px;
+      min-height: 1rem;
+    }
+    
+    .summary-value {
+      font-weight: bold;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 1.5rem;
+    }
+    
+    .improvement-badge {
+      background: #28a745;
+      color: white;
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: bold;
+    }
+    
+    .improvement-badge.negative {
+      background: #dc3545;
+    }
+    
+    .progress-item {
+      margin-bottom: 16px;
+    }
+    .progress-item:last-child {
+      margin-bottom: 0;
+    }
+    .progress-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .progress-label {
+      font-weight: 500;
+      color: var(--text);
+    }
+    .progress-percentage {
+      font-weight: bold;
+      color: var(--primary);
+    }
+    .progress-bar {
+      background: var(--primary-light); 
+      border-radius: 12px; 
+      overflow: hidden;
+      height: 8px;
+    }
+    .progress-fill {
+      height: 100%; 
+      background: linear-gradient(90deg, var(--primary), #28a745);
+      transition: width 0.3s ease;
+      border-radius: 12px;
+    }
+
+    /* Questionnaire Details */
+    .questionnaire-details {
+      margin-top: 16px;
+      padding: 16px;
+      background: #f0f8ff;
+      border-radius: var(--radius-sm);
+      border-left: 4px solid var(--primary);
+      font-size: 0.9rem;
+      color: #555;
+      line-height: 1.5;
+    }
+
+    /* Sessions Section */
+    .sessions-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0; /* allow internal scrolling to work when parent is a fixed-height flex container */
+    }
+
+    .sessions-container {
+      flex: 1;
+      overflow-y: auto;
+      padding-right: 8px;
+      min-height: 0; /* allow it to shrink to parent's height for correct internal scrolling */
+    }
+
+    .session {
+      border-bottom: 1px solid rgba(0, 0, 0, 0.08); 
+      padding: 16px 0;
+      position: relative;
+      transition: background 0.2s;
+    }
+    
+    .session:hover {
+      background: rgba(0, 0, 0, 0.02);
+      border-radius: var(--radius-sm);
+      padding: 16px;
+      margin: 0 -8px;
+    }
+    
+    .session:last-child { 
+      border-bottom: none; 
+      padding-bottom: 0;
+    }
+    .session:first-child {
+      padding-top: 0;
+    }
+    .session-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 8px;
+    }
+    .session-title { 
+      font-weight: 600;
+      color: var(--text);
+      font-size: 1rem;
+    }
+    .session-date { 
+      font-size: 0.85rem; 
+      color: var(--text-light); 
+      margin-bottom: 4px;
+    }
+    .session-counselor {
+      font-size: 0.85rem;
+      color: var(--primary);
+      font-weight: 500;
+    }
+    .session-counselor .counselor-name { font-weight:600; }
+    .session-counselor .counselor-specialization { font-size:0.8rem; color:var(--text-light); margin-top:2px; }
+    .session-rating {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .stars {
+      color: #ffc107; 
+      font-size: 0.9rem;
+    }
+    .rating-text {
+      font-size: 0.8rem;
+      color: var(--text-light);
+    }
+    .session-actions {
+      position: absolute;
+      top: 16px;
+      right: 0;
+    }
+    .view-notes-btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: var(--radius-sm);
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .view-notes-btn:hover {
+      background: var(--primary-dark);
+    }
+
+    .notes {
+      display: none;
+      margin-top: 12px;
+      background: #f8f9fa;
+      padding: 12px;
+      border-radius: var(--radius-sm);
+      font-size: 0.9rem;
+      color: #555;
+      border-left: 3px solid var(--primary);
+      line-height: 1.5;
+    }
+    .notes.show {
+      display: block;
+    }
+
+    /* Progress Milestones */
+    .milestones-container {
+      margin-top: 24px;
+    }
+
+    .milestone {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      border-radius: var(--radius-sm);
+      margin-bottom: 12px;
+      background: var(--primary-light);
+      transition: all 0.2s;
+    }
+
+    .milestone:hover {
+      transform: translateX(4px);
+      background: #e1f5e1;
+    }
+
+    .milestone-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+    }
+
+    .milestone-content {
+      flex: 1;
+    }
+
+    .milestone-title {
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: var(--text);
+    }
+
+    .milestone-date {
+      font-size: 0.8rem;
+      color: var(--text-light);
+    }
+
+    /* Bottom Navigation (Mobile Only) */
+    .bottom-nav {
+      display: none;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--primary);
+      justify-content: space-around;
+      padding: 12px 0;
+      z-index: 100;
+      box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .bottom-nav a {
+      flex: 1;
+      text-align: center;
+      color: white;
+      text-decoration: none;
+      font-size: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      opacity: 0.7;
+      transition: opacity 0.2s;
+    }
+
+    .bottom-nav a.active {
+      opacity: 1;
+    }
+
+    .bottom-nav a i {
+      font-size: 18px;
+    }
+
+    /* Responsive */
+    @media (max-width: 1200px) {
+      .history-container {
+        flex-direction: column;
+        height: auto;
+      }
+      
+      .progress-sidebar {
+        width: 100%;
+        position: static;
+        height: auto;
+      }
+      
+      .questionnaire-summary {
+        grid-template-columns: repeat(4, 1fr);
+      }
+    }
+
+    @media (max-width: 768px) {
+      .sidebar {
+        transform: translateX(-100%);
+      }
+
+      .topbar {
+        left: 0;
+      }
+
+      .content {
+        margin-left: 0;
+        padding: 20px;
+        /* Slightly increase top gap on mobile so title sits a bit farther from topbar */
+        padding-top: 12px !important;
+      }
+
+      .bottom-nav {
+        display: flex;
+      }
+
+      .page-title {
+        font-size: 24px;
+      }
+
+      .card {
+        padding: 20px;
+      }
+
+      .questionnaire-summary {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+      }
+
+      .chart-container {
+        height: 150px;
+        padding: 12px;
+      }
+
+      .session-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .session-actions {
+        position: static;
+        margin-top: 8px;
+      }
+    }
+
+    /* Custom scrollbar */
+    .sessions-container::-webkit-scrollbar,
+    .notif-list::-webkit-scrollbar,
+    .progress-sidebar::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .sessions-container::-webkit-scrollbar-track,
+    .notif-list::-webkit-scrollbar-track,
+    .progress-sidebar::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 10px;
+    }
+
+    .sessions-container::-webkit-scrollbar-thumb,
+    .notif-list::-webkit-scrollbar-thumb,
+    .progress-sidebar::-webkit-scrollbar-thumb {
+      background: #c1c1c1;
+      border-radius: 10px;
+    }
+
+    .sessions-container::-webkit-scrollbar-thumb:hover,
+    .notif-list::-webkit-scrollbar-thumb:hover,
+    .progress-sidebar::-webkit-scrollbar-thumb:hover {
+      background: #a8a8a8;
+    }
+  /* Rating modal styles (copied from messages.html) */
+  .rating-modal-overlay{ display:none; position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:3600; align-items:center; justify-content:center; }
+  .rating-modal-overlay.active{ display:flex; }
+  .rating-modal-box{ width:92%; max-width:560px; background:linear-gradient(180deg,#ffffff,#fbfffb); border-radius:12px; padding:20px; box-shadow:0 18px 50px rgba(2,6,23,0.18); color:#063d2b; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; }
+  .rating-modal-box h3{ margin:0 0 8px 0; font-size:20px; color:#064e3b; }
+  .rating-modal-meta{ color:#475569; margin-bottom:12px; font-size:14px }
+  .rating-stars{ display:flex; align-items:center; gap:10px; justify-content:center; width:100%; }
+  .rating-stars .star{ font-size:44px; color:#fbbf24; background:transparent; border:0; cursor:pointer; padding:6px 8px; border-radius:8px; transition:transform .12s ease, filter .12s ease }
+  .rating-stars .star:hover{ transform:translateY(-3px) scale(1.06); filter:brightness(1.03) }
+  .rating-stars .star.inactive{ color:#e6e6e6 }
+  .rating-value{ text-align:center; font-size:16px; color:#374151; margin-top:6px; font-weight:600 }
+  .rating-comment{ width:100%; padding:10px; border-radius:8px; border:1px solid #e6eef7; min-height:82px; font-size:14px }
+  .rating-actions{ display:flex; gap:8px; justify-content:flex-end; margin-top:12px }
+  .rating-btn{ padding:9px 14px; border-radius:8px; border:0; cursor:pointer }
+  .rating-btn.cancel{ background:#f3f4f6; color:#374151 }
+  .rating-btn.submit{ background:#0f7a34; color:#fff }
+  </style>
+
+  <!-- Mobile: tighten ORS & summary vertical spacing -->
+  <style id="mobile-ors-tighten">
+    @media (max-width: 768px) {
+      /* Reduce the grid gap between ORS summary items */
+      .questionnaire-summary {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important;
+        gap: 6px !important; /* tightened from larger gaps */
+        align-items: start !important;
+        margin: 0.25rem 0 !important;
+        padding: 0 !important;
+      }
+
+      /* Each summary item: smaller internal padding and compressed vertical rhythm */
+      .questionnaire-summary .summary-item {
+        padding: 6px 8px !important;
+        border-radius: 6px !important;
+        min-height: 0 !important;
+      }
+
+      /* Labels and values closer together */
+      .questionnaire-summary .summary-item .summary-label {
+        display: block !important;
+        margin: 0 0 2px 0 !important;
+        font-size: 0.78rem !important;
+        line-height: 1 !important;
+      }
+      .questionnaire-summary .summary-item .summary-value {
+        margin: 0 !important;
+        font-size: 0.95rem !important;
+        line-height: 1.1 !important;
+      }
+
+      /* If there is a small caption or meta line, reduce its spacing */
+      .questionnaire-summary .summary-item .summary-meta {
+        margin-top: 2px !important;
+        font-size: 0.72rem !important;
+      }
+
+      /* Reduce spacing above/below the chart and progress blocks */
+      .chart-container,
+      .questionnaire-progress {
+        margin: 6px 0 !important;
+        padding: 0 !important;
+      }
+
+      /* For very small screens tighten even more */
+      @media (max-width: 420px) {
+        .questionnaire-summary { gap: 4px !important; }
+        .questionnaire-summary .summary-item { padding: 5px 6px !important; }
+        .questionnaire-summary .summary-item .summary-label { font-size: 0.72rem !important; }
+        .questionnaire-summary .summary-item .summary-value { font-size: 0.9rem !important; }
+      }
+    }
+  </style>
+  <style id="appointments-copy">
+    :root {
+      --primary: #0f7a34;
+      --primary-light: #e8f5e9;
+      --primary-dark: #0a5a26;
+      --topbar-bg: #1e8e3e;
+      --secondary: #4361ee;
+      --accent: #7209b7;
+      --text: #2d3748;
+      --text-light: #718096;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      --card-shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.12);
+      --radius: 16px;
+      --radius-sm: 8px;
+      --sidebar-width: 280px;
+      --collapsed-width: 80px;
+      --topbar-height: 70px;
+      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      --transition-slow: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      font-size: 16px;
+      color: var(--text);
+    }
+
+    body {
+      background: var(--bg);
+      overflow-x: hidden;
+    }
+
+    /* ===== Sidebar (admin-like style) ===== */
+    .sidebar {
+      position:fixed; top:0; left:0;
+      width:250px; height:100%;
+      background:#f0f3f6; color:#1f2937;
+      padding:12px;
+      border-right:1px solid rgba(0,0,0,0.06);
+      display:flex; flex-direction:column;
+      transition:width 0.3s ease, transform 0.3s ease;
+      z-index:1200;
+    }
+
+    .sidebar .brand {
+      display:flex; align-items:center; gap:0.6rem;
+      margin-bottom:1rem; padding:8px 4px;
+    }
+
+    .sidebar .logo {
+      width:40px; height:40px; background:transparent;
+      border-radius:8px; display:flex; align-items:center; justify-content:center;
+      color:#10b981; font-weight:700; font-size:0.95rem;
+      flex-shrink:0; box-shadow:0 1px 2px rgba(0,0,0,0.04);
+    }
+
+    .sidebar .brand span { font-weight:700; font-size:1rem; color:#374151; }
+
+    /* collapsed (narrow) sidebar */
+    .sidebar.shrink { width:80px; padding:12px 8px; }
+    .sidebar.shrink .brand span { display:none; }
+    .sidebar.shrink a { text-align:center; font-size:1.1rem; }
+    .sidebar.shrink a span { display:none; }
+
+    /* nav items (anchors) styled similar to admin .nav-item */
+    .sidebar a {
+      display:flex; align-items:center; gap:12px; color:#1f2937;
+      text-decoration:none; margin:8px 0; font-size:15px;
+      padding:12px 10px; border-radius:8px; background:transparent;
+      transition:background 0.18s ease, color 0.18s ease;
+    }
+
+  .sidebar a .fa,
+  .sidebar a i { width:28px; text-align:center; font-size:18px; color:#1f2937; background:transparent; }
+
+    .sidebar a span { color:inherit; display:inline-block; white-space:nowrap; overflow:hidden; }
+
+    .sidebar a:hover,
+    .sidebar a.active {
+      background: rgba(15,122,52,0.08); color:#0f7a34; font-weight:600;
+    }
+
+    /* Admin-like header & sidebar overrides (no HTML changes) */
+    .header-and-sidebar-top {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      z-index: 1000;
+      display: flex;
+      background-color: #1e8e3e;
+      color: white;
+      height: 60px;
+      transition: left 0.3s ease;
+    }
+
+    .sidebar-top {
+      width: 250px;
+      display: flex;
+      align-items: center;
+      padding: 10px 20px;
+      box-sizing: border-box;
+      border-right: 1px solid rgba(255, 255, 255, 0.3);
+      height: 60px;
+      transition: width 0.3s ease;
+    }
+
+    .sidebar {
+      position: fixed; /* ensure sidebar spans full height and brand sits at top */
+      top: 0;
+      left: 0;
+      width: 250px;
+      height: 100vh;
+      background: #f0f3f6;
+      border-right: none; /* remove full-height border so brand can appear flush */
+      z-index: 1002; /* sit above topbar so brand overlays header area */
+      overflow: auto;
+    }
+
+    /* Hide the native scrollbar for the sidebar while keeping content scrollable */
+    .sidebar {
+      scrollbar-width: none; /* Firefox */
+      -ms-overflow-style: none; /* IE 10+ */
+    }
+    .sidebar::-webkit-scrollbar {
+      width: 0px;
+      height: 0px;
+      background: transparent;
+    }
+
+    /* vertical divider only below the brand area */
+    .sidebar::after {
+      content: '';
+      position: absolute;
+      left: 249px; /* 1px inside right edge */
+      top: 60px; /* start after brand/topbar */
+      width: 1px;
+      height: calc(100vh - 60px);
+      background: rgba(0,0,0,0.06);
+      z-index: 1001;
+    }
+
+    .nav-item, .sidebar a {
+      color: #1f2937;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 10px;
+      border-radius: 8px;
+      background: transparent;
+      cursor: pointer;
+      font-weight: 400;
+      font-size: 15px;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .nav-item:hover, .sidebar a:hover {
+      background: rgba(15,122,52,0.08) !important;
+      color: #0f7a34 !important;
+      font-weight: 400 !important;
+    }
+
+    .nav-item.active {
+      background: rgba(15,122,52,0.12) !important;
+      color: #0f7a34 !important;
+      font-weight: 600 !important;
+    }
+
+    /* adjust content to sit below the fixed topbar and to the right of the sidebar */
+    .content { margin-top: 60px; margin-left: 250px; }
+    .content.shrink { margin-left: 80px; }
+
+    /* Logo and brand name styling to mirror admin */
+    .sidebar .logo {
+      background: transparent;
+      width:72px; height:72px; border-radius:6px; box-shadow:none; color:transparent;
+      display:flex; align-items:center; justify-content:center; overflow:hidden; padding:0; border:0;
+    }
+    .sidebar .logo img{
+      width:auto; height:64px; max-width:100%; max-height:64px; object-fit:contain; display:block;
+      background:transparent; /* in case image has transparency preserve it */
+      image-rendering: -webkit-optimize-contrast;
+    }
+
+    /* keep brand/logo aligned with topbar height (60px) */
+    .sidebar .brand {
+      height: 60px;
+      align-items: center;
+      padding: 0 12px;
+      background: #1e8e3e; /* match topbar background for a seamless look */
+      color: white;
+      gap: 12px;
+    }
+
+    .sidebar .brand span { color: white; font-weight:700; margin-left:4px; }
+
+    /* push nav content below the brand area */
+    #nav { padding-top: 12px; margin-top: 60px; }
+
+    /* make the small top-area logo visible in header-like layout */
+    .header-and-sidebar-top .sidebar-logo span { color: white; font-weight:700; font-size:1.1rem; }
+
+    /* ===== Topbar (admin-like appearance) ===== */
+    .topbar {
+      position: fixed;
+      top: 0;
+      left: 250px; /* sit to the right of the fixed sidebar */
+      right: 0;
+      height: 60px;
+      background-color: var(--topbar-bg);
+      color: white;
+      padding: 10px 30px;
+      display: flex; justify-content: space-between; align-items: center;
+      z-index: 1001;
+      transition: left 0.3s ease, margin-left 0.3s ease;
+    }
+    .topbar.shrink { left: 80px; }
+
+    .topbar-left { display:flex; align-items:center; gap:0.6rem; }
+    .hamburger {
+      font-size: 1.2rem;
+      cursor: pointer;
+      padding: 0.3rem;
+      border-radius: 4px;
+      transition: background 0.2s;
+    }
+    .hamburger:hover { background: rgba(255,255,255,0.1); }
+  .portal-title { display:flex; flex-direction:column; line-height:1.2; }
+  .portal-title strong span.safespace { display:inline; margin-right:0.3rem; }
+    .portal-title small { font-size:0.75rem; opacity:0.9; }
+
+    /* Show SafeSpace text when sidebar is shrunk */
+    .topbar.shrink .portal-title strong span.safespace { display: inline; }
+
+    /* Mobile logo styling */
+    .mobile-logo {
+      display: none;
+      width: 44px;
+      height: 44px;
+      background: transparent; /* remove white circular background */
+      border-radius: 6px;
+      align-items: center;
+      justify-content: center;
+      color: #00723f;
+      font-weight: bold;
+      font-size: 0.8rem;
+      margin-right: 0.5rem;
+      padding:0;
+      overflow:hidden;
+    }
+  .mobile-logo img{ width:auto; height:34px; object-fit:contain; display:block; background:transparent }
+
+    /* Profile + Notifications */
+    .profile { width:38px; height:38px; border-radius:50%; background:#004c27;
+      display:flex; align-items:center; justify-content:center; font-weight:bold; cursor:pointer; }
+    .notif-wrapper { position:relative; cursor:pointer; font-size:1.3rem; color:white; }
+    .notif-badge {
+      position:absolute; bottom:0; right:0;
+      width:10px; height:10px; background:red;
+      border-radius:50%; border:2px solid #00723f;
+    }
+    .notif-badge.hidden { display:none; }
+
+    .notif-dropdown {
+      position:absolute; top:48px; right:0;
+      background:white; color:#333;
+      width:260px; border-radius:8px;
+      box-shadow:0 4px 10px rgba(0,0,0,0.15);
+      display:none; flex-direction:column;
+      overflow:hidden; z-index:2000;
+    }
+    .notif-dropdown.active { display:flex; }
+    .notif-header { background:#00723f; color:white; padding:0.6rem; font-weight:bold; }
+    .notif-list { max-height:220px; overflow-y:auto; }
+    .notif-item {
+      padding:0.6rem 0.8rem; border-bottom:1px solid #eee;
+      font-size:0.9rem; cursor:pointer;
+    }
+    .notif-item:hover { background:#f1f1f1; }
+
+    /* ===== Content ===== */
+    .content {
+      padding:1rem;
+      max-width:1200px; margin:auto;
+      margin-left:250px;
+      transition:margin-left 0.3s ease;
+    }
+    .content.shrink { margin-left:70px; }
+    .grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(350px,1fr)); gap:1rem; }
+    .card { background:white; border-radius:10px; padding:1rem; box-shadow:0 2px 6px rgba(0,0,0,0.1); }
+    .card h3 { margin-bottom:0.8rem; }
+
+    /* Hide hamburger on mobile */
+    @media (max-width:768px) {
+      .hamburger { display: none; }
+    }
+
+    /* ===== Mobile Bottom Nav ===== */
+    @media (max-width:768px) {
+      .sidebar { 
+        display: none !important;
+        transform: translateX(-100%);
+      }
+      .topbar { margin-left:0; }
+      .content { margin-left:0; }
+      .hamburger { display: none; }
+      
+      /* Show mobile logo and SafeSpace text */
+      .mobile-logo { display: flex; }
+      .portal-title strong span.safespace { display: inline; }
+      
+      .bottom-nav {
+        position:fixed; bottom:0; left:0; width:100%;
+        background:#004c27; display:flex; justify-content:space-around;
+        padding:0.5rem 0; z-index:2000;
+      }
+      .bottom-nav a {
+        flex:1; text-align:center; color:white; text-decoration:none; font-size:0.9rem;
+        display:flex; align-items:center; justify-content:center; gap:0.25rem;
+        padding:0.6rem 0; opacity:1; background:transparent; border-radius:8px;
+      }
+      .bottom-nav a i { font-size:22px; line-height:1; }
+      .bottom-nav a.active { color:#ffc107; }
+    }
+    
+    /* Hide bottom nav on larger screens */
+    .bottom-nav { display: none; }
+
+    @media (max-width: 768px) {
+      .bottom-nav { 
+        display: flex !important;
+        position: fixed;
+        bottom: 0; left: 0; right: 0;
+        background: var(--primary-dark); /* solid colored bar */
+        justify-content: space-around;
+        padding: 0.6rem 0; height:64px; z-index: 2000;
+      }
+    }
+
+    /* ===== Misc ===== */
+    .hidden {
+      display: none !important;
+    }
+
+    /* --- START: NEW ADMIN SYNC STYLES --- */
+    .sidebar {
+        width: 250px;
+        background: #f0f3f6;
+        border-right: 1px solid rgba(0,0,0,0.06);
+        position: fixed;
+        top: 60px; /* Starts below the header */
+        left: 0;
+        height: calc(100vh - 60px);
+        z-index: 999;
+        padding: 12px;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        transition: width 0.3s ease, transform 0.3s ease;
+    }
+    
+    .sidebar .brand {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 250px;
+        height: 60px;
+        background-color: #1e8e3e;
+        color: white;
+        display: flex;
+        align-items: center;
+        padding: 10px 20px;
+        box-sizing: border-box;
+        z-index: 1002;
+        border-right: 1px solid rgba(255, 255, 255, 0.3);
+        transition: width 0.3s ease;
+    }
+    
+  .sidebar .brand .logo {
+    height: 40px;
+    width: 40px;
+    background: transparent url("safespace.png") center/contain no-repeat;
+    color: transparent;
+    border-radius: 8px;
+  }
+    
+    .sidebar .brand span {
+        font-weight: bold;
+        font-size: 1.2rem;
+        color: white;
+        white-space: nowrap;
+        margin-left: 10px;
+        transition: opacity 0.3s ease, width 0.3s ease;
+    }
+    
+    .sidebar a {
+        margin: 0; /* Nav links start at the top of the sidebar container */
+    }
+    
+    .topbar {
+        position: fixed;
+        top: 0;
+        left: 250px;
+        right: 0;
+        height: 60px;
+        background-color: #1e8e3e;
+        color: white;
+        padding: 10px 30px;
+        z-index: 1000;
+        transition: left 0.3s ease;
+    }
+    
+    .content {
+        margin-top: 60px;
+        margin-left: 250px;
+        transition: margin-left 0.3s ease;
+    }
+    
+   /* --- Collapsed State --- */
+.sidebar.collapsed {
+  width: 80px;
+  padding: 12px 8px;
+}
+
+.sidebar.collapsed .brand {
+  width: 80px;
+  justify-content: center;
+}
+
+.sidebar.collapsed .brand span {
+  opacity: 0;
+  pointer-events: none;
+  width: 0;
+}
+
+.sidebar.collapsed a span {
+  display: none;
+}
+.sidebar.collapsed a {
+  justify-content: center;
+}
+
+/* ADD THIS NEW CODE RIGHT HERE - Keep emoji icons visible when collapsed */
+.sidebar.collapsed a::before {
+  content: attr(data-emoji);
+  font-size: 1.3rem;
+}
+
+.sidebar a::before {
+  content: attr(data-emoji);
+  margin-right: 8px;
+}
+
+.sidebar.collapsed a::before {
+  margin-right: 0;
+}
+/* END OF NEW CSS CODE */
+    
+    .sidebar.collapsed a span {
+        display: none;
+    }
+    .sidebar.collapsed a {
+        justify-content: center;
+    }
+    
+    .topbar.shifted {
+        left: 80px;
+    }
+    
+    .content.shifted {
+        margin-left: 80px;
+    }
+    
+    /* --- Mobile Overlay & Sidebar --- */
+    .sidebar-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 998;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    
+    .sidebar-overlay.active {
+        display: block;
+        opacity: 1;
+    }
+    
+    @media (max-width: 768px) {
+        .sidebar {
+            top: 0; /* On mobile, the sidebar is full height */
+            height: 100vh;
+            width: 280px;
+            transform: translateX(-100%);
+            box-shadow: 4px 0 15px rgba(0, 0, 0, 0.2);
+            z-index: 1200; /* Above overlay */
+        }
+    
+        .sidebar.mobile-open {
+            transform: translateX(0);
+        }
+    
+        /* Prevent collapsing on mobile view */
+        .sidebar.collapsed {
+            width: 280px;
+            transform: translateX(-100%);
+        }
+    
+        .sidebar .brand {
+            width: 280px; /* Brand takes full width of mobile sidebar */
+        }
+    
+        .sidebar .brand.collapsed {
+            width: 280px;
+            justify-content: flex-start;
+        }
+    
+        .sidebar .brand.collapsed span {
+            opacity: 1;
+            pointer-events: auto;
+            width: auto;
+        }
+    
+        .topbar, .topbar.shifted {
+            left: 0;
+        }
+        .content, .content.shifted {
+            margin-left: 0;
+        }
+    }
+    /* --- END: NEW ADMIN SYNC STYLES --- */
+  </style>
+  <style>
+    /* Ensure mobile bottom nav uses the exact green from the topbar for visual parity */
+    @media (max-width: 768px) {
+      .bottom-nav {
+        background: #1e8e3e !important;
+      }
+      /* keep emoji/icons white on the green bar */
+      .bottom-nav a .emoji,
+      .bottom-nav a i {
+        color: #ffffff !important;
+      }
+    }
+  </style>
+  <style id="mobile-bottomnav-active">
+    @media (max-width: 768px) {
+      /* Make the active bottom-nav item visually highlighted like appointments.html */
+      .bottom-nav a.active { 
+        color: #ffc107 !important;
+        background: rgba(255,255,255,0.06) !important;
+        transform: translateY(-4px) !important;
+        box-shadow: 0 6px 14px rgba(0,0,0,0.12) !important;
+        border-radius: 10px !important;
+      }
+      .bottom-nav a.active .emoji,
+      .bottom-nav a.active i {
+        color: #ffc107 !important; /* amber icon for active state */
+      }
+    }
+  </style>
+  <style>
+    /* Reduce vertical spacing in ORS area on small screens */
+    @media (max-width: 768px) {
+      .questionnaire-summary { gap: 8px !important; }
+      .questionnaire-summary .summary-item { padding-top: 4px !important; padding-bottom: 4px !important; }
+      /* Rendered ORS bars insert .progress-item with margin-top; reduce it on mobile */
+      .progress-item { margin-top: 6px !important; }
+      .progress-header { margin-bottom: 6px !important; }
+      .chart-container { padding: 8px !important; height: 140px !important; }
+      /* Slightly tighten the card and title spacing */
+      .questionnaire-progress { margin-bottom: 14px !important; }
+      .questionnaire-title { margin-bottom: 8px !important; }
+    }
+  </style>
+  <style id="sync-mobile-sizes">
+    /* Make topbar and sidebar mobile sizing identical to appointments.html */
+    @media (max-width: 768px) {
+      /* Topbar sizing */
+      .topbar { left: 0 !important; height: 60px !important; padding: 8px 12px !important; }
+      .topbar .portal-title strong { font-size: 1rem !important; line-height: 1.1 !important; }
+      .portal-title small { font-size: 0.75rem !important; }
+
+      /* Hamburger / icons */
+      .hamburger { font-size: 1.2rem !important; padding: 0.3rem !important; }
+      .profile { width: 38px !important; height: 38px !important; }
+
+      /* Mobile logo exactly like appointments.html */
+      .mobile-logo { display: flex !important; width: 44px !important; height: 44px !important; }
+      .mobile-logo img { height: 40px !important; width: auto !important; object-fit: contain !important; }
+
+      /* Sidebar behaviour and sizing on mobile */
+      .sidebar { transform: translateX(-100%) !important; width: 280px !important; top: 0 !important; height: 100vh !important; }
+      .sidebar .brand .logo { height: 40px !important; width: 40px !important; background-size: contain !important; }
+      .sidebar .brand span { font-size: 1rem !important; }
+      .sidebar a { font-size: 15px !important; }
+      .sidebar a .fa, .sidebar a i { font-size: 18px !important; width: 28px !important; }
+
+      /* Bottom navigation exact sizes/colors */
+      .bottom-nav { display: flex !important; background: #1e8e3e !important; height: 64px !important; padding: 0.6rem 0 !important; box-shadow: 0 -6px 20px rgba(0,0,0,0.12) !important; }
+      .bottom-nav a { font-size: 0.9rem !important; padding: 0.6rem 0 !important; }
+      .bottom-nav a i { font-size: 22px !important; }
+      .bottom-nav a .emoji { font-size: 28px !important; }
+      .bottom-nav a .emoji, .bottom-nav a i { color: #ffffff !important; }
+
+  /* Ensure content spacing mirrors appointments page on mobile */
+  .content { margin-left: 0 !important; padding-top: 12px !important; padding-left: 1rem !important; padding-right: 1rem !important; }
+    }
+  </style>
+  <style id="mobile-notes-inline">
+    /* Place rating and View Notes button on same row for mobile */
+    @media (max-width: 768px) {
+      .session {
+        display: grid !important;
+        grid-template-columns: 1fr auto !important;
+        grid-template-rows: auto auto !important;
+        grid-template-areas: "header header" "rating actions" !important;
+        gap: 6px 12px !important;
+        align-items: center !important;
+      }
+      .session-header { grid-area: header !important; }
+      .session-rating { grid-area: rating !important; display:flex !important; align-items:center !important; gap:8px !important; }
+      .session-actions { grid-area: actions !important; display:flex !important; align-items:center !important; gap:8px !important; justify-self:end !important; position:static !important; margin-top:0 !important; }
+      .view-notes-btn { white-space: nowrap !important; }
+      /* Slightly reduce stars size to fit tighter rows on very small screens */
+      @media (max-width: 420px) {
+        .stars { font-size: 0.85rem !important; }
+      }
+    }
+  </style>
+  <style id="mobile-content-upward">
+    /* Move content area upward on small screens so it sits closer under the topbar */
+    @media (max-width: 768px) {
+      .content {
+        /* topbar is 60px; remove extra breathing gap so content sits tighter under the bar */
+        padding-top: 12px !important;
+        padding-left: 0.5rem !important;
+        padding-right: 0.5rem !important;
+      }
+      /* If content-footer or other elements had left margin matching desktop sidebar, remove it */
+      .content-footer { margin-left: 0 !important; max-width: 100% !important; padding-left: 0.75rem !important; padding-right: 0.75rem !important; }
+    }
+  </style>
+  <style>
+    /* slideInLeft animation used by appointments.html — add here so history matches animation on mobile */
+    @keyframes slideInLeft {
+      from { opacity: 0; transform: translateX(-30px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+  </style>
+  <style id="mobile-page-title-smaller">
+    @media (max-width: 768px) {
+      /* Make the page title and subtitle more compact on mobile */
+      /* Match appointments.html mobile sizes: title slightly larger and spacing aligned */
+      .page-header { margin-bottom: 24px !important; }
+      .page-title { font-size: 22px !important; margin-bottom: 8px !important; line-height: 1.1 !important; animation: slideInLeft 0.6s ease-out !important; }
+      .page-subtitle { font-size: 14px !important; margin-top: 4px !important; line-height: 1.1 !important; opacity: 0.95 !important; animation: slideInLeft 0.8s ease-out !important; }
+    }
+  </style>
+
+  <style id="mobile-page-title-smaller-420">
+    @media (max-width: 420px) {
+      /* Very small screens should match appointments.html tiny breakpoint */
+      .page-header { margin-bottom: 12px !important; }
+      .page-title { font-size: 18px !important; margin-bottom: 6px !important; animation: slideInLeft 0.6s ease-out !important; }
+      .page-subtitle { font-size: 14px !important; margin-top: 3px !important; animation: slideInLeft 0.8s ease-out !important; }
+    }
+  </style>
+  <style id="mobile-footer-visible">
+    @media (max-width: 768px) {
+      /* Ensure footer is visible above the fixed bottom navigation on mobile */
+      .content { padding-bottom: 5px !important; }
+      .content-footer {
+        margin-left: 0 !important;
+        max-width: 100% !important;
+        padding-left: 0.75rem !important;
+        padding-right: 0.75rem !important;
+        padding-bottom: 70px !important; /* give room for bottom-nav (64px) + spacing */
+        box-sizing: border-box !important;
+        position: relative !important;
+        z-index: 1 !important;
+      }
+      /* Match appointments.html footer font-size on mobile */
+      .content-footer > div { font-size: 0.85rem !important; color: var(--text-light) !important; }
+      /* make sure bottom-nav sits above content but not hide it visually */
+      .bottom-nav { z-index: 2000 !important; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Sidebar from appointments.html -->
+  <div class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="logo">SS</div>
+      <span>SafeSpace</span>
+    </div>
+    <a href="appointments.html" data-emoji="📅"><span>Appointments</span></a> 
+    <a href="history.html" class="active" data-emoji="📋"><span>History</span></a>
+    <a href="assessments.html" data-emoji="📝"><span>Assessments</span></a>
+    <a href="resources.html" data-emoji="📚"><span>Resources</span></a>
+    <a href="messages.html" data-emoji="💬"><span>Messages</span></a>
+    <a href="settings.html" data-emoji="⚙️"><span>Settings</span></a>
+  </div>
+
+  <!-- Topbar (copied from appointments.html for identical mobile/desktop appearance) -->
+  <div class="topbar" id="topbar">
+    <div class="topbar-left">
+      <div class="hamburger">
+        <i class="fas fa-bars"></i>
+      </div>
+      <div class="mobile-logo"><img src="safespace.png" alt="SafeSpace" style="width:24px;height:24px;object-fit:contain"></div>
+      <div class="portal-title">
+        <strong><span class="safespace">RSU SafeSpace: </span>Student Portal</strong>
+        <small></small>
+      </div>
+    </div>
+    <div style="display:flex; align-items:center; gap:1rem; position:relative;">
+      <div class="notif-wrapper" onclick="toggleNotif()">
+        <span class="icon-btn">🔔</span>
+        <div class="notif-badge" style="position:absolute;right:4px;bottom:8px;width:8px;height:8px;background:#ef4444;border-radius:50%;border:2px solid var(--green)"></div>
+      </div>
+      <div id="notifDropdown" class="notif-dropdown">
+        <div class="notif-header">Notifications</div>
+        <div class="notif-list">
+          <div class="notif-item" onclick="goToSection('appointments')">🔔 New counseling slots available</div>
+          <div class="notif-item" onclick="goToSection('messages')">📩 You have a new message from your counselor</div>
+          <div class="notif-item" onclick="goToSection('assessments')">⚠ Reminder: Complete your assessment</div>
+        </div>
+      </div>
+      <div class="profile" onclick="window.location.href='profile.html'"></div>
+    </div>
+  </div>
+
+  <!-- Content -->
+  <div class="content" id="content">
+    <div class="page-header">
+      <h1 class="page-title">History & Progress</h1>
+      <p class="page-subtitle">Track your counseling journey and mental wellness progress</p>
+    </div>
+
+    <div class="history-container">
+      <!-- Progress Sidebar - Sticky -->
+      <div class="progress-sidebar">
+        <div class="card">
+          <h3><i class="fas fa-chart-line"></i> Your Progress</h3>
+          <!-- Make the area under the header scroll internally like the sessions list -->
+          <div class="card-body">
+          <!-- ORS Progress Section -->
+          <div class="questionnaire-progress">
+            <div class="questionnaire-title">
+              <i class="fas fa-clipboard-check"></i>
+              Outcome Rating Scale (ORS)
+            </div>
+
+            <div class="chart-container">
+              <svg id="orsChart" class="chart-svg" viewBox="0 0 400 140" preserveAspectRatio="none">
+                <defs>
+                  <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stop-color="#0f7a34" />
+                    <stop offset="100%" stop-color="#28a745" />
+                  </linearGradient>
+                </defs>
+                <!-- dynamic content inserted by script -->
+              </svg>
+            </div>
+
+            <div class="questionnaire-summary">
+              <div class="summary-item">
+                <div class="summary-label">Completed</div>
+                <div class="summary-value" id="orsCompleted">0</div>
+              </div>
+              <div class="summary-item">
+                <div class="summary-label">Last Submitted</div>
+                <div class="summary-value" id="orsLastSubmitted">—</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Latest ORS scores (replace previous progress bars) -->
+          <div style="margin-top:12px; margin-bottom:6px; font-weight:700; color:var(--primary);">Latest ORS Scores (most recent)</div>
+          <div id="orsLatestScores">
+          </div>
+
+          </div> 
+        </div>
+      </div>
+
+      <!-- Sessions Main Content -->
+      <div class="sessions-main">
+        <div class="card">
+          <h3><i class="fas fa-clock-rotate-left"></i> Session History</h3>
+          <div class="sessions-container" id="sessionsContainer">
+            <div class="loader">Loading session history…</div>
+          </div>
+        </div>
+      </div>
+      </div>
+    </div>
+    <!-- Content footer -->
+    <div class="content-footer" style="padding:1rem 0; margin-left:250px; max-width:calc(100% - 250px); box-sizing:border-box;">
+      <div style="width:1400px; max-width:100%; margin:0 auto; display:flex; align-items:center; justify-content:center; gap:12px; color:var(--text-light); font-size:0.95rem; text-align:center;">
+        © 2025 RSU SafeSpace | Student Support Management System
+      </div>
+    </div>
+  
+  <!-- Bottom Navigation (copied from appointments.html; history link marked active) -->
+  <div class="bottom-nav">
+    <a href="appointments.html" aria-label="Appointments"><span class="emoji" aria-hidden="true">📅</span></a>
+    <a href="history.html" aria-label="History" class="active"><span class="emoji" aria-hidden="true">📋</span></a>
+    <a href="assessments.html" aria-label="Assessments"><span class="emoji" aria-hidden="true">📝</span></a>
+    <a href="resources.html" aria-label="Resources"><span class="emoji" aria-hidden="true">📚</span></a>
+    <a href="messages.html" aria-label="Messages"><span class="emoji" aria-hidden="true">💬</span></a>
+    <a href="settings.html" aria-label="Settings"><span class="emoji" aria-hidden="true">⚙️</span></a>
+  </div>
+
+  <!-- Rating modal -->
+  <div id="ratingModal" class="rating-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="ratingTitle">
+    <div class="rating-modal-box">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <h3 id="ratingTitle">Rate your counselor</h3>
+        <button onclick="closeRatingModal()" style="background:transparent;border:0;font-size:18px;cursor:pointer" aria-label="Close rating dialog">✕</button>
+      </div>
+      <div class="rating-modal-meta">Please rate your recent session — your feedback helps improve counseling quality.</div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div id="ratingStars" class="rating-stars" role="radiogroup" aria-label="Rating stars">
+          <button class="star" data-index="1" aria-label="Rate 1" role="radio" aria-checked="false" tabindex="0"><i class="fa-regular fa-star"></i></button>
+          <button class="star" data-index="2" aria-label="Rate 2" role="radio" aria-checked="false" tabindex="0"><i class="fa-regular fa-star"></i></button>
+          <button class="star" data-index="3" aria-label="Rate 3" role="radio" aria-checked="false" tabindex="0"><i class="fa-regular fa-star"></i></button>
+          <button class="star" data-index="4" aria-label="Rate 4" role="radio" aria-checked="false" tabindex="0"><i class="fa-regular fa-star"></i></button>
+          <button class="star" data-index="5" aria-label="Rate 5" role="radio" aria-checked="false" tabindex="0"><i class="fa-regular fa-star"></i></button>
+        </div>
+        <div id="ratingLabel" class="rating-value" aria-live="polite">Not rated yet</div>
+        <textarea id="ratingComment" class="rating-comment" rows="4" placeholder="Optional: leave a short comment..."></textarea>
+        <div class="rating-actions">
+          <button onclick="closeRatingModal()" class="rating-btn cancel">Cancel</button>
+          <button id="submitRatingBtn" class="rating-btn submit">Submit Rating</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+  <script src="firebase_config.js"></script>
+  <script>
+    // Use centralized firebase_config.js which exposes window.db and ensures firebase is initialized.
+    const auth = window.firebase && window.firebase.auth ? window.firebase.auth() : (firebase ? firebase.auth() : null);
+    const db = window.db || (window.firebase && window.firebase.database ? window.firebase.database() : null);
+
+    if (!auth || !db) {
+      console.warn('Firebase auth or db not initialized yet. Ensure firebase SDKs and firebase_config.js are loaded.');
+    }
+
+    // so we try to load ratings under ratings/<appointmentId> for sessions that include an appointment id.
+    async function fetchRatingsForSessions(sessions, uid) {
+      const byCounselor = {}; // counselorUid -> latest rating object
+      const byAppointment = {}; // appointmentId -> latest rating object
+      if (!sessions) sessions = [];
+
+      // Helper to process a ratings snapshot under a specific appointmentId
+      const processAppointmentRatings = (snap, appointmentId) => {
+        snap.forEach(child => {
+          const r = child.val();
+          if (!r) return;
+          // normalize student id field (many possible names)
+          const studentField = r.student_uid || r.studentUid || r.student || r.student_id || null;
+          if (studentField && String(studentField) !== String(uid)) return; // rating belongs to another student
+          const cUid = r.counselorUid || r.counselor_uid || r.counselor || 'unknown';
+          const created = r.createdAt || r.created_at || r.updatedAt || r.updated_at || 0;
+          // update by-counselor map
+          if (!byCounselor[cUid] || (created > (byCounselor[cUid].createdAt || 0))) {
+            byCounselor[cUid] = { rating: r.rating, comment: r.comment || '', createdAt: created };
+          }
+          // update by-appointment map when appointmentId is available
+          if (appointmentId) {
+            if (!byAppointment[appointmentId] || (created > (byAppointment[appointmentId].createdAt || 0))) {
+              byAppointment[appointmentId] = { rating: r.rating, comment: r.comment || '', createdAt: created };
+            }
+          }
+        });
+      };
+
+      // For each session, attempt to read ratings under its appointment id (if present)
+        for (const s of sessions) {
+        const appointmentId = s.appointment_id || s.appointmentId || s._sessionKey || null;
+        if (!appointmentId) continue;
+        try {
+          const snap = await db.ref('ratings').child(appointmentId).once('value');
+          if (snap && snap.exists()) processAppointmentRatings(snap, appointmentId);
+        } catch (e) {
+          // If permission denied for this appointment's ratings, ignore and continue
+          console.warn('Error reading ratings for appointment (ignored):', appointmentId, e);
+        }
+      }
+
+      // Supplemental: scan the top-level ratings node to find any ratings authored by
+      // this student (covers cases where there is no Session_report or sessions do not
+      // reference the appointment id). This is best-effort and ignored on permission errors.
+      try {
+        const allRatings = await db.ref('ratings').once('value');
+        if (allRatings && allRatings.exists()) {
+          allRatings.forEach((appSnap) => {
+            const appointmentId = appSnap.key;
+            appSnap.forEach(rSnap => {
+              const r = rSnap.val();
+              if (!r) return;
+              const studentField = r.student_uid || r.studentUid || r.student || r.student_id || null;
+              if (!studentField) return;
+              if (String(studentField) !== String(uid)) return;
+              const created = r.createdAt || r.created_at || r.updatedAt || r.updated_at || 0;
+              const cUid = r.counselorUid || r.counselor_uid || r.counselor || 'unknown';
+              if (!byCounselor[cUid] || (created > (byCounselor[cUid].createdAt || 0))) {
+                byCounselor[cUid] = { rating: r.rating, comment: r.comment || '', createdAt: created };
+              }
+              if (!byAppointment[appointmentId] || (created > (byAppointment[appointmentId].createdAt || 0))) {
+                byAppointment[appointmentId] = { rating: r.rating, comment: r.comment || '', createdAt: created };
+              }
+            });
+          });
+        }
+      } catch (e) {
+        console.warn('Error scanning ratings root (ignored):', e);
+      }
+
+      return { byCounselor, byAppointment };
+    }
+
+    async function fetchCounselorNames(uids) {
+      const map = {};
+      if (!uids || uids.length === 0) return map;
+      try {
+        // Try a direct lookup under 'counselors' (common pattern)
+        const snap = await db.ref('counselors').once('value');
+        if (!snap || !snap.exists()) return map;
+        // Build an index of counselors by multiple identifier fields so we can match session-stored ids
+        const byKey = {};
+        const byUidField = {};
+        snap.forEach(child => {
+          const key = child.key;
+          const data = child.val() || {};
+          const name = data.name || data.fullname || ((data.first_name && data.last_name) ? (data.first_name + ' ' + data.last_name) : (data.displayName || data.username || data.first_name || data.last_name || key));
+          const specialization = data.specialization || data.speciality || data.department || data.role || data.college || '';
+          byKey[key] = { name, specialization, raw: data };
+          // common UID-like fields inside counselor records
+          ['uid','user_uid','userId','counselor_uid','counselorId','counselor_key'].forEach(f => {
+            if (data[f]) byUidField[String(data[f])] = { name, specialization, raw: data, key };
+          });
+        });
+        // For each requested uid, try to resolve to a counselor entry by key or by known uid fields
+        uids.forEach(requested => {
+          if (!requested) return;
+          // direct key match
+          if (byKey[requested]) { map[requested] = { name: byKey[requested].name, specialization: byKey[requested].specialization }; return; }
+          // match by uid-like fields
+          if (byUidField[requested]) { map[requested] = { name: byUidField[requested].name, specialization: byUidField[requested].specialization }; return; }
+          // fallback: attempt to find a counselor whose display name equals the requested id (rare)
+          const found = Object.values(byKey).find(v => v.name === requested);
+          if (found) { map[requested] = { name: found.name, specialization: found.specialization }; return; }
+          // otherwise leave undefined — renderSessions will show fallback
+        });
+        console.debug('fetchCounselorNames requested uids:', uids, 'resolved keys:', Object.keys(map));
+      } catch (e) {
+        console.warn('Error fetching counselor names:', e);
+      }
+      return map;
+    }
+
+    // Flexible session discovery: looks in a few common places and nested structures
+    async function findSessionsForStudent(uid) {
+      const sessions = [];
+
+      // 1) Session_report where entries have student_uid or student_uid
+      try {
+        let sr = await db.ref('Session_report').orderByChild('student_uid').equalTo(uid).once('value');
+        let usedIndex = 'student_uid';
+        // If no results, try camelCase field
+        if ((!sr || !sr.exists())) {
+          try {
+            const sr2 = await db.ref('Session_report').orderByChild('student_uid').equalTo(uid).once('value');
+            if (sr2 && sr2.exists()) {
+              sr = sr2;
+              usedIndex = 'student_uid';
+            }
+          } catch (e) {
+            // ignore and continue; we'll attempt other strategies below
+            console.warn('Error querying Session_report by student_uid (ignored):', e);
+          }
+        }
+
+        if (sr && sr.exists()) {
+          console.debug('Session_report query matched using index:', usedIndex);
+          sr.forEach(child => {
+            const val = child.val();
+            // If this is a session object itself
+            if (val && val.date) {
+              val._sessionKey = child.key;
+              sessions.push(val);
+            } else if (val && val.sessions) {
+              Object.keys(val.sessions).forEach(k => {
+                const s = val.sessions[k];
+                s._sessionKey = k;
+                sessions.push(s);
+              });
+            } else {
+              // attempt to read grandchildren (defensive)
+              child.forEach(gc => {
+                const gv = gc.val();
+                if (gv && gv.date) {
+                  gv._sessionKey = gc.key;
+                  sessions.push(gv);
+                }
+              });
+            }
+          });
+        }
+      } catch (e) {
+        // If reading Session_report is denied or fails, log and continue to other strategies
+        console.warn('Error reading Session_report (ignored):', e);
+      }
+
+      // 3) scan nested Session_report/*/sessions if still empty
+      if (sessions.length === 0) {
+        try {
+          const allSR = await db.ref('Session_report').once('value');
+          if (allSR && allSR.exists()) {
+            allSR.forEach(parent => {
+              const pv = parent.val();
+              if (!pv) return;
+
+              // Case A: parent has a 'sessions' child map
+              if (pv.sessions) {
+                Object.keys(pv.sessions).forEach(k => {
+                  const s = pv.sessions[k];
+                  if (s && (s.student_uid === uid || s.student_uid === uid || s.student === uid || s.student_id === uid || s.uid === uid)) { s._sessionKey = k; sessions.push(s); }
+                });
+                return;
+              }
+
+              // Case B: parent is itself a map of sessions (Session_report/{student_uid}/{sessionId})
+              Object.keys(pv).forEach(k => {
+                const candidate = pv[k];
+                if (!candidate) return;
+                // If this child is a session object
+                if (candidate.date && (candidate.student_uid === uid || candidate.student_uid === uid || candidate.student === uid || candidate.student_id === uid || candidate.uid === uid)) {
+                  candidate._sessionKey = k;
+                  sessions.push(candidate);
+                } else if (candidate.sessions) {
+                  // nested one level deeper
+                  Object.keys(candidate.sessions).forEach(sk => {
+                    const ss = candidate.sessions[sk];
+                    if (ss && (ss.student_uid === uid || ss.student_uid === uid || ss.student === uid || ss.student_id === uid || ss.uid === uid)) { ss._sessionKey = sk; sessions.push(ss); }
+                  });
+                }
+              });
+            });
+            console.debug('Nested Session_report scan completed; sessions found so far:', sessions.length);
+          }
+        } catch (e) {
+          console.warn('Error scanning Session_report parents (ignored):', e);
+        }
+      }
+
+      // 4) Discover sessions from ratings entries: sometimes a student rating
+      //    exists even when the counselor hasn't created a Session_report. Create
+      //    a lightweight synthetic session object for each rating appointment
+      //    that references this student so the history UI can show the rated
+      //    session (notes remain blank). We append only appointments that are
+      //    not already represented in `sessions` to avoid duplicates.
+      try {
+        const ratingsRoot = await db.ref('ratings').once('value');
+        if (ratingsRoot && ratingsRoot.exists()) {
+          ratingsRoot.forEach(appointmentSnap => {
+            const appointmentKey = appointmentSnap.key;
+            let matched = false;
+            appointmentSnap.forEach(rSnap => {
+              const r = rSnap.val();
+              if (!r) return;
+              const studentField = r.student_uid || r.studentUid || r.student || r.student_id || r.userUid || null;
+              if (studentField && String(studentField) === String(uid)) matched = true;
+            });
+            if (matched) {
+              // avoid duplicates if something else added it
+              const exists = sessions.find(s => ((s.appointment_id || s.appointmentId || s._sessionKey || '') + '') === (appointmentKey + ''));
+              if (!exists) {
+                // find a representative child to extract counselor/date if available
+                let rep = null;
+                appointmentSnap.forEach(rSnap => { if (!rep && rSnap && rSnap.val && rSnap.val()) rep = rSnap.val(); });
+                const dateVal = (rep && (rep.createdAt || rep.created_at || rep.updatedAt || rep.updated_at)) || Date.now();
+                const counselorUid = (rep && (rep.counselorUid || rep.counselor_uid || rep.counselor)) || null;
+                sessions.push({
+                  appointment_id: appointmentKey,
+                  _sessionKey: appointmentKey,
+                  date: dateVal,
+                  counselor_uid: counselorUid,
+                  _title: 'Counseling Session (from rating)',
+                  _notes: ''
+                });
+              }
+            }
+          });
+        }
+      } catch (e) {
+        console.warn('Error scanning ratings for sessions (ignored):', e);
+      }
+
+      // Normalize and sort sessions by date (descending)
+      sessions.forEach(s => {
+        s._displayDate = s.date || s.saved_at || s.createdAt || s.start_time || '';
+        s._title = s.presenting_problem || s.Session_summary || s.action_taken || s._title || 'Counseling Session';
+        s._notes = s.Session_summary || s.observations || s.remarks || s.notes || '';
+      });
+      sessions.sort((a,b) => {
+        const ta = a._displayDate ? new Date(a._displayDate).getTime() : (a.saved_at || a.createdAt || 0);
+        const tb = b._displayDate ? new Date(b._displayDate).getTime() : (b.saved_at || b.createdAt || 0);
+        return tb - ta;
+      });
+
+      return sessions;
+    }
+
+    function starsFromRating(r) {
+      if (!r && r !== 0) return 'No rating';
+      const n = Math.max(0, Math.min(5, Math.round(r)));
+      return '★'.repeat(n) + '☆'.repeat(5 - n);
+    }
+
+    function renderSessions(sessions, ratingsMap, counselorsMap) {
+      const container = document.getElementById('sessionsContainer');
+      if (!container) return;
+      if (!sessions || sessions.length === 0) {
+        container.innerHTML = '<div class="card"><div style="padding:20px;text-align:center;color:var(--text-light)">No session history found.</div></div>';
+        return;
+      }
+      const html = sessions.map(s => {
+        const dateRaw = s.date || s._displayDate || s.saved_at || s.createdAt || '';
+        const formattedDate = formatDisplayDate(dateRaw);
+        const cUid = s.counselor_uid || s.counselorUid || s.counselor || '';
+        const counselorInfo = (counselorsMap[cUid] || {});
+        // prefer counselorInfo, then session-stored names, then a friendly fallback
+        const counselorName = (counselorInfo.name) || (s.counselor_name || s.counselorName) || 'Counselor';
+        // FIX: Add fallbacks for specialization from the session object (s) if the profile lookup fails
+        const counselorSpecialization = counselorInfo.specialization || s.counselor_specialization || s.counselorSpecialization || '';
+        // Prefer rating by appointmentId when available; otherwise fall back to counselor-keyed map
+        let ratingObj = null;
+        const appointmentId = (s.appointment_id || s.appointmentId || s._sessionKey || '') + '';
+        if (ratingsMap) {
+          if (ratingsMap.byAppointment && appointmentId && ratingsMap.byAppointment[appointmentId]) ratingObj = ratingsMap.byAppointment[appointmentId];
+          else if (ratingsMap.byCounselor && ratingsMap.byCounselor[cUid]) ratingObj = ratingsMap.byCounselor[cUid];
+          else if (ratingsMap[cUid]) ratingObj = ratingsMap[cUid]; // backward-compat fallback
+        }
+        const ratingStars = ratingObj ? starsFromRating(ratingObj.rating) : 'Not rated';
+        const notes = s._notes || '';
+        // Use session numbering when available; otherwise fall back to present title
+        const sessionNumber = s._sessionNumber || null;
+        const titleText = sessionNumber ? ('Session ' + sessionNumber) : (s._title || 'Counseling Session');
+        const safeTitle = (titleText || '').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        const safeCounselor = (counselorName || '').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        const safeDate = (formattedDate || '').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        const safeNotes = (notes || '').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        // appointment id used to scope ratings
+        const safeAppointmentId = (appointmentId || '').replace(/"/g, '&quot;');
+        return `
+          <div class="session" data-appointment-id="${safeAppointmentId}" data-counselor-id="${cUid}">
+            <div class="session-header">
+              <div>
+                <div class="session-title">${safeTitle}</div>
+                <div class="session-date">${safeDate}</div>
+                <div class="session-counselor"><div class="counselor-name">${safeCounselor}</div><div class="counselor-specialization">${(counselorSpecialization||'').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div></div>
+              </div>
+            </div>
+              <div class="session-rating">
+              <div class="stars">${ratingStars}</div>
+              <span class="rating-text">${ratingObj ? ('Rated ' + ratingObj.rating) : 'Your rating'}</span>
+              <button class="view-notes-btn edit-rating-btn" type="button" data-appointment-id="${safeAppointmentId}" data-counselor-id="${cUid}" data-rating="${ratingObj ? ratingObj.rating : ''}" data-comment="${ratingObj ? (ratingObj.comment || '') : ''}">Edit Rating</button>
+            </div>
+            <div class="session-actions">
+              <button class="view-notes-btn" onclick="toggleNotes(event, this)">${notes ? 'View Notes' : 'No Notes'}</button>
+            </div>
+            <div class="notes">${safeNotes}</div>
+          </div>
+        `;
+      }).join('\n');
+      container.innerHTML = html;
+      // attach handlers to Edit Rating buttons
+      attachRatingHandlers();
+    }
+
+    // Format a date-like value into 'December 15, 2023' when possible
+    function formatDisplayDate(value) {
+      if (!value) return '';
+      // handle numeric timestamps (seconds or milliseconds)
+      let ts = value;
+      if (typeof value === 'string' && /^\d+$/.test(value)) {
+        ts = parseInt(value, 10);
+      }
+      // if value looks like seconds (10 digits) convert to ms
+      if (typeof ts === 'number' && ts < 1e12) ts = ts * 1000;
+      const d = new Date(ts);
+      if (isNaN(d.getTime())) {
+        // fallback: try Date parsing of strings like '2023-12-15T...'
+        const d2 = new Date(String(value));
+        if (!isNaN(d2.getTime())) return d2.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+        return String(value);
+      }
+      return d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    }
+
+    // Wire up click handlers for edit-rating buttons added by renderSessions
+    function attachRatingHandlers() {
+      document.querySelectorAll('.edit-rating-btn').forEach(btn => {
+        btn.removeEventListener('click', openRatingFromButton);
+        btn.addEventListener('click', openRatingFromButton);
+      });
+    }
+
+    function openRatingFromButton(e) {
+      const btn = e.currentTarget;
+      const appointmentId = btn.dataset.appointmentId;
+      const counselorId = btn.dataset.counselorId;
+      const current = btn.dataset.rating ? Number(btn.dataset.rating) : null;
+      const comment = btn.dataset.comment || '';
+      openRatingModal({ appointmentId, counselorId, current, comment });
+    }
+
+    // Modal-driven rating flow (replaces prompt-based flow). Uses the rating modal UI.
+    let _ratingModalState = { appointmentId: null, counselorId: null, student_uid: null, rating: 0, comment: '' };
+
+    function openRatingModal({ appointmentId, counselorId, current, comment }) {
+      if (!auth || !auth.currentUser) { alert('You must be signed in to rate a session.'); return; }
+      _ratingModalState.appointmentId = appointmentId || '';
+      _ratingModalState.counselorId = counselorId || '';
+      _ratingModalState.student_uid = auth.currentUser.uid;
+      _ratingModalState.rating = current || 0;
+      _ratingModalState.comment = comment || '';
+
+      // populate modal
+      const overlay = document.getElementById('ratingModal');
+      if (!overlay) return;
+      overlay.classList.add('active');
+      // store on modal dataset for compatibility with submit handler and preview restore
+      try { overlay.dataset.consult = appointmentId || ''; overlay.dataset.rating = String(current || 0); } catch(e){}
+      const stars = overlay.querySelectorAll('.rating-stars .star');
+      stars.forEach(s => s.classList.remove('active'));
+      stars.forEach((s, idx) => {
+        const i = idx + 1;
+        if (_ratingModalState.rating >= i) { s.classList.remove('inactive'); s.classList.add('active'); }
+        else { s.classList.add('inactive'); s.classList.remove('active'); }
+      });
+      const label = document.getElementById('ratingLabel'); if (label) label.textContent = _ratingModalState.rating ? ('Rated ' + _ratingModalState.rating) : 'Not rated yet';
+      const ta = document.getElementById('ratingComment'); if (ta) ta.value = _ratingModalState.comment || '';
+      // remember to initialize handlers (one-time)
+      initRatingModalHandlers();
+      // preview the current rating using fill/half logic
+      try{ setRatingStars(Number(current || 0)); }catch(e){}
+    }
+
+    function closeRatingModal() {
+      const overlay = document.getElementById('ratingModal');
+      if (!overlay) return; overlay.classList.remove('active');
+    }
+
+    function initRatingModalHandlers() {
+      const overlay = document.getElementById('ratingModal');
+      if (!overlay || overlay._initialized) return; overlay._initialized = true;
+
+      // attach half-star capable handlers
+      attachHalfStarHandlers();
+
+      // cancel & submit
+      const cancelBtn = overlay.querySelector('.rating-btn.cancel');
+      const submitBtn = overlay.querySelector('#submitRatingBtn');
+      if (cancelBtn) cancelBtn.addEventListener('click', () => closeRatingModal());
+      if (submitBtn) submitBtn.addEventListener('click', async () => {
+        const comment = (document.getElementById('ratingComment') || {}).value || '';
+        const modal = document.getElementById('ratingModal'); if (!modal) return;
+        let rating = Number(modal.dataset.rating || 0);
+        if (!rating){ if (!confirm('You did not select a rating. Submit without star rating?')) return; }
+        const appointmentId = modal.dataset.consult || null;
+        if (!appointmentId){ alert('No session id available to attach rating.'); closeRatingModal(); return; }
+        if (!auth || !auth.currentUser){ alert('Please sign in to submit a rating.'); return; }
+        const student_uid = auth.currentUser.uid;
+        try{
+          await saveRating(appointmentId, modal.dataset.counselorId || null, student_uid, rating, comment);
+          // refresh DOM for this appointment immediately so edits appear without waiting for full reload
+          try{ await refreshRatingForAppointment(appointmentId, student_uid); }catch(e){ /* non-critical */ }
+          closeRatingModal();
+          // also refresh full session list as a fallback
+          if (auth && auth.currentUser) await loadSessionHistory(auth.currentUser.uid);
+          const thanks = document.getElementById('ratingThanksModal'); if (thanks) { thanks.classList.add('active'); setTimeout(()=>thanks.classList.remove('active'), 1600); }
+        }catch(e){ console.error('Failed to save rating', e); alert('Could not save rating. Check permissions or try again later.'); }
+      });
+    }
+
+    // Refresh rating display for a single appointmentId by reading ratings/<appointmentId>
+    async function refreshRatingForAppointment(appointmentId, uid){
+      if (!appointmentId) return;
+      try{
+        if (!db) return;
+        const snap = await db.ref('ratings').child(appointmentId).once('value');
+        if (!snap || !snap.exists()) return;
+        // find student's rating first, otherwise take the latest
+        let chosen = null; let latestTs = 0;
+        snap.forEach(child => {
+          const r = child.val(); if (!r) return;
+          const studentField = r.student_uid || r.studentUid || r.student || r.student_id || null;
+          const created = r.createdAt || r.created_at || r.updatedAt || r.updated_at || 0;
+          if (studentField && String(studentField) === String(uid)) { chosen = r; chosen._key = child.key; return; }
+          if (created > latestTs){ latestTs = created; chosen = r; chosen._key = child.key; }
+        });
+
+        if (!chosen) return;
+
+        // determine counselor id used by sessions DOM
+        const sessionEls = Array.from(document.querySelectorAll(`.session[data-appointment-id="${appointmentId}"]`));
+        sessionEls.forEach(el => {
+          try{
+            const cUid = el.dataset.counselorId || el.getAttribute('data-counselor-id') || el.dataset.counselorId || '';
+            // Update stars text and rating text
+            const starsEl = el.querySelector('.stars');
+            const ratingTextEl = el.querySelector('.rating-text');
+            const btn = el.querySelector('.edit-rating-btn');
+            const rVal = (typeof chosen.rating !== 'undefined' && chosen.rating !== null) ? chosen.rating : null;
+            const stars = (rVal !== null) ? ('★'.repeat(Math.max(0,Math.min(5,Math.round(rVal)))) + '☆'.repeat(5 - Math.max(0,Math.min(5,Math.round(rVal))))) : 'Not rated';
+            if (starsEl) starsEl.textContent = stars;
+            if (ratingTextEl) ratingTextEl.textContent = rVal ? ('Rated ' + rVal) : 'Your rating';
+            if (btn){ btn.dataset.rating = rVal || ''; btn.dataset.comment = chosen.comment || ''; btn.dataset.counselorId = chosen.counselorUid || chosen.counselor_uid || btn.dataset.counselorId || ''; }
+          }catch(e){ /* ignore per-element update failures */ }
+        });
+      }catch(e){ console.warn('refreshRatingForAppointment failed', e); }
+    }
+
+    function setRatingStars(n, persistPreview = true){
+      try{
+        n = Number(n) || 0;
+        const stars = Array.from(document.querySelectorAll('#ratingStars .star'));
+        stars.forEach((s, idx) => {
+          const icon = s.querySelector('i');
+          const i = idx + 1;
+          if (!icon) return;
+          if (n >= i){
+            icon.className = 'fa-solid fa-star';
+            s.classList.remove('inactive'); s.classList.remove('half');
+            s.setAttribute('aria-checked', 'true');
+          } else if (n >= i - 0.5){
+            icon.className = 'fa-solid fa-star-half-stroke';
+            s.classList.remove('inactive'); s.classList.add('half');
+            s.setAttribute('aria-checked', 'mixed');
+          } else {
+            icon.className = 'fa-regular fa-star';
+            s.classList.add('inactive'); s.classList.remove('half');
+            s.setAttribute('aria-checked', 'false');
+          }
+        });
+        const label = document.getElementById('ratingLabel'); if (label) { label.textContent = n ? (n + ' / 5') : 'Not rated yet'; }
+        const modal = document.getElementById('ratingModal'); if (modal && persistPreview) modal.dataset.rating = String(n);
+      }catch(e){ console.warn('setRatingStars failed', e); }
+    }
+
+    function attachHalfStarHandlers(){
+      try{
+        const stars = Array.from(document.querySelectorAll('#ratingStars .star'));
+        stars.forEach((s, idx) => {
+          s.addEventListener('mousemove', function(e){
+            const rect = s.getBoundingClientRect();
+            const relX = e.clientX - rect.left;
+            const half = relX < rect.width / 2 ? 0.5 : 1;
+            const preview = idx + half;
+            setRatingStars(preview, true);
+          });
+          s.addEventListener('click', function(e){
+            const rect = s.getBoundingClientRect();
+            const relX = e.clientX - rect.left;
+            const half = relX < rect.width / 2 ? 0.5 : 1;
+            const rating = idx + half;
+            setRatingStars(rating, true);
+            s.focus();
+          });
+          s.addEventListener('mouseleave', function(){
+            const modal = document.getElementById('ratingModal');
+            const saved = modal && modal.dataset.rating ? Number(modal.dataset.rating) : 0;
+            setRatingStars(saved || 0, true);
+          });
+          s.addEventListener('keydown', function(e){
+            if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); const rating = idx + 1; setRatingStars(rating, true); }
+            else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown'){ e.preventDefault(); const modal = document.getElementById('ratingModal'); let cur = modal && modal.dataset.rating ? Number(modal.dataset.rating) : 0; cur = Math.max(0, cur - 0.5); setRatingStars(cur, true); }
+            else if (e.key === 'ArrowRight' || e.key === 'ArrowUp'){ e.preventDefault(); const modal = document.getElementById('ratingModal'); let cur = modal && modal.dataset.rating ? Number(modal.dataset.rating) : 0; cur = Math.min(5, cur + 0.5); setRatingStars(cur, true); }
+          });
+        });
+      }catch(e){ console.warn('attachHalfStarHandlers failed', e); }
+    }
+
+    // Save a rating under ratings/<appointmentId>. Server-only variant: reads any
+    // existing server entry, updates or creates the rating, updates aggregated
+    // stats and meta info. Does not persist to localStorage.
+    async function saveRating(appointmentId, counselorId, studentUid, ratingValue, comment) {
+      if (!appointmentId) throw new Error('Missing appointmentId');
+
+      const consultId = appointmentId;
+      const ratingVal = (typeof ratingValue !== 'undefined' && ratingValue !== null) ? Number(ratingValue) : null;
+      const commentNormalized = comment && comment.length ? String(comment).trim() : null;
+      const now = Date.now();
+
+      // Save to localStorage first (offline-first UX)
+      try{
+        const ratingsLocal = JSON.parse(localStorage.getItem('ratings') || '{}');
+        const localPayload = { rating: ratingVal || null, comment: commentNormalized || null, studentUid: studentUid || null, counselorUid: counselorId || null, createdAt: now };
+        ratingsLocal[consultId] = localPayload;
+        localStorage.setItem('ratings', JSON.stringify(ratingsLocal));
+      }catch(e){ console.warn('failed to persist rating locally', e); }
+
+      try{
+        if (window.db && typeof window.db.ref === 'function'){
+          const ratingsBasePath = 'ratings/' + consultId;
+          const ratingKey = studentUid ? String(studentUid) : db.ref(ratingsBasePath).push().key;
+          const entryPath = ratingsBasePath + '/' + ratingKey;
+
+          // Prepare the entry payload
+          const entryPayload = {
+            rating: (ratingVal !== null) ? ratingVal : null,
+            comment: commentNormalized || null,
+            studentUid: studentUid || null,
+            counselorUid: counselorId || null,
+            createdAt: now
+          };
+
+          // Read existing rating for this key to compute deltas
+          let existing = null;
+          try{ const snap = await db.ref(entryPath).once('value'); existing = snap.exists() ? snap.val() : null; }catch(e){ console.warn('failed to read existing rating', e); existing = null; }
+
+          // Write (set) the rating entry (overwrite per-student key)
+          try{ await db.ref(entryPath).set(entryPayload); }catch(e){ console.warn('failed to write rating entry', e); }
+
+          // Update aggregated stats under ratingStats (count,sum,avg)
+          try{
+            const statsRef = db.ref(ratingsBasePath + '/ratingStats');
+            await statsRef.transaction(function(current){
+              current = current || { count: 0, sum: 0, avg: 0 };
+              const prev = existing && typeof existing.rating !== 'undefined' ? Number(existing.rating) : null;
+              const r = (ratingVal !== null) ? Number(ratingVal) : null;
+              if (prev === null && r !== null){
+                const count = (current.count || 0) + 1;
+                const sum = (current.sum || 0) + r;
+                return { count: count, sum: sum, avg: (count > 0 ? (sum / count) : 0) };
+              } else if (prev !== null && r === null){
+                const count = Math.max(0, (current.count || 0) - 1);
+                const sum = (current.sum || 0) - Number(prev);
+                return { count: count, sum: sum, avg: (count > 0 ? (sum / count) : 0) };
+              } else if (prev !== null && r !== null){
+                const count = (current.count || 0) || 1;
+                const sum = (current.sum || 0) - Number(prev) + r;
+                return { count: count, sum: sum, avg: (count > 0 ? (sum / count) : 0) };
+              }
+              return current;
+            });
+          }catch(e){ console.warn('ratingStats transaction failed', e); }
+
+          // Update meta (non-critical)
+          try{ await db.ref(ratingsBasePath + '/meta').update({ lastRatingAt: now, lastRatingBy: studentUid || null }); }catch(e){ console.warn('failed to update ratings meta', e); }
+        }
+      }catch(e){ console.warn('failed to persist rating to server', e); }
+    }
+    
+
+    async function loadSessionHistory(uid) {
+      const container = document.getElementById('sessionsContainer');
+      if (container) container.innerHTML = '<div class="loader">Loading session history…</div>';
+      try {
+        const sessions = await findSessionsForStudent(uid);
+
+        // Load ratings per-session (by appointmentId) according to rules structure
+        let ratingsMap = {};
+        try {
+          ratingsMap = await fetchRatingsForSessions(sessions, uid);
+        } catch (re) {
+          console.warn('Could not load per-session ratings (continuing without ratings):', re);
+        }
+
+        // Collect unique counselor UIDs
+        const counselorUids = Array.from(new Set(sessions.map(s => s.counselor_uid || s.counselorUid || s.counselor).filter(Boolean)));
+        // Compute per-counselor session numbering (Session 1 is earliest for that counselor)
+        try {
+          const groups = {};
+          sessions.forEach(s => {
+            const c = s.counselor_uid || s.counselorUid || s.counselor || '_unknown';
+            if (!groups[c]) groups[c] = [];
+            groups[c].push(s);
+          });
+          Object.keys(groups).forEach(c => {
+            groups[c].sort((a,b) => {
+              const ta = a._displayDate ? new Date(a._displayDate).getTime() : (a.saved_at || a.createdAt || 0);
+              const tb = b._displayDate ? new Date(b._displayDate).getTime() : (b.saved_at || b.createdAt || 0);
+              return ta - tb; // ascending => earliest first
+            });
+            groups[c].forEach((s, idx) => { s._sessionNumber = idx + 1; });
+          });
+        } catch (e) {
+          console.warn('Error computing session numbers:', e);
+        }
+        const counselorsMap = await fetchCounselorNames(counselorUids);
+  console.debug('loadSessionHistory: requested counselorUids:', counselorUids, 'counselorsMap keys:', Object.keys(counselorsMap));
+
+        renderSessions(sessions, ratingsMap, counselorsMap);
+      } catch (e) {
+        // Permission or other error when loading sessions
+        console.warn('Failed to load session history:', e);
+        if (container) {
+          const msg = (e && e.code && e.code === 'PERMISSION_DENIED') || (e && /permission_denied/i.test(e.message || ''))
+            ? 'You do not have permission to view session history. If this seems wrong, contact support.'
+            : 'Unable to load session history at this time.';
+          container.innerHTML = `<div class="card"><div style="padding:20px;text-align:center;color:var(--text-light)">${msg}</div></div>`;
+        }
+      }
+    }
+
+    // Wire into auth state
+    auth && auth.onAuthStateChanged(function(user) {
+      if (user) {
+        // existing student profile load
+        db.ref('students').orderByChild('uid').equalTo(user.uid).once('value').then(function(snapshot) {
+          if (snapshot.exists()) {
+            snapshot.forEach(function(child) {
+              const data = child.val();
+              // Update profile image in topbar/sidebar
+              const topbarProfile = document.querySelector('.profile');
+              if (topbarProfile) {
+                if (data.photo_url) {
+                  topbarProfile.innerHTML = `<img src="${data.photo_url}" alt="Profile Photo" style="width:38px;height:38px;border-radius:50%;object-fit:cover;">`;
+                } else {
+                  topbarProfile.textContent = (data.username || data.first_name || 'U')[0].toUpperCase();
+                }
+              }
+              // Update student ID in topbar
+              const topbarStudentId = document.querySelector('.portal-title small');
+              if (topbarStudentId) {
+                topbarStudentId.textContent = "ID: " + (data.student_id || 'N/A');
+              }
+            });
+          }
+        }).catch(e => console.warn('student profile load error', e));
+
+        // Load session history for this user
+        loadSessionHistory(user.uid).catch(e => console.warn('Error loading session history', e));
+      } else {
+        window.location.href = "signin.html";
+      }
+    });
+  </script>
+
+  <script>
+    // --- START: NEW ADMIN SYNC SIDEBAR SCRIPT ---
+    const menuIcon = document.querySelector('.hamburger');
+    const sidebar = document.getElementById('sidebar');
+    const mainContent = document.getElementById('content');
+    const sidebarTop = document.querySelector('.sidebar .brand');
+    const topbar = document.getElementById('topbar');
+    
+    // Create overlay for mobile
+    const overlay = document.createElement('div');
+    overlay.className = 'sidebar-overlay';
+    document.body.appendChild(overlay);
+    
+    // Mobile detection
+    function isMobile() {
+        return window.innerWidth <= 768;
+    }
+    
+    // Toggle sidebar with mobile responsiveness
+    if (menuIcon) {
+        menuIcon.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            if (isMobile()) {
+                // Mobile behavior - overlay sidebar
+                const isOpen = sidebar.classList.toggle('mobile-open');
+                overlay.classList.toggle('active', isOpen);
+                document.body.style.overflow = isOpen ? 'hidden' : '';
+            } else {
+                // Desktop behavior - collapse sidebar
+                const isCollapsed = sidebar.classList.toggle('collapsed');
+                mainContent.classList.toggle('shifted', isCollapsed);
+                sidebarTop.classList.toggle('collapsed', isCollapsed);
+                topbar.classList.toggle('shifted', isCollapsed);
+            }
+        });
+    }
+    
+    // Close mobile sidebar when clicking overlay
+    overlay.addEventListener('click', () => {
+        sidebar.classList.remove('mobile-open');
+        overlay.classList.remove('active');
+        document.body.style.overflow = '';
+    });
+    
+    // Handle window resize
+    window.addEventListener('resize', () => {
+        if (!isMobile()) {
+            // Reset mobile states when switching to desktop
+            sidebar.classList.remove('mobile-open');
+            overlay.classList.remove('active');
+            document.body.style.overflow = '';
+            // Ensure desktop state is consistent
+            const isCollapsed = sidebar.classList.contains('collapsed');
+            mainContent.classList.toggle('shifted', isCollapsed);
+            sidebarTop.classList.toggle('collapsed', isCollapsed);
+            topbar.classList.toggle('shifted', isCollapsed);
+        } else {
+            // Reset desktop states when switching to mobile
+            sidebar.classList.remove('collapsed');
+            mainContent.classList.remove('shifted');
+            sidebarTop.classList.remove('collapsed');
+            topbar.classList.remove('shifted');
+        }
+    });
+    
+    // Close mobile sidebar when clicking a menu item
+    document.querySelectorAll('.sidebar a').forEach(link => {
+        link.addEventListener('click', () => {
+            if (isMobile()) {
+                sidebar.classList.remove('mobile-open');
+                overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        });
+    });
+    // --- END: NEW ADMIN SYNC SIDEBAR SCRIPT ---
+
+    // Notification toggle
+    function toggleNotif() {
+      const dropdown = document.getElementById("notifDropdown");
+      const badge = document.querySelector(".notif-badge");
+      dropdown.classList.toggle("active");
+      if (dropdown.classList.contains("active")) { badge.classList.add("hidden"); }
+    }
+
+    // Close notification dropdown when clicking outside
+    document.addEventListener("click", function(e){
+      const dropdown = document.getElementById("notifDropdown");
+      const notifBtn = document.querySelector(".notif-wrapper");
+      if (notifBtn && dropdown && !notifBtn.contains(e.target) && !dropdown.contains(e.target)) {
+        dropdown.classList.remove("active");
+      }
+    });
+
+    // Navigation
+    function goToSection(sectionId) {
+      if (sectionId === 'appointments') {
+        window.location.href = 'appointments.html';
+      } else if (sectionId === 'history') {
+        window.location.href = 'history.html';
+      } else if (sectionId === 'assessments') {
+        window.location.href = 'assessments.html';
+      } else if (sectionId === 'resources') {
+        window.location.href = 'resources.html';
+      } else if (sectionId === 'messages') {
+        window.location.href = 'messages.html';
+      } else {
+        alert("Navigation to " + sectionId);
+      }
+      document.getElementById("notifDropdown").classList.remove("active");
+    }
+
+    // Add chart interaction with specific questionnaire data
+    document.addEventListener('DOMContentLoaded', function() {
+      const chartDots = document.querySelectorAll('.chart-dot');
+      const tooltip = document.createElement('div');
+      tooltip.style.cssText = `
+        position: absolute;
+        background: #333;
+        color: white;
+        padding: 0.8rem;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        pointer-events: none;
+        z-index: 1000;
+        display: none;
+        max-width: 250px;
+        line-height: 1.4;
+      `;
+      document.body.appendChild(tooltip);
+
+      const tooltipData = [
+        { 
+          month: 'August 2023', 
+          score: 32, 
+          status: 'Moderate Risk',
+          details: 'High anxiety and stress levels. Recommended for immediate counseling.',
+          categories: 'Anxiety: 15/50, Depression: 8/25, Stress: 5/25'
+        },
+        { 
+          month: 'September 2023', 
+          score: 45, 
+          status: 'Mild Risk',
+          details: 'Showing improvement in stress management. Continue counseling sessions.',
+          categories: 'Anxiety: 22/50, Depression: 12/25, Stress: 11/25'
+        },
+        { 
+          month: 'October 2023', 
+          score: 58, 
+          status: 'Low Risk',
+          details: 'Significant progress in anxiety management. Sleep quality improved.',
+          categories: 'Anxiety: 28/50, Depression: 16/25, Stress: 14/25'
+        },
+        { 
+          month: 'November 2023', 
+          score: 72, 
+          status: 'Minimal Risk',
+          details: 'Excellent coping strategies developed. Social support increased.',
+          categories: 'Anxiety: 35/50, Depression: 20/25, Stress: 17/25'
+        },
+        { 
+          month: 'December 2023', 
+          score: 85, 
+          status: 'Good Mental Health',
+          details: 'Maintaining healthy mental wellness. Continue monthly check-ins.',
+          categories: 'Anxiety: 42/50, Depression: 23/25, Stress: 20/25'
+        }
+      ];
+
+      chartDots.forEach((dot, index) => {
+        dot.addEventListener('mouseenter', function(e) {
+          const data = tooltipData[index];
+          tooltip.innerHTML = `
+            <div style="font-weight: bold; margin-bottom: 0.5rem; color: #ffc107;">${data.month}</div>
+            <div style="margin-bottom: 0.3rem;"><strong>Score:</strong> ${data.score}/100</div>
+            <div style="margin-bottom: 0.3rem;"><strong>Status:</strong> ${data.status}</div>
+            <div style="margin-bottom: 0.5rem; font-size: 0.8rem;">${data.details}</div>
+            <div style="font-size: 0.75rem; opacity: 0.9;">${data.categories}</div>
+          `;
+          tooltip.style.display = 'block';
+        });
+
+        dot.addEventListener('mousemove', function(e) {
+          tooltip.style.left = Math.min(e.pageX + 10, window.innerWidth - 260) + 'px';
+          tooltip.style.top = Math.max(e.pageY - 80, 10) + 'px';
+        });
+
+        dot.addEventListener('mouseleave', function() {
+          tooltip.style.display = 'none';
+        });
+      });
+    });
+
+    // Toggle session notes
+    function toggleNotes(event, button) {
+      event.preventDefault();
+      const session = button.closest('.session');
+      const notes = session.querySelector('.notes');
+      notes.classList.toggle('show');
+      button.textContent = notes.classList.contains('show') ? 'Hide Notes' : 'View Notes';
+    }
+  </script>
+
+  <script>
+    // ORS widget: load ORS entries for signed-in student and render chart + latest scores
+    (function(){
+      function formatShortDate(ts) {
+        if (!ts) return '—';
+        if (typeof ts === 'number' && ts < 1e12) ts = ts; // ms already
+        const d = new Date(Number(ts));
+        if (isNaN(d.getTime())) return String(ts);
+        return d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+      }
+
+      function interpretScore(pct) {
+        // pct is 0-100
+        if (pct >= 80) return 'Good';
+        if (pct >= 60) return 'Fair';
+        if (pct >= 40) return 'Mild concern';
+        return 'Needs support';
+      }
+
+      function renderLatestBars(container, responses) {
+        // responses: { individual, interpersonal, social, overall } each 0-10
+        if (!container) return;
+        if (!responses) { container.innerHTML = '<div style="padding:12px;color:var(--text-light)">No ORS responses yet.</div>'; return; }
+        const keys = [ ['Individual','individual'], ['Interpersonal','interpersonal'], ['Social','social'], ['Overall','overall'] ];
+        container.innerHTML = keys.map(k => {
+          const label = k[0]; const key = k[1];
+          const val = (responses[key] !== undefined && responses[key] !== null) ? Number(responses[key]) : 0;
+          const pct = Math.round(Math.max(0, Math.min(10, val)) * 10);
+          return `
+            <div class="progress-item" style="margin-top:10px;">
+              <div class="progress-header">
+                <span class="progress-label">${label}</span>
+                <span class="progress-percentage">${val}/10</span>
+              </div>
+              <div class="progress-bar">
+                <div class="progress-fill" style="width:${pct}%"></div>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      function renderChart(svgEl, points) {
+        // points: [{label, score(0-100), timestamp}]
+        if (!svgEl) return;
+        const w = 400, h = 120; // viewBox coordinates
+        const ns = 'http://www.w3.org/2000/svg';
+        while (svgEl.firstChild) svgEl.removeChild(svgEl.firstChild);
+        const defs = document.createElementNS(ns,'defs');
+        const lg = document.createElementNS(ns,'linearGradient'); lg.setAttribute('id','lineGradient'); lg.setAttribute('x1','0%'); lg.setAttribute('x2','100%');
+        const s0 = document.createElementNS(ns,'stop'); s0.setAttribute('offset','0%'); s0.setAttribute('stop-color','#0f7a34');
+        const s1 = document.createElementNS(ns,'stop'); s1.setAttribute('offset','100%'); s1.setAttribute('stop-color','#28a745');
+        lg.appendChild(s0); lg.appendChild(s1); defs.appendChild(lg); svgEl.appendChild(defs);
+
+        const left = 72; // left padding for axis/labels (increased for visibility)
+        const right = 40; // right padding
+        const innerWidth = w - left - right;
+        for (let i = 0; i < 5; i++) {
+          const x = left + i * (innerWidth / 4);
+          const line = document.createElementNS(ns, 'line'); line.setAttribute('class', 'chart-grid'); line.setAttribute('x1', x); line.setAttribute('y1', 20); line.setAttribute('x2', x); line.setAttribute('y2', 100); svgEl.appendChild(line);
+        }
+        for (let yi = 0; yi < 4; yi++) {
+          const y = 30 + yi * 20; const line = document.createElementNS(ns, 'line'); line.setAttribute('class', 'chart-grid'); line.setAttribute('x1', left); line.setAttribute('y1', y); line.setAttribute('x2', w - right); line.setAttribute('y2', y); svgEl.appendChild(line);
+        }
+        const axisH = document.createElementNS(ns, 'line'); axisH.setAttribute('class', 'chart-axis'); axisH.setAttribute('x1', left); axisH.setAttribute('y1', 100); axisH.setAttribute('x2', w - right); axisH.setAttribute('y2', 100); svgEl.appendChild(axisH);
+        const axisV = document.createElementNS(ns, 'line'); axisV.setAttribute('class', 'chart-axis'); axisV.setAttribute('x1', left); axisV.setAttribute('y1', 20); axisV.setAttribute('x2', left); axisV.setAttribute('y2', 100); svgEl.appendChild(axisV);
+
+        // Build months starting at first ORS month (if available) and extend a few months ahead
+        const months = [];
+        if (points && points.length) {
+          // sort points ascending by timestamp to locate first/last
+          const sorted = points.slice().sort((a,b) => (Number(a.timestamp || a.ts || 0) - Number(b.timestamp || b.ts || 0)));
+          const firstTs = sorted[0].timestamp || sorted[0].ts || Date.now();
+          const lastTs = sorted[sorted.length - 1].timestamp || sorted[sorted.length - 1].ts || Date.now();
+          const startDate = new Date(new Date(Number(firstTs)).getFullYear(), new Date(Number(firstTs)).getMonth(), 1);
+          const lastMonthDate = new Date(new Date(Number(lastTs)).getFullYear(), new Date(Number(lastTs)).getMonth(), 1);
+          // months between
+          const monthDiff = (lastMonthDate.getFullYear() - startDate.getFullYear()) * 12 + (lastMonthDate.getMonth() - startDate.getMonth());
+          const extraAhead = 4; // show 3-4 months ahead as requested
+          let totalMonths = monthDiff + 1 + extraAhead;
+          // reasonable bounds
+          const MAX_MONTHS = 12;
+          const MIN_MONTHS = 4;
+          totalMonths = Math.min(Math.max(totalMonths, MIN_MONTHS), MAX_MONTHS);
+          for (let i = 0; i < totalMonths; i++) {
+            const d = new Date(startDate.getFullYear(), startDate.getMonth() + i, 1);
+            months.push(d);
+          }
+        } else {
+          // fallback: show last 8 months ending this month
+          const now = new Date();
+          const maxMonths = 8; // show up to 8 months on x-axis
+          const endDate = new Date(now.getFullYear(), now.getMonth(), 1);
+          for (let i = maxMonths - 1; i >= 0; i--) {
+            const d = new Date(endDate.getFullYear(), endDate.getMonth() - i, 1);
+            months.push(d);
+          }
+        }
+
+        // map points by month key YYYY-MM
+        const byMonth = {};
+        if (points && points.length) {
+          points.forEach(p => {
+            const ts = p.timestamp || p.ts || Date.now();
+            const d = new Date(Number(ts));
+            const key = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+            // if multiple entries in month, keep the last (most recent)
+            byMonth[key] = p;
+          });
+        }
+
+        // compute x positions for each month slot (respect left/right padding)
+        const slotCount = months.length;
+        const slotStep = innerWidth / Math.max(1, slotCount - 1);
+        const coords = months.map((d, i) => {
+          const key = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+          const x = left + i * slotStep;
+          const entry = byMonth[key] || null;
+          const score = entry ? Math.max(0, Math.min(100, entry.score || entry.score === 0 ? entry.score : null)) : null;
+          const y = score !== null ? (100 - (score * 0.75)) : null; // same mapping as before
+          return { x, y, label: d.toLocaleString('en-US', { month: 'short' }), score, ts: entry ? entry.timestamp : null };
+        });
+
+        // draw polyline connecting only existing points
+        const existingCoords = coords.filter(c => c.y !== null);
+        if (existingCoords.length > 0) {
+          const poly = document.createElementNS(ns, 'polyline'); poly.setAttribute('class', 'chart-line');
+          const pointsAttr = existingCoords.map(c => `${c.x},${c.y}`).join(' ');
+          poly.setAttribute('points', pointsAttr); svgEl.appendChild(poly);
+        }
+
+        // draw circles for months: filled for data, faint for empty
+        coords.forEach(c => {
+          const circ = document.createElementNS(ns, 'circle'); circ.setAttribute('cx', c.x); circ.setAttribute('cy', c.y !== null ? c.y : 100); circ.setAttribute('r', '5');
+          if (c.score !== null) {
+            circ.setAttribute('class', 'chart-dot');
+            circ.setAttribute('data-score', String(Math.round(c.score)));
+            circ.setAttribute('data-date', c.label + (c.ts ? (' ' + new Date(Number(c.ts)).getFullYear()) : ''));
+          } else {
+            circ.setAttribute('class', 'chart-dot'); // reuse style but make it faint via opacity
+            circ.style.opacity = '0.18';
+            circ.setAttribute('data-score', '');
+            circ.setAttribute('data-date', c.label);
+          }
+          svgEl.appendChild(circ);
+        });
+
+        // labels under slots
+        coords.forEach(c => {
+          const lbl = document.createElementNS(ns, 'text'); lbl.setAttribute('class', 'chart-label'); lbl.setAttribute('x', c.x); lbl.setAttribute('y', 122); lbl.setAttribute('text-anchor', 'middle'); lbl.textContent = c.label; svgEl.appendChild(lbl);
+        });
+
+        // values above dots (only for actual scores)
+        coords.forEach(c => {
+          if (c.score !== null) {
+            const val = document.createElementNS(ns, 'text'); val.setAttribute('class', 'chart-value'); val.setAttribute('x', c.x); val.setAttribute('y', c.y - 6); val.setAttribute('text-anchor', 'middle'); val.textContent = String(Math.round(c.score)); svgEl.appendChild(val);
+          }
+        });
+
+        // Y-axis labels static (place them left of the axis using the left padding)
+        const ylabels = [100, 75, 50, 25, 0];
+        const labelX = left - 12; // position labels slightly left of the axis line
+        ylabels.forEach((v, i) => {
+          const y = 20 + i * 20; const tl = document.createElementNS(ns, 'text'); tl.setAttribute('class', 'chart-y-label'); tl.setAttribute('x', String(labelX)); tl.setAttribute('y', String(y + 5)); tl.textContent = String(v); svgEl.appendChild(tl);
+        });
+      }
+
+      async function loadORSForUser(uid){
+        try{
+          const container = document.getElementById('orsLatestScores');
+          const svgEl = document.getElementById('orsChart');
+          const completedEl = document.getElementById('orsCompleted');
+          const lastEl = document.getElementById('orsLastSubmitted');
+
+          if (!db || !uid) {
+            if (container) container.innerHTML = '<div style="padding:12px;color:var(--text-light)">ORS unavailable.</div>';
+            return;
+          }
+
+          const snap = await db.ref('ors/' + uid).orderByChild('created_at').once('value');
+          if (!snap || !snap.exists()) {
+            if (completedEl) completedEl.textContent = '0';
+            if (lastEl) lastEl.textContent = '—';
+            if (container) container.innerHTML = '<div style="padding:12px;color:var(--text-light)">No ORS responses yet.</div>';
+            renderChart(svgEl, []);
+            return;
+          }
+
+          const entries = [];
+          snap.forEach(child => {
+            const v = child.val() || {};
+            const responses = (v.responses || {});
+            const ts = v.created_at || v.createdAt || v.saved_at || null;
+            // composite average of four items *10 -> 0-100
+            const ind = Number(responses.individual || 0);
+            const inter = Number(responses.interpersonal || 0);
+            const soc = Number(responses.social || 0);
+            const ov = Number(responses.overall || 0);
+            const avg = ((ind + inter + soc + ov) / 4) * 10;
+            entries.push({ key: child.key, timestamp: ts || Date.now(), label: formatShortDate(ts || Date.now()), score: avg, responses: responses });
+          });
+
+          // sort by timestamp ascending
+          entries.sort((a,b)=> (a.timestamp||0)-(b.timestamp||0));
+          const count = entries.length;
+          const first = entries[0];
+          const last = entries[entries.length-1];
+
+          // Summary
+          if (completedEl) completedEl.textContent = String(count);
+          if (lastEl) lastEl.textContent = last ? new Date(Number(last.timestamp)).toLocaleDateString() : '—';
+
+          // Render latest bars using the most recent responses
+          if (container) renderLatestBars(container, last ? last.responses : null);
+
+          // Render chart using entries
+          if (svgEl) renderChart(svgEl, entries.map(e => ({ label: e.label, score: e.score, timestamp: e.timestamp })));
+
+          // Add simple hover tooltip on generated dots
+          try {
+            const svgRoot = svgEl;
+            const dots = svgRoot.querySelectorAll('.chart-dot');
+            let tooltip = document.getElementById('orsTooltip');
+            if (!tooltip) {
+              tooltip = document.createElement('div'); tooltip.id = 'orsTooltip'; tooltip.style.cssText = 'position:fixed;display:none;z-index:12000;background:#0f1724;color:white;padding:8px;border-radius:8px;font-size:13px;max-width:260px;'; document.body.appendChild(tooltip);
+            }
+            dots.forEach(d => {
+              d.addEventListener('mouseenter', function(e){ tooltip.style.display='block'; tooltip.innerHTML = `<strong>${d.getAttribute('data-date')}</strong><div style="margin-top:6px">Score: ${d.getAttribute('data-score')}/100</div>`; });
+              d.addEventListener('mousemove', function(e){ tooltip.style.left = (e.pageX + 12) + 'px'; tooltip.style.top = (e.pageY - 36) + 'px'; });
+              d.addEventListener('mouseleave', function(){ tooltip.style.display='none'; });
+            });
+          } catch (e) { /* non-critical */ }
+
+        } catch (e) {
+          console.warn('loadORSForUser failed', e);
+        }
+      }
+
+      // Hook into auth state (auth defined by firebase_config.js)
+      if (typeof auth !== 'undefined' && auth && auth.onAuthStateChanged) {
+        auth.onAuthStateChanged(function(user){ if (user) { loadORSForUser(user.uid); } });
+      } else {
+        // If auth not available yet, try after DOM ready
+        document.addEventListener('DOMContentLoaded', function(){ if (typeof auth !== 'undefined' && auth && auth.currentUser) loadORSForUser(auth.currentUser.uid); });
+      }
+    })();
+  </script>
+  <script>
+    // Force the mobile content padding using inline style with !important to ensure it applies
+    (function(){
+      function applyMobileContentPadding(){
+        try {
+          var content = document.getElementById('content');
+          if (!content) return;
+      if (window.innerWidth <= 768) {
+        // topbar is 60px; set inline !important so it overrides other stylesheet rules
+        content.style.setProperty('padding-top', '12px', 'important');
+            content.style.setProperty('padding-left', '0.5rem', 'important');
+            content.style.setProperty('padding-right', '0.5rem', 'important');
+          } else {
+            content.style.removeProperty('padding-top');
+            content.style.removeProperty('padding-left');
+            content.style.removeProperty('padding-right');
+          }
+        } catch(e){ console.warn('applyMobileContentPadding failed', e); }
+      }
+      window.addEventListener('resize', applyMobileContentPadding);
+      document.addEventListener('DOMContentLoaded', applyMobileContentPadding);
+      // run once in case script loads after DOMContentLoaded
+      setTimeout(applyMobileContentPadding, 80);
+    })();
+  </script>
+</body>
+</html>

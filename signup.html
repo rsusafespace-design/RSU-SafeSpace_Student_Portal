@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sign Up - SafeSpace Portal</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <style>
+    /* Copy all styles from signin.html */
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+    body {
+      background: #f4f6f9;
+      color: #333;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .header {
+      background: linear-gradient(135deg, #004c27, #00723f);
+      color: white;
+      padding: 2rem 1rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .header::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="20" cy="20" r="2" fill="rgba(255,255,255,0.1)"/><circle cx="80" cy="40" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="40" cy="80" r="1.5" fill="rgba(255,255,255,0.1)"/></svg>');
+      opacity: 0.3;
+    }
+    .header-content { position: relative; z-index: 1; }
+    .logo-section {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+    .logo {
+      width: 48px;
+      height: 48px;
+      background: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #00723f;
+      font-weight: bold;
+      font-size: 1.2rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    .header h1 { font-size: 2rem; font-weight: 600; margin-bottom: 0.5rem; }
+    .header p { font-size: 1rem; opacity: 0.9; font-weight: 300; }
+    .main-container {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1rem;
+    }
+    .container {
+      max-width: 420px;
+      width: 100%;
+      background: white;
+      padding: 2rem;
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+    .signin-title {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: #00723f;
+      text-align: center;
+    }
+    .signin-subtitle {
+      font-size: 0.9rem;
+      color: #666;
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    .form-group { margin-bottom: 1.5rem; }
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-size: 0.95rem;
+      font-weight: 500;
+      color: #333;
+    }
+    .input-wrapper { position: relative; }
+    input {
+      width: 100%;
+      padding: 0.875rem 1rem;
+      padding-left: 3rem;
+      border: 2px solid #e1e5e9;
+      border-radius: 10px;
+      font-size: 1rem;
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
+      background: #f9f9f9;
+    }
+    input:focus {
+      outline: none;
+      border-color: #00723f;
+      background: white;
+      box-shadow: 0 0 0 3px rgba(0, 114, 63, 0.1);
+    }
+    .input-icon {
+      position: absolute;
+      left: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #666;
+      font-size: 1rem;
+    }
+    select {
+      width: 100%;
+      padding: 0.875rem 1rem;
+      border: 2px solid #e1e5e9;
+      border-radius: 10px;
+      background: #f9f9f9;
+      font-size: 1rem;
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      /* match input left padding so the icon doesn't overlap */
+      padding-left: 3rem;
+    }
+    label.checkbox-label { display:flex; align-items:center; gap:8px; cursor:pointer; }
+    input[type="checkbox"] { width:16px; height:16px; }
+    .signin-btn {
+      width: 100%;
+      padding: 1rem;
+      font-size: 1.1rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #00723f, #004c27);
+      color: white;
+      cursor: pointer;
+      margin-bottom: 1.5rem;
+      transition: transform 0.2s ease, box-shadow 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .signin-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 25px rgba(0, 114, 63, 0.3);
+    }
+    .signin-btn:active { transform: translateY(0); }
+    .signin-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+      transition: left 0.5s;
+    }
+    .signin-btn:hover::before { left: 100%; }
+    .divider {
+      text-align: center;
+      margin: 1.5rem 0;
+      position: relative;
+      color: #999;
+      font-size: 0.9rem;
+    }
+    .divider::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: #e1e5e9;
+    }
+    .divider span {
+      background: white;
+      padding: 0 1rem;
+      position: relative;
+    }
+    .signup-link {
+      text-align: center;
+      font-size: 0.95rem;
+      color: #666;
+    }
+    .signup-link a {
+      color: #00723f;
+      text-decoration: none;
+      font-weight: 600;
+      transition: color 0.2s ease;
+    }
+    .signup-link a:hover {
+      color: #004c27;
+      text-decoration: underline;
+    }
+    .footer {
+      background: #f8f9fa;
+      padding: 1rem;
+      text-align: center;
+      font-size: 0.85rem;
+      color: #666;
+      border-top: 1px solid #e1e5e9;
+    }
+    @media (max-width: 768px) {
+      .header { padding: 1.5rem 1rem; }
+      .header h1 { font-size: 1.8rem; }
+      .logo { width: 40px; height: 40px; font-size: 1rem; }
+      .main-container { padding: 1rem; }
+      .container {
+        padding: 1.5rem;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      }
+      .signin-title { font-size: 1.3rem; }
+      input {
+        padding: 0.75rem 1rem;
+        padding-left: 2.75rem;
+        font-size: 0.95rem;
+      }
+      .input-icon { left: 0.875rem; font-size: 0.9rem; }
+      .signin-btn { padding: 0.875rem; font-size: 1rem; }
+      select { padding-left: 2.75rem; }
+    }
+    @media (max-width: 480px) {
+      .header h1 { font-size: 1.6rem; }
+      .container {
+        margin: 0;
+        border-radius: 0;
+        box-shadow: none;
+        border: none;
+      }
+      .main-container { padding: 0.5rem; }
+    }
+    .signin-btn.loading {
+      pointer-events: none;
+      opacity: 0.7;
+    }
+    .signin-btn.loading::after {
+      content: '';
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      margin: auto;
+      border: 2px solid transparent;
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+    @keyframes spin {
+      0% { transform: translate(-50%, -50%) rotate(0deg); }
+      100% { transform: translate(-50%, -50%) rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="header-content">
+      <div class="logo-section">
+        <div class="logo">SS</div>
+        <h1>SafeSpace</h1>
+      </div>
+      <p>Your mental wellness companion</p>
+    </div>
+  </div>
+
+  <div class="main-container">
+    <div class="container">
+      <h2 class="signin-title">Create Your Account</h2>
+      <p class="signin-subtitle">Sign up to access your student portal</p>
+
+      <form id="signupForm">
+        <div class="form-group">
+          <label for="username">Username</label>
+          <div class="input-wrapper">
+            <i class="fas fa-user input-icon"></i>
+            <input type="text" id="username" placeholder="Enter your username" required />
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="gender">Gender</label>
+          <div class="input-wrapper">
+            <i class="fas fa-venus-mars input-icon"></i>
+            <select id="gender" required>
+              <option value="">Select gender</option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+              <option value="Prefer Not to Say">Prefer Not to Say</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="password">Password</label>
+          <div class="input-wrapper">
+            <i class="fas fa-lock input-icon"></i>
+            <input type="password" id="password" placeholder="Create a password" required />
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="confirmPassword">Confirm Password</label>
+          <div class="input-wrapper">
+            <i class="fas fa-lock input-icon"></i>
+            <input type="password" id="confirmPassword" placeholder="Confirm your password" required />
+          </div>
+        </div>
+        <div class="form-group">
+          <label style="font-weight:600;">Data Privacy</label>
+          <div style="font-size:0.9rem;color:#444;margin-bottom:8px;">By creating an account you consent to the collection and processing of your personal information as described in our Data Privacy Statement.</div>
+          <label class="checkbox-label"><input type="checkbox" id="consentCheck" required /> <span>I consent to the Data Privacy Statement</span></label>
+          <div style="margin-top:6px;font-size:0.85rem;color:#666;">Read the full statement: <a href="#" id="privacyLink">View Data Privacy Statement</a></div>
+        </div>
+        <button type="submit" class="signin-btn" id="signupBtn">
+          Create Account
+        </button>
+      </form>
+
+      <div class="divider">
+        <span>Already have an account?</span>
+      </div>
+
+      <div class="signup-link">
+        Sign in here <a href="signin.html">Sign In</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <p>&copy; 2025 SafeSpace. Your privacy and mental wellness are our priority.</p>
+  </div>
+
+  <!-- Data Privacy Statement Modal (triggered from signup) -->
+  <div id="privacyModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);align-items:center;justify-content:center;z-index:9999;">
+    <div style="background:#fff;max-width:760px;width:94%;margin:auto;border-radius:10px;padding:1.2rem;max-height:80vh;overflow:auto;position:relative;">
+      <button id="privacyClose" style="position:absolute;right:12px;top:12px;border:none;background:transparent;font-size:1.4rem;cursor:pointer">&times;</button>
+      <h2>Data Privacy Statement</h2>
+      <p>Romblon State University respects your right to privacy and is committed to protecting the confidentiality of your personal information. By filling out this form, you are consenting to the collection, processing, and use of the information in accordance with this privacy notice. The information you have provided is used for any or all the following: access provision, attendance, monitoring, evaluation, documentation, and communication purposes. The University shall only retain the said personal information until it serves its purpose, after which it shall be securely disposed of. Suppose you have concerns and queries on Data Privacy, email dpo@rsu.edu.ph. Rest assured that we will respect and protect the confidentiality and privacy of these data and information as required by the Data Privacy Act of 2012 (R.A 10173).</p>
+      <div style="margin-top:12px;text-align:right;"><button id="privacyOk" style="background:#0f7a34;color:#fff;border:none;padding:8px 12px;border-radius:8px;cursor:pointer;">OK</button></div>
+    </div>
+  </div>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+  <script src="firebase_config.js"></script>
+  <script>
+    // Use shared firebase_config.js which sets window.auth/window.db/window.storage
+    // Provide safe fallbacks in case the shared file didn't load for some reason.
+    const auth = window.auth || (window.firebase ? firebase.auth() : null);
+    const db = window.db || (window.firebase ? firebase.database() : null);
+
+    // Get key and email from URL
+    const params = new URLSearchParams(window.location.search);
+    const studentKey = params.get("key");
+    const email = params.get("email");
+
+    // if (!studentKey || !email) {
+    //   window.location.href = "verify.html";
+    // }
+
+    // Modal function for alerts
+    function showModal(message, callback) {
+      const oldModal = document.getElementById('alertModal');
+      if (oldModal) oldModal.remove();
+      const modalHtml = `
+        <div id="alertModal" style="position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.35);z-index:9999;display:flex;align-items:center;justify-content:center;">
+          <div style="background:#fff;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,0.15);padding:1.2rem 1.5rem;min-width:280px;max-width:90vw;text-align:center;position:relative;">
+            <span style="position:absolute;top:10px;right:18px;font-size:1.3rem;cursor:pointer;" onclick="document.getElementById('alertModal').remove()">&times;</span>
+            <div style="margin-bottom:1rem;">${message}</div>
+            <button id="modalOkBtn" style="background:#00723f;color:white;border:none;padding:0.5rem 1.2rem;border-radius:8px;cursor:pointer;">OK</button>
+          </div>
+        </div>
+      `;
+      document.body.insertAdjacentHTML('beforeend', modalHtml);
+      document.getElementById('modalOkBtn').onclick = function() {
+        document.getElementById('alertModal').remove();
+        if (callback) callback();
+      };
+    }
+
+    document.getElementById('signupForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+
+      const username = document.getElementById('username').value.trim();
+      const gender = document.getElementById('gender').value.trim();
+      const password = document.getElementById('password').value;
+      const confirmPassword = document.getElementById('confirmPassword').value;
+      const submitBtn = document.getElementById('signupBtn');
+
+      if (!username || !gender || !password || !confirmPassword) {
+        showModal('Please fill in all fields');
+        return;
+      }
+      if (password !== confirmPassword) {
+        showModal('Passwords do not match');
+        return;
+      }
+
+  submitBtn.classList.add('loading');
+  submitBtn.disabled = true;
+      try {
+        if (!auth || typeof auth.createUserWithEmailAndPassword !== 'function') {
+          throw new Error('Firebase Auth not initialized.');
+        }
+        if (!db) {
+          throw new Error('Firebase Database not initialized.');
+        }
+
+        // Step 1: Create Firebase Authentication account
+        const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+
+        // Step 2: Update record in Realtime Database
+        const updates = {
+          uid: userCredential.user.uid,
+          username: username,
+          gender: gender,
+          expiry_date: 0,
+          status: 2
+        };
+
+        await db.ref("students/" + studentKey).update(updates);
+
+        // After creating the account and updating the student record, redirect to profile completion
+        showModal('Signup successful! Continue to complete your profile.', function() {
+          window.location.href = 'complete_profile.html?key=' + encodeURIComponent(studentKey);
+        });
+      } catch (error) {
+        showModal('Error: ' + (error.message || error));
+        submitBtn.classList.remove('loading');
+        submitBtn.disabled = false;
+      }
+    });
+
+    // Add smooth focus animations
+    document.querySelectorAll('input, select').forEach(input => {
+      input.addEventListener('focus', function() {
+        this.parentElement.style.transform = 'scale(1.02)';
+      });
+      input.addEventListener('blur', function() {
+        this.parentElement.style.transform = 'scale(1)';
+      });
+    });
+
+    // Privacy link handlers
+    const privacyLink = document.getElementById('privacyLink');
+    const privacyModal = document.getElementById('privacyModal');
+    const privacyClose = document.getElementById('privacyClose');
+    const privacyOk = document.getElementById('privacyOk');
+    if (privacyLink && privacyModal) {
+      privacyLink.addEventListener('click', function(e){ e.preventDefault(); privacyModal.style.display = 'flex'; });
+    }
+    if (privacyClose) privacyClose.addEventListener('click', function(){ privacyModal.style.display = 'none'; });
+    if (privacyOk) privacyOk.addEventListener('click', function(){ privacyModal.style.display = 'none'; });
+  </script>
+</body>
+</html>

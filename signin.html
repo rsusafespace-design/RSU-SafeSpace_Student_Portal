@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sign In - SafeSpace Portal</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+    body {
+      background: #f4f6f9;
+      color: #333;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Header */
+    .header {
+      background: linear-gradient(135deg, #004c27, #00723f);
+      color: white;
+      padding: 2rem 1rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .header::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="20" cy="20" r="2" fill="rgba(255,255,255,0.1)"/><circle cx="80" cy="40" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="40" cy="80" r="1.5" fill="rgba(255,255,255,0.1)"/></svg>');
+      opacity: 0.3;
+    }
+
+    .header-content {
+      position: relative;
+      z-index: 1;
+    }
+
+    .logo-section {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .logo {
+      width: 48px;
+      height: 48px;
+      background: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #00723f;
+      font-weight: bold;
+      font-size: 1.2rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    .header h1 {
+      font-size: 2rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+
+    .header p {
+      font-size: 1rem;
+      opacity: 0.9;
+      font-weight: 300;
+    }
+
+    /* Main Container */
+    .main-container {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1rem;
+    }
+
+    .container {
+      max-width: 420px;
+      width: 100%;
+      background: white;
+      padding: 2rem;
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+
+    .signin-title {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: #00723f;
+      text-align: center;
+    }
+
+    .signin-subtitle {
+      font-size: 0.9rem;
+      color: #666;
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-size: 0.95rem;
+      font-weight: 500;
+      color: #333;
+    }
+
+    .input-wrapper {
+      position: relative;
+    }
+
+    input {
+      width: 100%;
+      padding: 0.875rem 1rem;
+      padding-left: 3rem;
+      border: 2px solid #e1e5e9;
+      border-radius: 10px;
+      font-size: 1rem;
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
+      background: #f9f9f9;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: #00723f;
+      background: white;
+      box-shadow: 0 0 0 3px rgba(0, 114, 63, 0.1);
+    }
+
+    .input-icon {
+      position: absolute;
+      left: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #666;
+      font-size: 1rem;
+    }
+
+    .forgot {
+      text-align: right;
+      margin-top: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .forgot a {
+      color: #00723f;
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: color 0.2s ease;
+    }
+
+    .forgot a:hover {
+      color: #004c27;
+      text-decoration: underline;
+    }
+
+    .signin-btn {
+      width: 100%;
+      padding: 1rem;
+      font-size: 1.1rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #00723f, #004c27);
+      color: white;
+      cursor: pointer;
+      margin-bottom: 1.5rem;
+      transition: transform 0.2s ease, box-shadow 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .signin-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 25px rgba(0, 114, 63, 0.3);
+    }
+
+    .signin-btn:active {
+      transform: translateY(0);
+    }
+
+    .signin-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+      transition: left 0.5s;
+    }
+
+    .signin-btn:hover::before {
+      left: 100%;
+    }
+
+    .divider {
+      text-align: center;
+      margin: 1.5rem 0;
+      position: relative;
+      color: #999;
+      font-size: 0.9rem;
+    }
+
+    .divider::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: #e1e5e9;
+    }
+
+    .divider span {
+      background: white;
+      padding: 0 1rem;
+      position: relative;
+    }
+
+    .signup-link {
+      text-align: center;
+      font-size: 0.95rem;
+      color: #666;
+    }
+
+    .signup-link a {
+      color: #00723f;
+      text-decoration: none;
+      font-weight: 600;
+      transition: color 0.2s ease;
+    }
+
+    .signup-link a:hover {
+      color: #004c27;
+      text-decoration: underline;
+    }
+
+    /* Footer */
+    .footer {
+      background: #f8f9fa;
+      padding: 1rem;
+      text-align: center;
+      font-size: 0.85rem;
+      color: #666;
+      border-top: 1px solid #e1e5e9;
+    }
+
+    /* Mobile Responsive */
+    @media (max-width: 768px) {
+      .header {
+        padding: 1.5rem 1rem;
+      }
+
+      .header h1 {
+        font-size: 1.8rem;
+      }
+
+      .logo {
+        width: 40px;
+        height: 40px;
+        font-size: 1rem;
+      }
+
+      .main-container {
+        padding: 1rem;
+      }
+
+      .container {
+        padding: 1.5rem;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      }
+
+      .signin-title {
+        font-size: 1.3rem;
+      }
+
+      input {
+        padding: 0.75rem 1rem;
+        padding-left: 2.75rem;
+        font-size: 0.95rem;
+      }
+
+      .input-icon {
+        left: 0.875rem;
+        font-size: 0.9rem;
+      }
+
+      .signin-btn {
+        padding: 0.875rem;
+        font-size: 1rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .header h1 {
+        font-size: 1.6rem;
+      }
+
+      .container {
+        margin: 0;
+        border-radius: 0;
+        box-shadow: none;
+        border: none;
+      }
+
+      .main-container {
+        padding: 0.5rem;
+      }
+    }
+
+    /* Loading state */
+    .signin-btn.loading {
+      pointer-events: none;
+      opacity: 0.7;
+    }
+
+    .signin-btn.loading::after {
+      content: '';
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      margin: auto;
+      border: 2px solid transparent;
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    @keyframes spin {
+      0% { transform: translate(-50%, -50%) rotate(0deg); }
+      100% { transform: translate(-50%, -50%) rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="header-content">
+      <div class="logo-section">
+        <div class="logo">SS</div>
+        <h1>SafeSpace</h1>
+      </div>
+      <p>Your mental wellness companion</p>
+    </div>
+  </div>
+
+  <div class="main-container">
+    <div class="container">
+      <h2 class="signin-title">Welcome Back</h2>
+      <p class="signin-subtitle">Sign in to continue to your student portal</p>
+
+      <form id="signinForm">
+        <div class="form-group">
+          <label for="email">Email Address</label>
+          <div class="input-wrapper">
+            <i class="fas fa-envelope input-icon"></i>
+            <input type="email" id="email" placeholder="Enter your email address" required />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="password">Password</label>
+          <div class="input-wrapper">
+            <i class="fas fa-lock input-icon"></i>
+            <input type="password" id="password" placeholder="Enter your password" required />
+          </div>
+          <div class="forgot">
+            <a href="forgot.html">Forgot Password?</a>
+          </div>
+        </div>
+
+        <button type="submit" class="signin-btn" id="signinBtn">
+          Sign In to Portal
+        </button>
+      </form>
+
+      <div class="divider">
+        <span>New to SafeSpace?</span>
+      </div>
+
+      <div class="signup-link">
+        Don't have an account? <a href="verify.html">Create Account</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <p>&copy; 2025 SafeSpace. Your privacy and mental wellness are our priority.</p>
+  </div>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="firebase_config.js"></script>
+  <script>
+    // Use shared firebase_config.js which sets window.auth/window.db/window.storage
+    // Fallback to firebase global if needed
+    const auth = window.auth || (window.firebase ? firebase.auth() : null);
+
+    // Modal function for alerts
+function showModal(message, callback) {
+  const oldModal = document.getElementById('alertModal');
+  if (oldModal) oldModal.remove();
+  const modalHtml = `
+    <div id="alertModal" style="position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.35);z-index:9999;display:flex;align-items:center;justify-content:center;">
+      <div style="background:#fff;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,0.15);padding:1.2rem 1.5rem;min-width:280px;max-width:90vw;text-align:center;position:relative;">
+        <span style="position:absolute;top:10px;right:18px;font-size:1.3rem;cursor:pointer;" onclick="document.getElementById('alertModal').remove()">&times;</span>
+        <div style="margin-bottom:1rem;">${message}</div>
+        <button id="modalOkBtn" style="background:#00723f;color:white;border:none;padding:0.5rem 1.2rem;border-radius:8px;cursor:pointer;">OK</button>
+      </div>
+    </div>
+  `;
+  document.body.insertAdjacentHTML('beforeend', modalHtml);
+  document.getElementById('modalOkBtn').onclick = function() {
+    document.getElementById('alertModal').remove();
+    if (callback) callback();
+  };
+}
+
+document.getElementById('signinForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+
+  const emailInput = document.getElementById('email');
+  const passwordInput = document.getElementById('password');
+  const email = emailInput.value.trim();
+  const password = passwordInput.value;
+  const submitBtn = document.getElementById('signinBtn');
+
+  if (!email || !password) {
+    showModal('Please fill in all fields');
+    emailInput.value = '';
+    passwordInput.value = '';
+    return;
+  }
+
+  submitBtn.classList.add('loading');
+  submitBtn.innerHTML = '';
+
+  try {
+    if (!auth || typeof auth.signInWithEmailAndPassword !== 'function') {
+      throw new Error('Auth not initialized.');
+    }
+
+    // First attempt to sign in using Firebase Auth
+    const credential = await auth.signInWithEmailAndPassword(email, password);
+    const user = auth.currentUser || (credential && credential.user);
+
+    // If DB is available, verify the student's `login` field (expects 'Enable' or 'Disable')
+    try {
+      if (window.db && user && user.uid) {
+        const snap = await window.db.ref('students').orderByChild('uid').equalTo(user.uid).once('value');
+        if (snap && snap.exists()) {
+          // find first matching child and read its login flag
+          let loginFlag = null;
+          snap.forEach(child => {
+            const v = child.val() || {};
+            if (v.login !== undefined && loginFlag === null) {
+              loginFlag = String(v.login).trim();
+            }
+          });
+
+          if (!loginFlag) {
+            // no explicit login flag found - allow sign in (or deny per policy). Here we deny for safety.
+            await auth.signOut();
+            showModal('Your account does not have a login permission set. Contact administrator.');
+            submitBtn.classList.remove('loading');
+            submitBtn.innerHTML = 'Sign In to Portal';
+            emailInput.value = '';
+            passwordInput.value = '';
+            return;
+          }
+
+          if (loginFlag.toLowerCase() !== 'enable') {
+            // account disabled
+            await auth.signOut();
+            showModal('Your account has been disabled. Please contact the administrator.');
+            submitBtn.classList.remove('loading');
+            submitBtn.innerHTML = 'Sign In to Portal';
+            emailInput.value = '';
+            passwordInput.value = '';
+            return;
+          }
+          // loginFlag === 'Enable' -> proceed below to redirect
+        } else {
+          // Student record not found - sign out and inform user
+          await auth.signOut();
+          showModal('Account not found in student records. Please contact the administrator.');
+          submitBtn.classList.remove('loading');
+          submitBtn.innerHTML = 'Sign In to Portal';
+          emailInput.value = '';
+          passwordInput.value = '';
+          return;
+        }
+      } else {
+        // If DB not available, deny sign-in for safety or allow -- here we allow but warn
+        console.warn('Realtime Database not available; skipping login flag check.');
+      }
+    } catch (dbErr) {
+      console.error('Error checking login flag in DB:', dbErr);
+      // Attempt to sign out to avoid partial auth state
+      try { if (auth && auth.signOut) await auth.signOut(); } catch(e){}
+      showModal('Unable to verify account status. Please try again later.');
+      submitBtn.classList.remove('loading');
+      submitBtn.innerHTML = 'Sign In to Portal';
+      emailInput.value = '';
+      passwordInput.value = '';
+      return;
+    }
+
+    // All checks passed — clear fields and redirect
+    emailInput.value = '';
+    passwordInput.value = '';
+    window.location.href = 'appointments.html';
+  } catch (error) {
+    showModal('Error: Incorrect Email or Password.');
+    submitBtn.classList.remove('loading');
+    submitBtn.innerHTML = 'Sign In to Portal';
+    // Keep the email so the user doesn't have to retype it; only clear the password
+    passwordInput.value = '';
+  }
+});
+
+    // Clear sign-in fields when redirected from sign out or page load
+    window.onload = function() {
+      const emailInput = document.getElementById('email');
+      const passwordInput = document.getElementById('password');
+      if (emailInput) emailInput.value = '';
+      if (passwordInput) passwordInput.value = '';
+    };
+
+    // Add smooth focus animations
+    document.querySelectorAll('input').forEach(input => {
+      input.addEventListener('focus', function() {
+        this.parentElement.style.transform = 'scale(1.02)';
+      });
+
+      input.addEventListener('blur', function() {
+        this.parentElement.style.transform = 'scale(1)';
+      });
+    });
+  </script>
+</body>
+</html>
