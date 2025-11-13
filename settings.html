@@ -1,0 +1,1534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Settings - SafeSpace</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI', sans-serif; }
+    body { 
+      background:#f4f6f9; 
+      color:#333; 
+      overflow-x:hidden;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    /* Dark Mode Variables */
+    body.dark-mode {
+      background: #1a1a1a;
+      color: #e0e0e0;
+    }
+
+    /* ===== Sidebar ===== */
+    .sidebar {
+      width: 250px;
+      background: #f0f3f6;
+      border-right: 1px solid rgba(0,0,0,0.06);
+      position: fixed;
+      top: 60px;
+      left: 0;
+      height: calc(100vh - 60px);
+      z-index: 999;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      transition: width 0.3s ease, background-color 0.3s ease;
+    }
+
+    body.dark-mode .sidebar {
+      background: #2d2d2d;
+      border-right: 1px solid #404040;
+    }
+    
+    .sidebar .brand {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 250px;
+      height: 60px;
+      background-color: #1e8e3e;
+      color: white;
+      display: flex;
+      align-items: center;
+      padding: 10px 20px;
+      z-index: 1002;
+      transition: width 0.3s ease;
+    }
+    
+    .sidebar .brand .logo {
+      height: 40px;
+      width: 40px;
+      background: #fff;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #1e8e3e;
+      font-weight: bold;
+    }
+
+    .sidebar .brand .logo {
+    height: 40px;
+    width: 40px;
+    background: transparent url("safespace.png") center/contain no-repeat;
+    color: transparent;
+    border-radius: 8px;
+  }
+    
+    .sidebar .brand span {
+      font-weight: bold;
+      font-size: 1.2rem;
+      color: white;
+      margin-left: 10px;
+      transition: opacity 0.3s ease;
+    }
+    
+    .sidebar a {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: #1f2937;
+      text-decoration: none;
+      padding: 12px 10px;
+      border-radius: 8px;
+      transition: background 0.2s, color 0.2s;
+      font-size: 15px;
+    }
+
+    body.dark-mode .sidebar a {
+      color: #e0e0e0;
+    }
+    
+    .sidebar a:hover,
+    .sidebar a.active {
+      background: rgba(15,122,52,0.08);
+      color: #0f7a34;
+    }
+
+    body.dark-mode .sidebar a:hover,
+    body.dark-mode .sidebar a.active {
+      background: rgba(15,122,52,0.15);
+      color: #4ade80;
+    }
+    
+    .sidebar a.active {
+      background: rgba(15,122,52,0.12);
+      font-weight: 600;
+    }
+    
+    .topbar {
+      position: fixed;
+      top: 0;
+      left: 250px;
+      right: 0;
+      height: 60px;
+      background-color: #1e8e3e;
+      color: white;
+      padding: 10px 30px;
+      z-index: 1000;
+      transition: left 0.3s ease;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    /* Collapsed Sidebar */
+    .sidebar.collapsed {
+      width: 80px;
+    }
+    
+    .sidebar.collapsed .brand {
+      width: 80px;
+      justify-content: center;
+    }
+    
+    .sidebar.collapsed .brand span {
+      opacity: 0;
+    }
+    
+    .sidebar.collapsed a span {
+      display: none;
+    }
+    
+    .sidebar.collapsed a {
+      justify-content: center;
+    }
+    
+    .topbar.shifted {
+      left: 80px;
+    }
+    
+    .content.shifted {
+      margin-left: 80px;
+    }
+
+    @media (max-width: 768px) {
+      .topbar, .topbar.shifted {
+        left: 0;
+        width: 100%;
+        padding: 10px 0;
+      }
+    }
+
+    /* Topbar elements */
+    .topbar-left { display:flex; align-items:center; gap:0.6rem; }
+    .hamburger {
+      font-size: 1.2rem;
+      cursor: pointer;
+      padding: 0.3rem;
+      border-radius: 4px;
+      transition: background 0.2s;
+      margin-left: 0; /* Added this line */
+    }
+    .hamburger:hover { background: rgba(255,255,255,0.1); }
+    .portal-title { display:flex; flex-direction:column; line-height:1.2; }
+    .portal-title strong { font-size: 1.1rem; }
+    .portal-title strong span.safespace { display:none; margin-right:0.3rem; }
+    .portal-title small { font-size:0.75rem; opacity:0.9; }
+
+    /* Show SafeSpace text when sidebar is shrunk */
+    .topbar.shifted .portal-title strong span.safespace { display: inline; }
+
+    /* Mobile logo styling */
+    .mobile-logo {
+      display: none;
+      width: 28px;
+      height: 28px;
+      background: white;
+      border-radius: 50%;
+      align-items: center;
+      justify-content: center;
+      color: #00723f;
+      font-weight: bold;
+      font-size: 0.8rem;
+      margin-right: 0.5rem;
+    }
+
+    /* Profile + Notifications */
+    .profile { width:38px; height:38px; border-radius:50%; background:#004c27;
+      display:flex; align-items:center; justify-content:center; font-weight:bold; cursor:pointer; }
+    .notif-wrapper { position:relative; cursor:pointer; font-size:1.3rem; color:white; }
+    .notif-badge {
+      position:absolute; bottom:0; right:0;
+      width:10px; height:10px; background:red;
+      border-radius:50%; border:2px solid #00723f;
+    }
+    .notif-badge.hidden { display:none; }
+
+    .notif-dropdown {
+      position:absolute; top:48px; right:0;
+      background:white; color:#333;
+      width:260px; border-radius:8px;
+      box-shadow:0 4px 10px rgba(0,0,0,0.15);
+      display:none; flex-direction:column;
+      overflow:hidden; z-index:2000;
+    }
+    .notif-dropdown.active { display:flex; }
+    .notif-header { background:#00723f; color:white; padding:0.6rem; font-weight:bold; }
+    .notif-list { max-height:220px; overflow-y:auto; }
+    .notif-item {
+      padding:0.6rem 0.8rem; border-bottom:1px solid #eee;
+      font-size:0.9rem; cursor:pointer;
+    }
+    .notif-item:hover { background:#f1f1f1; }
+
+    /* Settings Content */
+    .settings-container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .settings-section {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      margin-bottom: 1.5rem;
+      transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    body.dark-mode .settings-section {
+      background: #2d2d2d;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+
+    .settings-section h3 {
+      margin-bottom: 1.5rem;
+      font-size: 1.2rem;
+      color: #00723f;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    body.dark-mode .settings-section h3 {
+      color: #4ade80;
+    }
+
+    .settings-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 0;
+      border-bottom: 1px solid #f0f0f0;
+      transition: border-color 0.3s ease;
+    }
+
+    body.dark-mode .settings-item {
+      border-bottom: 1px solid #404040;
+    }
+
+    .settings-item:last-child {
+      border-bottom: none;
+    }
+
+    .settings-label {
+      color: #333;
+      font-weight: 500;
+      transition: color 0.3s ease;
+    }
+
+    body.dark-mode .settings-label {
+      color: #e0e0e0;
+    }
+
+    .settings-description {
+      color: #666;
+      font-size: 0.9rem;
+      margin-top: 0.3rem;
+      transition: color 0.3s ease;
+    }
+
+    body.dark-mode .settings-description {
+      color: #a0a0a0;
+    }
+
+    .settings-item i {
+      color: #00723f;
+      transition: color 0.3s ease;
+    }
+
+    body.dark-mode .settings-item i {
+      color: #4ade80;
+    }
+
+    /* Toggle Switch */
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 50px;
+      height: 24px;
+    }
+
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      transition: .4s;
+      border-radius: 24px;
+    }
+
+    .toggle-slider:before {
+      position: absolute;
+      content: "";
+      height: 16px;
+      width: 16px;
+      left: 4px;
+      bottom: 4px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+
+    input:checked + .toggle-slider {
+      background-color: #00723f;
+    }
+
+    body.dark-mode input:checked + .toggle-slider {
+      background-color: #4ade80;
+    }
+
+    input:checked + .toggle-slider:before {
+      transform: translateX(26px);
+    }
+
+    /* Action Card */
+    .action-card {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 9999;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .action-card-content {
+      background: #fff;
+      border-radius: 10px;
+      padding: 2rem;
+      max-width: 400px;
+      width: 90%;
+      text-align: center;
+      position: relative;
+      transition: background-color 0.3s ease;
+    }
+
+    body.dark-mode .action-card-content {
+      background: #2d2d2d;
+      color: #e0e0e0;
+    }
+
+    .close-btn {
+      position: absolute;
+      top: 10px;
+      right: 15px;
+      font-size: 1.5rem;
+      cursor: pointer;
+      background: none;
+      border: none;
+      color: #333;
+      transition: color 0.3s ease;
+    }
+
+    body.dark-mode .close-btn {
+      color: #e0e0e0;
+    }
+
+    /* Dark Mode Toggle Button */
+    .dark-mode-toggle {
+      position: fixed;
+      top: 70px;
+      right: 30px;
+      background: #00723f;
+      color: white;
+      border: none;
+      padding: 0.7rem 1.2rem;
+      border-radius: 25px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-weight: 500;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      z-index: 100;
+      transition: background-color 0.3s ease;
+    }
+
+    body.dark-mode .dark-mode-toggle {
+      background: #4ade80;
+      color: #1a1a1a;
+    }
+
+    /* Mobile Styles */
+    @media (max-width: 768px) {
+      .sidebar {
+        transform: translateX(-100%);
+      }
+      
+      .topbar, .content {
+        left: 0;
+        margin-left: 0;
+      }
+      
+      .mobile-logo {
+        display: flex;
+        width: 28px;
+        height: 28px;
+        background: white;
+        border-radius: 50%;
+        align-items: center;
+        justify-content: center;
+        color: #00723f;
+        font-weight: bold;
+        font-size: 0.8rem;
+        margin-right: 0.5rem;
+      }
+      
+      .bottom-nav {
+        display: flex;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: #004c27;
+        justify-content: space-around;
+        padding: 0.5rem 0;
+        z-index: 2000;
+      }
+
+      body.dark-mode .bottom-nav {
+        background: #1e3a28;
+      }
+      
+      .bottom-nav a {
+        flex: 1;
+        text-align: center;
+        color: white;
+        text-decoration: none;
+        font-size: 0.8rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      
+      .bottom-nav a.active {
+        color: #ffc107;
+      }
+      
+      .content {
+        padding-bottom: 5rem;
+      }
+
+      .dark-mode-toggle {
+        position: fixed;
+        bottom: 70px;
+        right: 20px;
+        top: auto;
+      }
+    }
+
+    /* Hide mobile elements on desktop */
+    @media (min-width: 769px) {
+      .mobile-logo, .bottom-nav {
+        display: none;
+      }
+    }
+
+    /* --- Mobile Overlay & Sidebar --- */
+    .sidebar-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 998;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    
+    .sidebar-overlay.active {
+        display: block;
+        opacity: 1;
+    }
+    
+    @media (max-width: 768px) {
+        .sidebar {
+            top: 0;
+            height: 100vh;
+            width: 280px;
+            transform: translateX(-100%);
+            box-shadow: 4px 0 15px rgba(0, 0, 0, 0.2);
+            z-index: 1200;
+            padding-top: 72px;
+        }
+    
+        .sidebar.mobile-open {
+            transform: translateX(0);
+        }
+    
+        .sidebar.collapsed {
+            width: 280px;
+            transform: translateX(-100%);
+        }
+    
+        .sidebar .brand {
+            width: 280px;
+        }
+    
+        .sidebar .brand.collapsed {
+            width: 280px;
+            justify-content: flex-start;
+        }
+    
+        .sidebar .brand.collapsed span {
+            opacity: 1;
+            pointer-events: auto;
+            width: auto;
+        }
+    
+        .topbar, .topbar.shifted {
+            left: 0;
+        }
+        .content, .content.shifted {
+            margin-left: 0;
+        }
+    }
+
+    /* Keep emoji icons visible when collapsed */
+    .sidebar.collapsed a::before {
+      content: attr(data-emoji);
+      font-size: 1.3rem;
+    }
+
+    .sidebar a::before {
+      content: attr(data-emoji);
+      margin-right: 8px;
+    }
+
+    .sidebar.collapsed a::before {
+      margin-right: 0;
+    }
+  </style>
+  <style id="appointments-copy">
+    :root {
+      --primary: #0f7a34;
+      --primary-light: #e8f5e9;
+      --primary-dark: #0a5a26;
+      --topbar-bg: #1e8e3e;
+      --secondary: #4361ee;
+      --accent: #7209b7;
+      --text: #2d3748;
+      --text-light: #718096;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      --card-shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.12);
+      --radius: 16px;
+      --radius-sm: 8px;
+      --sidebar-width: 280px;
+      --collapsed-width: 80px;
+      --topbar-height: 70px;
+      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      --transition-slow: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      font-size: 16px;
+      color: var(--text);
+    }
+
+    body {
+      background: var(--bg);
+      overflow-x: hidden;
+    }
+
+    /* ===== Sidebar (admin-like style) ===== */
+    .sidebar {
+      position:fixed; top:0; left:0;
+      width:250px; height:100%;
+      background:#f0f3f6; color:#1f2937;
+      padding:12px;
+      border-right: 1px solid rgba(0,0,0,0.06);
+      display:flex; flex-direction:column;
+      transition:width 0.3s ease, transform 0.3s ease;
+      z-index:1200;
+    }
+
+    .sidebar .brand {
+      display:flex; align-items:center; gap:0.6rem;
+      margin-bottom:1rem; padding:8px 4px;
+    }
+
+    .sidebar .logo {
+      width:40px; height:40px; background:transparent;
+      border-radius:8px; display:flex; align-items:center; justify-content:center;
+      color:#10b981; font-weight:700; font-size:0.95rem;
+      flex-shrink:0; box-shadow:0 1px 2px rgba(0,0,0,0.04);
+    }
+
+    .sidebar .brand span { font-weight:700; font-size:1rem; color:#374151; }
+
+    /* collapsed (narrow) sidebar */
+    .sidebar.shrink { width:80px; padding:12px 8px; }
+    .sidebar.shrink .brand span { display:none; }
+    .sidebar.shrink a { text-align:center; font-size:1.1rem; }
+    .sidebar.shrink a span { display:none; }
+
+    /* nav items (anchors) styled similar to admin .nav-item */
+    .sidebar a {
+      display:flex; align-items:center; gap:12px; color:#1f2937;
+      text-decoration:none; margin:8px 0; font-size:15px;
+      padding:12px 10px; border-radius:8px; background:transparent;
+      transition:background 0.18s ease, color 0.18s ease;
+    }
+
+  .sidebar a .fa,
+  .sidebar a i { width:28px; text-align:center; font-size:18px; color:#1f2937; background:transparent; }
+
+    .sidebar a span { color:inherit; display:inline-block; white-space:nowrap; overflow:hidden; }
+
+    .sidebar a:hover,
+    .sidebar a.active {
+      background: rgba(15,122,52,0.08); color:#0f7a34; font-weight:600;
+    }
+
+    /* Admin-like header & sidebar overrides (no HTML changes) */
+    .header-and-sidebar-top {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      z-index: 1000;
+      display: flex;
+      background-color: #1e8e3e;
+      color: white;
+      height: 60px;
+      transition: left 0.3s ease;
+    }
+
+    .sidebar-top {
+      width: 250px;
+      display: flex;
+      align-items: center;
+      padding: 10px 20px;
+      box-sizing: border-box;
+      border-right: 1px solid rgba(255, 255, 255, 0.3);
+      height: 60px;
+      transition: width 0.3s ease;
+    }
+
+    .sidebar {
+      position: fixed; /* ensure sidebar spans full height and brand sits at top */
+      top: 0;
+      left: 0;
+      width: 250px;
+      height: 100vh;
+      background: #f0f3f6;
+      border-right: none; /* remove full-height border so brand can appear flush */
+      z-index: 1002; /* sit above topbar so brand overlays header area */
+      overflow: auto;
+    }
+
+    /* Hide the native scrollbar for the sidebar while keeping content scrollable */
+    .sidebar {
+      scrollbar-width: none; /* Firefox */
+      -ms-overflow-style: none; /* IE 10+ */
+    }
+    .sidebar::-webkit-scrollbar {
+      width: 0px;
+      height: 0px;
+      background: transparent;
+    }
+
+    /* vertical divider only below the brand area */
+    .sidebar::after {
+      content: '';
+      position: absolute;
+      left: 249px; /* 1px inside right edge */
+      top: 60px; /* start after brand/topbar */
+      width: 1px;
+      height: calc(100vh - 60px);
+      background: rgba(0,0,0,0.06);
+      z-index: 1001;
+    }
+
+    .nav-item, .sidebar a {
+      color: #1f2937;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 10px;
+      border-radius: 8px;
+      background: transparent;
+      cursor: pointer;
+      font-weight: 400;
+      font-size: 15px;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .nav-item:hover, .sidebar a:hover {
+      background: rgba(15,122,52,0.08) !important;
+      color: #0f7a34 !important;
+      font-weight: 400 !important;
+    }
+
+    .nav-item.active {
+      background: rgba(15,122,52,0.12) !important;
+      color: #0f7a34 !important;
+      font-weight: 600 !important;
+    }
+
+    /* adjust content to sit below the fixed topbar and to the right of the sidebar */
+    .content { margin-top: 60px; margin-left: 250px; }
+    .content.shrink { margin-left: 80px; }
+
+    /* Logo and brand name styling to mirror admin */
+    .sidebar .logo {
+      background: transparent;
+      width:72px; height:72px; border-radius:6px; box-shadow:none; color:transparent;
+      display:flex; align-items:center; justify-content:center; overflow:hidden; padding:0; border:0;
+    }
+    .sidebar .logo img{
+      width:auto; height:64px; max-width:100%; max-height:64px; object-fit:contain; display:block;
+      background:transparent; /* in case image has transparency preserve it */
+      image-rendering: -webkit-optimize-contrast;
+    }
+
+    /* keep brand/logo aligned with topbar height (60px) */
+    .sidebar .brand {
+      height: 60px;
+      align-items: center;
+      padding: 0 12px;
+      background: #1e8e3e; /* match topbar background for a seamless look */
+      color: white;
+      gap: 12px;
+    }
+
+    .sidebar .brand span { color: white; font-weight:700; margin-left:4px; }
+
+    /* push nav content below the brand area */
+    #nav { padding-top: 12px; margin-top: 60px; }
+
+    /* make the small top-area logo visible in header-like layout */
+    .header-and-sidebar-top .sidebar-logo span { color: white; font-weight:700; font-size:1.1rem; }
+
+    /* ===== Topbar (admin-like appearance) ===== */
+    .topbar {
+      position: fixed;
+      top: 0;
+      left: 250px; /* sit to the right of the fixed sidebar */
+      right: 0;
+      height: 60px;
+      background-color: var(--topbar-bg);
+      color: white;
+      padding: 10px 30px;
+      display: flex; justify-content: space-between; align-items: center;
+      z-index: 1001;
+      transition: left 0.3s ease, margin-left 0.3s ease;
+    }
+    .topbar.shrink { left: 80px; }
+
+    .topbar-left { display:flex; align-items:center; gap:0.6rem; }
+    .hamburger {
+      font-size: 1.2rem;
+      cursor: pointer;
+      padding: 0.3rem;
+      border-radius: 4px;
+      transition: background 0.2s;
+      margin-left: 0; /* Added this line */
+    }
+    .hamburger:hover { background: rgba(255,255,255,0.1); }
+    .portal-title { display:flex; flex-direction:column; line-height:1.2; }
+    .portal-title strong span.safespace { display:inline; margin-right:0.3rem; }
+    .portal-title small { font-size:0.75rem; opacity:0.9; }
+
+    /* Show SafeSpace text when sidebar is shrunk */
+    .topbar.shrink .portal-title strong span.safespace { display: inline; }
+
+    /* Mobile logo styling */
+    .mobile-logo {
+      display: none;
+      width: 44px;
+      height: 44px;
+      background: transparent; /* remove white circular background */
+      border-radius: 6px;
+      align-items: center;
+      justify-content: center;
+      color: #00723f;
+      font-weight: bold;
+      font-size: 0.8rem;
+      margin-right: 0.5rem;
+      padding:0;
+      overflow:hidden;
+    }
+  .mobile-logo img{ width:auto; height:34px; object-fit:contain; display:block; background:transparent }
+
+    /* Profile + Notifications */
+    .profile { width:38px; height:38px; border-radius:50%; background:#004c27;
+      display:flex; align-items:center; justify-content:center; font-weight:bold; cursor:pointer; }
+    .notif-wrapper { position:relative; cursor:pointer; font-size:1.3rem; color:white; }
+    .notif-badge {
+      position:absolute; bottom:0; right:0;
+      width:10px; height:10px; background:red;
+      border-radius:50%; border:2px solid #00723f;
+    }
+    .notif-badge.hidden { display:none; }
+
+    .notif-dropdown {
+      position:absolute; top:48px; right:0;
+      background:white; color:#333;
+      width:260px; border-radius:8px;
+      box-shadow:0 4px 10px rgba(0,0,0,0.15);
+      display:none; flex-direction:column;
+      overflow:hidden; z-index:2000;
+    }
+    .notif-dropdown.active { display:flex; }
+    .notif-header { background:#00723f; color:white; padding:0.6rem; font-weight:bold; }
+    .notif-list { max-height:220px; overflow-y:auto; }
+    .notif-item {
+      padding:0.6rem 0.8rem; border-bottom:1px solid #eee;
+      font-size:0.9rem; cursor:pointer;
+    }
+    .notif-item:hover { background:#f1f1f1; }
+
+    /* ===== Content ===== */
+    .content {
+      padding:1rem;
+      max-width:1200px; margin:auto;
+      margin-left:250px;
+      transition:margin-left 0.3s ease;
+    }
+    .content.shrink { margin-left:70px; }
+    .grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(350px,1fr)); gap:1rem; }
+    .card { background:white; border-radius:10px; padding:1rem; box-shadow:0 2px 6px rgba(0,0,0,0.1); }
+    .card h3 { margin-bottom:0.8rem; }
+
+    /* Hide hamburger on mobile */
+    @media (max-width:768px) {
+      .hamburger { display: none; }
+    }
+
+    /* ===== Mobile Bottom Nav ===== */
+    @media (max-width:768px) {
+      .sidebar { 
+        display: none !important;
+        transform: translateX(-100%);
+      }
+      .topbar { margin-left:0; }
+      .content { margin-left:0; }
+      .hamburger { display: none; }
+      
+      /* Show mobile logo and SafeSpace text */
+      .mobile-logo { display: flex; }
+      .portal-title strong span.safespace { display: inline; }
+      
+      .bottom-nav {
+        position:fixed; bottom:0; left:0; width:100%;
+        background:#004c27; display:flex; justify-content:space-around;
+        padding:0.5rem 0; z-index:2000;
+      }
+      .bottom-nav a {
+        flex:1; text-align:center; color:white; text-decoration:none; font-size:0.9rem;
+        display:flex; align-items:center; justify-content:center; gap:0.25rem;
+        padding:0.6rem 0; opacity:1; background:transparent; border-radius:8px;
+      }
+      .bottom-nav a i { font-size:22px; line-height:1; }
+      .bottom-nav a.active { color:#ffc107; }
+    }
+    
+    /* Hide bottom nav on larger screens */
+    .bottom-nav { display: none; }
+
+    @media (max-width: 768px) {
+      .bottom-nav { 
+        display: flex !important;
+        position: fixed;
+        bottom: 0; left: 0; right: 0;
+        background: #1e8e3e; /* solid colored bar */
+        justify-content: space-around;
+        padding: 0.6rem 0; height:64px; z-index: 2000;
+      }
+    }
+
+    /* ===== Misc ===== */
+    .hidden {
+      display: none !important;
+    }
+
+    /* --- START: NEW ADMIN SYNC STYLES --- */
+    .sidebar {
+        width: 250px;
+        background: #f0f3f6;
+        border-right: 1px solid rgba(0,0,0,0.06);
+        position: fixed;
+        top: 60px; /* Starts below the header */
+        left: 0;
+        height: calc(100vh - 60px);
+        z-index: 999;
+        padding: 12px;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        transition: width 0.3s ease, transform 0.3s ease;
+    }
+    
+    .sidebar .brand {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 250px;
+        height: 60px;
+        background-color: #1e8e3e;
+        color: white;
+        display: flex;
+        align-items: center;
+        padding: 10px 20px;
+        box-sizing: border-box;
+        z-index: 1002;
+        border-right: 1px solid rgba(255, 255, 255, 0.3);
+        transition: width 0.3s ease;
+    }
+    
+  .sidebar .brand .logo {
+    height: 40px;
+    width: 40px;
+    background: transparent url("safespace.png") center/contain no-repeat;
+    color: transparent;
+    border-radius: 8px;
+  }
+    
+    .sidebar .brand span {
+        font-weight: bold;
+        font-size: 1.2rem;
+        color: white;
+        white-space: nowrap;
+        margin-left: 10px;
+        transition: opacity 0.3s ease, width 0.3s ease;
+    }
+    
+    .sidebar a {
+        margin: 0; /* Nav links start at the top of the sidebar container */
+    }
+    
+    .topbar {
+        position: fixed;
+        top: 0;
+        left: 250px;
+        right: 0;
+        height: 60px;
+        background-color: #1e8e3e;
+        color: white;
+        padding: 10px 30px;
+        z-index: 1000;
+        transition: left 0.3s ease;
+    }
+    
+    .content {
+        margin-top: 60px;
+        margin-left: 250px;
+        transition: margin-left 0.3s ease;
+    }
+    
+   /* --- Collapsed State --- */
+.sidebar.collapsed {
+  width: 80px;
+  padding: 12px 8px;
+}
+
+.sidebar.collapsed .brand {
+  width: 80px;
+  justify-content: center;
+}
+
+.sidebar.collapsed .brand span {
+  opacity: 0;
+  pointer-events: none;
+  width: 0;
+}
+
+.sidebar.collapsed a span {
+  display: none;
+}
+.sidebar.collapsed a {
+  justify-content: center;
+}
+
+/* ADD THIS NEW CODE RIGHT HERE - Keep emoji icons visible when collapsed */
+.sidebar.collapsed a::before {
+  content: attr(data-emoji);
+  font-size: 1.3rem;
+}
+
+.sidebar a::before {
+  content: attr(data-emoji);
+  margin-right: 8px;
+}
+
+.sidebar.collapsed a::before {
+  margin-right: 0;
+}
+/* END OF NEW CSS CODE */
+    
+  </style>
+  <style>
+    /* Ensure topbar title matches assessments.html sizing */
+    .topbar .portal-title strong { font-size: 16px !important; font-weight: 700 !important; }
+    
+    /* Mobile content alignment fix */
+    @media (max-width: 768px) {
+      .content, .content.shifted {
+        margin-left: 0 !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar (copied exactly from assessments.html) -->
+  <div class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="logo"><img src="safespace.png" alt="SafeSpace logo"></div>
+      <span>SafeSpace</span>
+    </div>
+    <a href="appointments.html" data-emoji="📅"><span>Appointments</span></a>
+    <a href="history.html" data-emoji="📋"><span>History</span></a>
+    <a href="assessments.html" data-emoji="📝"><span>Assessments</span></a>
+    <a href="resources.html" data-emoji="📚"><span>Resources</span></a>
+    <a href="messages.html" data-emoji="💬"><span>Messages</span></a>
+    <a href="settings.html" class="active" data-emoji="⚙️"><span>Settings</span></a>
+  </div>
+
+  <!-- Topbar (copied exactly from assessments.html) -->
+  <div class="topbar" id="topbar">
+    <div class="topbar-left">
+      <div class="hamburger">
+        <i class="fas fa-bars"></i>
+      </div>
+      <div class="mobile-logo"><img src="safespace.png" alt="SafeSpace" style="width:24px;height:24px;object-fit:contain"></div>
+      <div class="portal-title">
+        <strong><span class="safespace">RSU SafeSpace: </span>Student Portal</strong>
+        <small id="topbarStudentId"></small>
+      </div>
+    </div>
+    <div style="display:flex; align-items:center; gap:1rem; position:relative;">
+      <div class="notif-wrapper" onclick="toggleNotif()">
+        <span class="icon-btn">🔔</span>
+        <div class="notif-badge" style="position:absolute;right:4px;bottom:8px;width:8px;height:8px;background:#ef4444;border-radius:50%;border:2px solid var(--green)"></div>
+      </div>
+      <div id="notifDropdown" class="notif-dropdown">
+        <div class="notif-header">Notifications</div>
+        <div class="notif-list">
+          <div class="notif-item" onclick="goToSection('appointments')">🔔 New counseling slots available</div>
+          <div class="notif-item" onclick="goToSection('messages')">📩 You have a new message from your counselor</div>
+          <div class="notif-item" onclick="goToSection('assessments')">⚠ Reminder: Complete your assessment</div>
+        </div>
+      </div>
+  <div class="profile" id="topbarProfile" onclick="window.location.href='profile.html'"></div>
+    </div>
+  </div>
+
+  <!-- Content -->
+  <div class="content" id="content">
+    <div class="settings-container">
+      <!-- Appearance Settings -->
+      <div class="settings-section">
+        <h3><i class="fas fa-palette"></i> Appearance</h3>
+        <div class="settings-item">
+          <div>
+            <div class="settings-label">Dark Mode</div>
+            <div class="settings-description">Switch between light and dark theme</div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="darkModeSwitch">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="settings-item" onclick="showActionCard('Theme Color', 'Choose your preferred accent color.')">
+          <div>
+            <div class="settings-label">Theme Color</div>
+            <div class="settings-description">Customize the accent color</div>
+          </div>
+          <i class="fas fa-chevron-right"></i>
+        </div>
+      </div>
+
+      <!-- Notification Settings -->
+      <div class="settings-section">
+        <h3><i class="fas fa-bell"></i> Notification Settings</h3>
+        <div class="settings-item">
+          <div>
+            <div class="settings-label">Appointment Reminders</div>
+            <div class="settings-description">Get reminders before appointments</div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="appointmentReminders" checked>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="settings-item">
+          <div>
+            <div class="settings-label">New Messages</div>
+            <div class="settings-description">Notify when you receive messages</div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="messageNotifications" checked>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Privacy Settings -->
+      <div class="settings-section">
+        <h3><i class="fas fa-shield-alt"></i> Privacy & Security</h3>
+        <div class="settings-item" onclick="showActionCard('Change Password', 'You can change your password in your profile settings.')">
+          <div>
+            <div class="settings-label">Change Password</div>
+            <div class="settings-description">Update your account password</div>
+          </div>
+          <i class="fas fa-chevron-right"></i>
+        </div>
+        <div class="settings-item" onclick="showActionCard('Privacy Settings', 'Manage your privacy preferences here.')">
+          <div>
+            <div class="settings-label">Privacy Preferences</div>
+            <div class="settings-description">Control your data and privacy</div>
+          </div>
+          <i class="fas fa-chevron-right"></i>
+        </div>
+      </div>
+
+      <!-- App Preferences -->
+      <div class="settings-section">
+        <h3><i class="fas fa-cog"></i> App Preferences</h3>
+        <div class="settings-item">
+          <div>
+            <div class="settings-label">Auto-logout</div>
+            <div class="settings-description">Log out after 30 minutes inactive</div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="autoLogout" checked>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="settings-item" onclick="showActionCard('Language', 'Select your preferred language.')">
+          <div>
+            <div class="settings-label">Language</div>
+            <div class="settings-description">English, Spanish, etc.</div>
+          </div>
+          <i class="fas fa-chevron-right"></i>
+        </div>
+      </div>
+
+      <!-- Support -->
+      <div class="settings-section">
+        <h3><i class="fas fa-headset"></i> Support</h3>
+        <div class="settings-item" onclick="showActionCard('Help Center', 'Contact support for assistance.')">
+          <div>
+            <div class="settings-label">Help Center</div>
+            <div class="settings-description">Get help with SafeSpace</div>
+          </div>
+          <i class="fas fa-chevron-right"></i>
+        </div>
+        <div class="settings-item" onclick="showActionCard('About', 'SafeSpace Student Portal v2.0')">
+          <div>
+            <div class="settings-label">About SafeSpace</div>
+            <div class="settings-description">Version and information</div>
+          </div>
+          <i class="fas fa-chevron-right"></i>
+        </div>
+      </div>
+
+      <!-- Sign Out Section -->
+      <div class="settings-section">
+        <h3><i class="fas fa-sign-out-alt"></i> Sign Out</h3>
+        <div class="settings-item">
+          <div>
+            <div class="settings-label">Sign Out of SafeSpace</div>
+            <div class="settings-description">You will be returned to the sign-in page.</div>
+          </div>
+          <button id="signOutBtn" class="signout-btn" style="background:#dc2626;color:#fff;padding:10px 18px;border-radius:8px;border:none;cursor:pointer">Sign Out</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Bottom Nav (Mobile Only) -->
+  <div class="bottom-nav">
+    <a href="appointments.html"><span>📅</span><span>Appointments</span></a>
+    <a href="history.html"><span>📋</span><span>History</span></a>
+    <a href="assessments.html"><span>📝</span><span>Assessments</span></a>
+    <a href="resources.html"><span>📚</span><span>Resources</span></a>
+    <a href="messages.html"><span>💬</span><span>Messages</span></a>
+    <a href="settings.html" class="active"><span>⚙️</span><span>Settings</span></a>
+  </div>
+
+  <!-- Action Card -->
+  <div class="action-card" id="actionCard">
+    <div class="action-card-content">
+      <button class="close-btn" onclick="closeActionCard()">&times;</button>
+      <h3 id="actionTitle"></h3>
+      <p id="actionMessage"></p>
+      <button onclick="closeActionCard()" style="background:#00723f;color:white;border:none;padding:0.5rem 1.5rem;border-radius:6px;margin-top:1rem;cursor:pointer;">
+        OK
+      </button>
+    </div>
+  </div>
+
+  <!-- Action Cards for settings -->
+  <div class="action-card" id="changePasswordCard">
+      <div class="action-card-content">
+        <button class="close-btn">&times;</button>
+        <h2>Change Password</h2>
+        <!-- Add form elements here -->
+      </div>
+    </div>
+
+  <!-- Add Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+  <script>
+    // Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyAhGG1-VyUOD5BllSzDxrPEcd_mhqSNxj0",
+      authDomain: "safespace-fbd7f.firebaseapp.com",
+      databaseURL: "https://safespace-fbd7f-default-rtdb.firebaseio.com",
+      projectId: "safespace-fbd7f",
+      storageBucket: "safespace-fbd7f.appspot.com",
+      messagingSenderId: "16930797102",
+      appId: "1:16930797102:web:c0b10204cc5e31a06cd1bf"
+    };
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+    const auth = firebase.auth();
+    const db = firebase.database();
+
+    // --- START: SIDEBAR SCRIPT ---
+    const menuIcon = document.querySelector('.hamburger');
+    const sidebar = document.getElementById('sidebar');
+    const mainContent = document.getElementById('content');
+    const sidebarTop = document.querySelector('.sidebar .brand');
+    const topbar = document.getElementById('topbar');
+    
+    // Create overlay for mobile
+    const overlay = document.createElement('div');
+    overlay.className = 'sidebar-overlay';
+    document.body.appendChild(overlay);
+    
+    // Mobile detection
+    function isMobile() {
+        return window.innerWidth <= 768;
+    }
+    
+    // Toggle sidebar with mobile responsiveness
+    if (menuIcon) {
+        menuIcon.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            if (isMobile()) {
+                // Mobile behavior - overlay sidebar
+                const isOpen = sidebar.classList.toggle('mobile-open');
+                overlay.classList.toggle('active', isOpen);
+                document.body.style.overflow = isOpen ? 'hidden' : '';
+            } else {
+                // Desktop behavior - collapse sidebar
+                const isCollapsed = sidebar.classList.toggle('collapsed');
+                mainContent.classList.toggle('shifted', isCollapsed);
+                sidebarTop.classList.toggle('collapsed', isCollapsed);
+                topbar.classList.toggle('shifted', isCollapsed);
+            }
+        });
+    }
+    
+    // Close mobile sidebar when clicking overlay
+    overlay.addEventListener('click', () => {
+        sidebar.classList.remove('mobile-open');
+        overlay.classList.remove('active');
+        document.body.style.overflow = '';
+    });
+    
+    // Handle window resize
+    window.addEventListener('resize', () => {
+        if (!isMobile()) {
+            // Reset mobile states when switching to desktop
+            sidebar.classList.remove('mobile-open');
+            overlay.classList.remove('active');
+            document.body.style.overflow = '';
+            // Ensure desktop state is consistent
+            const isCollapsed = sidebar.classList.contains('collapsed');
+            mainContent.classList.toggle('shifted', isCollapsed);
+            sidebarTop.classList.toggle('collapsed', isCollapsed);
+            topbar.classList.toggle('shifted', isCollapsed);
+        } else {
+            // Reset desktop states when switching to mobile
+            sidebar.classList.remove('collapsed');
+            mainContent.classList.remove('shifted');
+            sidebarTop.classList.remove('collapsed');
+            topbar.classList.remove('shifted');
+        }
+    });
+    
+    // Close mobile sidebar when clicking a menu item
+    document.querySelectorAll('.sidebar a').forEach(link => {
+        link.addEventListener('click', () => {
+            if (isMobile()) {
+                sidebar.classList.remove('mobile-open');
+                overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        });
+    });
+    // --- END: SIDEBAR SCRIPT ---
+
+    // Notification toggle
+    function toggleNotif() {
+      const dropdown = document.getElementById("notifDropdown");
+      const badge = document.querySelector(".notif-badge");
+      dropdown.classList.toggle("active");
+      if (dropdown.classList.contains("active")) { badge.classList.add("hidden"); }
+    }
+
+    document.addEventListener("click", function(e){
+      const dropdown = document.getElementById("notifDropdown");
+      const notifBtn = document.querySelector(".notif-wrapper");
+      if (!notifBtn.contains(e.target) && !dropdown.contains(e.target)) {
+        dropdown.classList.remove("active");
+      }
+    });
+
+    // Navigation
+    function goToSection(sectionId) {
+      if (sectionId === 'appointments') {
+        window.location.href = 'appointments.html';
+      } else if (sectionId === 'messages') {
+        window.location.href = 'messages.html';
+      } else if (sectionId === 'assessments') {
+        window.location.href = 'assessments.html';
+      }
+      document.getElementById("notifDropdown").classList.remove("active");
+    }
+
+    // Action Card functions
+    function showActionCard(title, message) {
+      document.getElementById('actionTitle').textContent = title;
+      document.getElementById('actionMessage').textContent = message;
+      document.getElementById('actionCard').style.display = 'flex';
+    }
+
+    function closeActionCard() {
+      document.getElementById('actionCard').style.display = 'none';
+    }
+
+    // Dark Mode Functionality
+    function initializeDarkMode() {
+      const darkModeToggle = document.getElementById('darkModeToggle');
+      const darkModeSwitch = document.getElementById('darkModeSwitch');
+      const body = document.body;
+      
+      // Load dark mode preference
+      const isDarkMode = localStorage.getItem('darkMode') === 'true';
+      
+      // Apply dark mode if enabled
+      if (isDarkMode) {
+        body.classList.add('dark-mode');
+        darkModeSwitch.checked = true;
+        updateDarkModeButton(true);
+      }
+      
+      // Toggle dark mode with switch
+      darkModeSwitch.addEventListener('change', function() {
+        const isDark = this.checked;
+        body.classList.toggle('dark-mode', isDark);
+        localStorage.setItem('darkMode', isDark);
+        updateDarkModeButton(isDark);
+      });
+      
+      // Toggle dark mode with button
+      darkModeToggle.addEventListener('click', function() {
+        const isDark = !body.classList.contains('dark-mode');
+        body.classList.toggle('dark-mode', isDark);
+        darkModeSwitch.checked = isDark;
+        localStorage.setItem('darkMode', isDark);
+        updateDarkModeButton(isDark);
+      });
+      
+      function updateDarkModeButton(isDark) {
+        const icon = darkModeToggle.querySelector('i');
+        const text = darkModeToggle.querySelector('span');
+        
+        if (isDark) {
+          icon.className = 'fas fa-sun';
+          text.textContent = 'Light Mode';
+        } else {
+          icon.className = 'fas fa-moon';
+          text.textContent = 'Dark Mode';
+        }
+      }
+    }
+
+    // Load user profile for topbar
+    auth.onAuthStateChanged(async (user) => {
+      if (user) {
+        const snapshot = await db.ref('students').orderByChild('uid').equalTo(user.uid).once('value');
+        if (snapshot.exists()) {
+          const data = Object.values(snapshot.val())[0];
+          
+          // Update topbar
+          document.getElementById('topbarStudentId').textContent = "ID: " + (data.student_id || 'N/A');
+          
+          if (data.photo_url) {
+            document.getElementById('topbarProfile').innerHTML = `<img src="${data.photo_url}" alt="Profile Photo" style="width:38px;height:38px;border-radius:50%;object-fit:cover;">`;
+          } else {
+            const initials = (data.first_name || data.username || 'U')[0].toUpperCase();
+            document.getElementById('topbarProfile').textContent = initials;
+          }
+        }
+      } else {
+        window.location.href = "signin.html";
+      }
+    });
+
+    // Settings Save Functionality
+    document.addEventListener('DOMContentLoaded', function() {
+      // Initialize dark mode
+      initializeDarkMode();
+      
+      // Load saved settings
+      const savedSettings = JSON.parse(localStorage.getItem('safeSpaceSettings') || '{}');
+      
+      // Set initial states
+      document.getElementById('appointmentReminders').checked = savedSettings.appointmentReminders !== false;
+      document.getElementById('messageNotifications').checked = savedSettings.messageNotifications !== false;
+      document.getElementById('autoLogout').checked = savedSettings.autoLogout !== false;
+
+      // Save on change
+      document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+          const settings = {
+            appointmentReminders: document.getElementById('appointmentReminders').checked,
+            messageNotifications: document.getElementById('messageNotifications').checked,
+            autoLogout: document.getElementById('autoLogout').checked
+          };
+          localStorage.setItem('safeSpaceSettings', JSON.stringify(settings));
+          showActionCard('Settings Saved', 'Your preferences have been updated.');
+        });
+      });
+    });
+
+    // Mobile detection for sidebar
+    function isMobile() {
+      return window.innerWidth <= 768;
+    }
+
+    // Close sidebar when clicking on mobile
+    if (isMobile()) {
+      document.querySelectorAll('.sidebar a').forEach(link => {
+        link.addEventListener('click', function() {
+          sidebar.classList.remove('collapsed');
+          content.classList.remove('shifted');
+          topbar.classList.remove('shifted');
+        });
+      });
+    }
+
+    // Sign Out functionality
+    document.getElementById('signOutBtn').addEventListener('click', function() {
+      auth.signOut().then(() => {
+        // Sign-out successful.
+        window.location.href = 'signin.html';
+      }).catch((error) => {
+        // An error happened.
+        console.error('Sign Out Error', error);
+        alert('Error signing out: ' + error.message);
+      });
+    });
+  </script>
+</body>
+</html>
