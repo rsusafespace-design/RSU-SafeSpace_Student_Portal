@@ -1,0 +1,3880 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Assessments - SafeSpace Portal</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <style>
+    /* ===== Sidebar (admin-like style) ===== */
+
+    /* Ensure consistent root typography with appointments.html */
+    html {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      font-size: 16px;
+      color: #2d3748;
+    }
+    .sidebar {
+      position:fixed; top:0; left:0;
+      width:250px; height:100%;
+      background:#f0f3f6; color:#1f2937;
+      padding:12px;
+      border-right:1px solid rgba(0,0,0,0.06);
+      display:flex; flex-direction:column;
+      transition:width 0.3s ease, transform 0.3s ease;
+      z-index:1200;
+    }
+
+    .sidebar .brand {
+      display:flex; align-items:center; gap:0.6rem;
+      margin-bottom:1rem; padding:8px 4px;
+    }
+
+    .sidebar .logo {
+      width:40px; height:40px; background:transparent;
+      border-radius:8px; display:flex; align-items:center; justify-content:center;
+      color:#10b981; font-weight:700; font-size:0.95rem;
+      flex-shrink:0; box-shadow:0 1px 2px rgba(0,0,0,0.04);
+    }
+
+    .sidebar .brand span { font-weight:700; font-size:1rem; color:#374151; }
+
+    /* collapsed (narrow) sidebar */
+    .sidebar.shrink { width:80px; padding:12px 8px; }
+    .sidebar.shrink .brand span { display:none; }
+    .sidebar.shrink a { text-align:center; font-size:1.1rem; }
+    .sidebar.shrink a span { display:none; }
+
+    /* nav items (anchors) styled similar to admin .nav-item */
+    .sidebar a {
+      display:flex; align-items:center; gap:12px; color:#1f2937;
+      text-decoration:none; margin:8px 0; font-size:15px;
+      padding:12px 10px; border-radius:8px; background:transparent;
+      transition:background 0.18s ease, color 0.18s ease;
+    }
+
+  .sidebar a .fa,
+  .sidebar a i { width:28px; text-align:center; font-size:18px; color:#1f2937; background:transparent; }
+
+    .sidebar a span { color:inherit; display:inline-block; white-space:nowrap; overflow:hidden; }
+
+    .sidebar a:hover,
+    .sidebar a.active {
+      background: rgba(15,122,52,0.08); color:#0f7a34; font-weight:600;
+    }
+
+    /* Admin-like header & sidebar overrides (no HTML changes) */
+    .header-and-sidebar-top {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      z-index: 1000;
+      display: flex;
+      background-color: #1e8e3e;
+      color: white;
+      height: 60px;
+      transition: left 0.3s ease;
+    }
+
+    .sidebar-top {
+      width: 250px;
+      display: flex;
+      align-items: center;
+      padding: 10px 20px;
+      box-sizing: border-box;
+      border-right: 1px solid rgba(255, 255, 255, 0.3);
+      height: 60px;
+      transition: width 0.3s ease;
+    }
+
+    .sidebar {
+      position: fixed; /* ensure sidebar spans full height and brand sits at top */
+      top: 0;
+      left: 0;
+      width: 250px;
+      height: 100vh;
+      background: #f0f3f6;
+      border-right: none; /* remove full-height border so brand can appear flush */
+      z-index: 1002; /* sit above topbar so brand overlays header area */
+      overflow: auto;
+    }
+
+    /* Hide the native scrollbar for the sidebar while keeping content scrollable */
+    .sidebar {
+      scrollbar-width: none; /* Firefox */
+      -ms-overflow-style: none; /* IE 10+ */
+    }
+    .sidebar::-webkit-scrollbar {
+      width: 0px;
+      height: 0px;
+      background: transparent;
+    }
+
+    /* vertical divider only below the brand area */
+    .sidebar::after {
+      content: '';
+      position: absolute;
+      left: 249px; /* 1px inside right edge */
+      top: 60px; /* start after brand/topbar (desktop default: 60px) */
+      width: 1px;
+      height: calc(100vh - 60px);
+      background: rgba(0,0,0,0.06);
+      z-index: 1001;
+    }
+
+    .nav-item, .sidebar a {
+      color: #1f2937;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 10px;
+      border-radius: 8px;
+      background: transparent;
+      cursor: pointer;
+      font-weight: 400;
+      font-size: 15px;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .nav-item:hover, .sidebar a:hover {
+      background: rgba(15,122,52,0.08) !important;
+      color: #0f7a34 !important;
+      font-weight: 400 !important;
+    }
+
+    .nav-item.active {
+      background: rgba(15,122,52,0.12) !important;
+      color: #0f7a34 !important;
+      font-weight: 600 !important;
+    }
+
+    /* adjust content to sit below the fixed topbar and to the right of the sidebar */
+    .content { margin-top: 60px; margin-left: 250px; }
+    .content.shrink { margin-left: 80px; }
+
+    /* Logo and brand name styling to mirror admin */
+    .sidebar .logo {
+      /* don't use background-image here; use the inline <img> to avoid scaling/blurring differences */
+      background: transparent;
+      width:44px; height:44px; border-radius:6px; box-shadow:none; color:transparent;
+    }
+
+    /* keep brand/logo aligned with topbar height (60px) */
+    .sidebar .brand {
+      height: 60px;
+      align-items: center;
+      padding: 0 12px;
+      background: #1e8e3e; /* match topbar background for a seamless look */
+      color: white;
+      gap: 12px;
+    }
+
+    .sidebar .brand span { color: white; font-weight:700; margin-left:4px; }
+
+  /* push nav content below the brand area (desktop default: 60px) */
+  #nav { padding-top: 12px; margin-top: 60px; }
+
+    /* make the small top-area logo visible in header-like layout */
+    .header-and-sidebar-top .sidebar-logo span { color: white; font-weight:700; font-size:1.1rem; }
+
+    /* ===== Topbar (admin-like appearance) ===== */
+    .topbar {
+      position: fixed;
+      top: 0;
+      left: 250px; /* sit to the right of the fixed sidebar */
+      right: 0;
+      height: 60px;
+      background-color: #1e8e3e;
+      color: white;
+      padding: 10px 30px;
+      display: flex; justify-content: space-between; align-items: center;
+      z-index: 1001;
+      transition: left 0.3s ease, margin-left 0.3s ease;
+    }
+    .topbar.shrink { left: 80px; }
+
+  .topbar-left { display:flex; align-items:center; gap:0.15rem; }
+    .hamburger {
+      font-size: 1.05rem;
+      cursor: pointer;
+      /* pixel-tuned padding so hamburger sits slightly closer to the title */
+      padding: 0.12rem;
+      border-radius: 4px;
+      transition: background 0.2s;
+    }
+    .hamburger:hover { background: rgba(255,255,255,0.1); }
+  .portal-title { display:flex; flex-direction:column; line-height:1.2; margin-left:0; }
+  .portal-title strong span.safespace { display:none; margin-right:0.3rem; }
+  .portal-title small { font-size:0.75rem; opacity:0.9; }
+  /* Explicit topbar title sizing to match appointments.html */
+  .topbar .portal-title strong { font-size:16px; font-weight:700; }
+  .topbar .portal-title small { font-size:0.75rem; color: rgba(255,255,255,0.9); }
+
+    /* Show SafeSpace text when sidebar is shrunk */
+    .topbar.shrink .portal-title strong span.safespace { display: inline; }
+
+    /* Mobile logo styling */
+    .mobile-logo {
+      display: none;
+      width: 44px;
+      height: 44px;
+      background: transparent; /* remove white circular background */
+      border-radius: 6px;
+      align-items: center;
+      justify-content: center;
+      color: #00723f;
+      font-weight: bold;
+      font-size: 0.8rem;
+      /* slightly smaller margin for pixel parity */
+      margin-right: 0.2rem;
+      padding:0;
+      overflow:hidden;
+    }
+
+    /* Profile + Notifications */
+    .profile { width:38px; height:38px; border-radius:50%; background:#004c27;
+      display:flex; align-items:center; justify-content:center; font-weight:bold; cursor:pointer; }
+    .notif-wrapper { position:relative; cursor:pointer; font-size:1.3rem; color:white; }
+    .notif-badge {
+      position:absolute; bottom:0; right:0;
+      width:10px; height:10px; background:red;
+      border-radius:50%; border:2px solid #1e8e3e;
+    }
+    .notif-badge.hidden { display:none; }
+
+    .notif-dropdown {
+      position:absolute; top:48px; right:0;
+      background:white; color:#333;
+      width:260px; border-radius:8px;
+      box-shadow:0 4px 10px rgba(0,0,0,0.15);
+      display:none; flex-direction:column;
+      overflow:hidden; z-index:2000;
+    }
+    .notif-dropdown.active { display:flex; }
+    .notif-header { background:#1e8e3e; color:white; padding:0.6rem; font-weight:bold; }
+    .notif-list { max-height:220px; overflow-y:auto; }
+    .notif-item {
+      padding:0.6rem 0.8rem; border-bottom:1px solid #eee;
+      font-size:0.9rem; cursor:pointer;
+    }
+    .notif-item:hover { background:#f1f1f1; }
+
+    /* --- START: NEW ADMIN SYNC STYLES --- */
+    .sidebar {
+        width: 250px;
+        background: #f0f3f6;
+        border-right: 1px solid rgba(0,0,0,0.06);
+        position: fixed;
+        top: 60px; /* Starts below the header */
+        left: 0;
+        height: calc(100vh - 60px);
+        z-index: 999;
+        padding: 12px;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        transition: width 0.3s ease, transform 0.3s ease;
+    }
+    
+  .sidebar .brand {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 250px;
+    height: 60px; /* desktop default: 60px */
+    background-color: #1e8e3e;
+    color: white;
+    display: flex;
+    align-items: center;
+    padding: 10px 20px;
+    box-sizing: border-box;
+    z-index: 1002;
+    border-right: 1px solid rgba(255, 255, 255, 0.3);
+    transition: width 0.3s ease;
+  }
+    
+  /* Match appointments.html: use the sidebar logo sizing and prefer the inline image
+     Note: use the same image-rendering hint that appointments uses for crisper pixels */
+  .sidebar .brand .logo {
+    /* desktop: compact container so the sidebar brand fits the topbar */
+    background: transparent;
+    width: 44px; height: 44px; border-radius: 6px; box-shadow:none; color:transparent;
+    display:flex; align-items:center; justify-content:center; overflow:hidden; padding:0; border:0;
+  }
+
+  .sidebar .brand .logo img{
+    width:auto; height:40px; max-width:100%; max-height:40px; object-fit:contain; display:block;
+    background:transparent; /* preserve transparency */
+    image-rendering: -webkit-optimize-contrast;
+  }
+
+  .mobile-logo { border-radius: 0 !important; padding: 0 !important; }
+  /* default (desktop) mobile-logo size - keep it small when not on narrow screens */
+  .mobile-logo img{ width:auto !important; height:28px !important; object-fit:contain !important; display:block; background:transparent }
+
+  /* On small screens, make the topbar/mobile logo larger and centered */
+  @media (max-width: 768px) {
+    .mobile-logo { width:48px; height:48px; display:flex; align-items:center; justify-content:center; }
+    /* match desktop/sidebar inner image size so mobile logo appears the same */
+    .mobile-logo img{ height:40px !important; width:auto !important; object-fit:contain !important; }
+  }
+
+  /* Ensure images render normally; remove blend-mode which can cause darkening/artifacts.
+     If the logo still looks soft, use a higher-resolution or SVG image and/or provide a 2x asset via srcset. */
+  .mobile-logo img, .sidebar .brand .logo img {
+    mix-blend-mode: normal !important;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden; /* small performance hint for some browsers */
+    image-rendering: auto; /* let browser use default smoothing */
+  }
+    
+    .sidebar .brand span {
+        font-weight: bold;
+        font-size: 1.2rem;
+        color: white;
+        white-space: nowrap;
+        margin-left: 10px;
+        transition: opacity 0.3s ease, width 0.3s ease;
+    }
+    
+    .sidebar a {
+        margin: 0; /* Nav links start at the top of the sidebar container */
+    }
+    
+    .topbar {
+        position: fixed;
+        top: 0;
+        left: 250px;
+        right: 0;
+        height: 60px;
+        background-color: #1e8e3e;
+        color: white;
+        padding: 10px 30px;
+        z-index: 1000;
+        transition: left 0.3s ease;
+    }
+    
+    .content {
+        margin-top: 60px;
+        margin-left: 250px;
+        transition: margin-left 0.3s ease;
+    }
+    
+   /* --- Collapsed State --- */
+.sidebar.collapsed {
+  width: 80px;
+  padding: 12px 8px;
+}
+
+.sidebar.collapsed .brand {
+  width: 80px;
+  justify-content: center;
+}
+
+.sidebar.collapsed .brand span {
+  opacity: 0;
+  pointer-events: none;
+  width: 0;
+}
+
+.sidebar.collapsed a span {
+  display: none;
+}
+.sidebar.collapsed a {
+  justify-content: center;
+}
+
+/* ADD THIS NEW CODE RIGHT HERE - Keep emoji icons visible when collapsed */
+.sidebar.collapsed a::before {
+  content: attr(data-emoji);
+  font-size: 1.3rem;
+}
+
+.sidebar a::before {
+  content: attr(data-emoji);
+  margin-right: 8px;
+}
+
+.sidebar.collapsed a::before {
+  margin-right: 0;
+}
+/* END OF NEW CSS CODE */
+    
+    .sidebar.collapsed a span {
+        display: none;
+    }
+    .sidebar.collapsed a {
+        justify-content: center;
+    }
+    
+    .topbar.shifted {
+        left: 80px;
+    }
+    
+    .content.shifted {
+        margin-left: 80px;
+    }
+    
+    /* --- Mobile Overlay & Sidebar --- */
+    .sidebar-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 998;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    
+    .sidebar-overlay.active {
+        display: block;
+        opacity: 1;
+    }
+    
+    @media (max-width: 768px) {
+        .sidebar {
+            top: 0; /* On mobile, the sidebar is full height */
+            height: 100vh;
+            width: 280px;
+            transform: translateX(-100%);
+            box-shadow: 4px 0 15px rgba(0, 0, 0, 0.2);
+            z-index: 1200; /* Above overlay */
+        }
+    
+        .sidebar.mobile-open {
+            transform: translateX(0);
+        }
+    
+        /* Prevent collapsing on mobile view */
+        .sidebar.collapsed {
+            width: 280px;
+            transform: translateX(-100%);
+        }
+    
+        .sidebar .brand {
+            width: 280px; /* Brand takes full width of mobile sidebar */
+        }
+    
+        .sidebar .brand.collapsed {
+            width: 280px;
+            justify-content: flex-start;
+        }
+    
+        .sidebar .brand.collapsed span {
+            opacity: 1;
+            pointer-events: auto;
+            width: auto;
+        }
+    
+        .topbar, .topbar.shifted {
+            left: 0;
+        }
+        .content, .content.shifted {
+            margin-left: 0;
+        }
+    /* Mobile-only: increase brand area and logo container so the artwork doesn't get clipped */
+    .sidebar .brand {
+      height: 80px; /* larger brand area on mobile */
+      align-items: center;
+      padding: 12px 20px;
+    }
+    .sidebar .brand .logo {
+      width: 80px;
+      height: 80px;
+      border-radius: 8px;
+    }
+    /* push nav content further below the enlarged brand on mobile */
+    .sidebar::after { top: 80px; height: calc(100vh - 80px); }
+    #nav { margin-top: 80px; }
+    }
+    /* --- END: NEW ADMIN SYNC STYLES --- */
+
+    :root {
+      --green: #0f7a34;
+      --green-light: #e8f5e8;
+      --green-dark: #004c27;
+      --panel: #ffffff;
+      --muted: #6b7280;
+      --bg: #f4f6fb;
+      --card-shadow: 0 6px 18px rgba(16,24,40,0.06);
+      --card-shadow-hover: 0 12px 28px rgba(16,24,40,0.12);
+      --radius: 12px;
+      --sidebar-width: 250px;
+      --collapsed-width: 80px;
+      --topbar-height: 64px;
+  --accent: #FFD166; /* warm gold */
+  --accent-light: #FFE8A1; /* soft gold */
+  /* small positive value to nudge emoji glyphs right to correct font rendering bias */
+  --emoji-nudge: 6px;
+    }
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    html {
+      font-family: 'Segoe UI', system-ui, -apple-system, Roboto, sans-serif;
+      font-size: 15px;
+    }
+    
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: #111;
+      overflow-x: hidden;
+      min-height: 100vh;
+    }
+
+    /* Mood picker buttons (bigger, centered) */
+    .mood-btn {
+      font-size: 34px;
+      width: 64px;
+      height: 64px;
+      border-radius: 12px;
+      background: white;
+      border: 1px solid rgba(0,0,0,0.06);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: transform 0.14s ease, box-shadow 0.14s ease;
+      box-shadow: 0 4px 10px rgba(16,24,40,0.04);
+    }
+    .mood-btn:hover { transform: translateY(-4px); box-shadow: 0 8px 18px rgba(16,24,40,0.08); }
+    .mood-btn.pulse { animation: pulse 0.8s ease; }
+
+  /* Mood top responsive layout
+     - Use a flexible grid with a smaller minimum for the right panel so it fits tablets
+     - On narrow screens the grid collapses to a single column and the emoji list wraps
+  */
+  .mood-top-container {
+    display: grid;
+    grid-template-columns: 1fr minmax(220px, 1fr);
+    gap: 20px;
+    align-items: stretch;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  /* Keep the mood area visually above the cards to avoid overlap */
+  .mood-top-container { position: relative; z-index: 20; }
+  .mood-left { display:flex; align-items:flex-start; }
+  .mood-right { display:flex; justify-content:flex-end; }
+  /* emoji columns become flexible tiles so they can wrap on small screens */
+  .emoji-col { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; min-width:44px; width:auto; }
+  .emoji-label { font-size:12px; color:var(--muted); text-align:center; width:100%; }
+  .mood-top-container { align-items:stretch }
+  .mood-right > div { height:100%; display:flex; flex-direction:column; max-height:340px; overflow:hidden; }
+  /* leave room for the textual labels row under the canvas so labels are always visible */
+  #moodMini { flex:1; width:100%; height: calc(100% - 26px); display:block; border-radius:8px; min-height:120px; }
+  #moodLabels { height:26px; display:flex; align-items:center; gap:4px; }
+
+  /* Emoji list: keep a single horizontal row on all viewports; allow horizontal scroll if needed */
+  #emojiList {
+    display:flex;
+    gap:10px;
+    flex-wrap:nowrap; /* force single-line */
+    align-items:center;
+    justify-content:center;
+    overflow-x:auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom:6px;
+    margin:0;
+  }
+
+  /* scale the mood buttons responsively using clamp() so they feel proportional
+     Reduced caps so emojis fit into a single row on desktop and mobile */
+  .mood-btn {
+    font-size: clamp(16px, 3.2vw, 28px);
+    width: clamp(36px, 6.5vw, 48px);
+    height: clamp(36px, 6.5vw, 48px);
+    border-radius: 10px;
+    /* ensure true centering for emoji glyphs */
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 !important;
+    line-height: 1 !important;
+    /* prefer emoji-capable fonts to reduce baseline drift across platforms */
+    font-family: 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', 'EmojiOne Mozilla', sans-serif;
+  }
+
+    @media (max-width: 900px) {
+      /* collapse to a single column on tablet / narrow screens */
+      .mood-top-container { grid-template-columns: 1fr; padding: 8px; gap: 12px; }
+      .mood-left, .mood-right { width:100%; }
+      #emojiList { justify-content: center; }
+  .emoji-col { min-width: 34px; flex: 0 0 auto; }
+      .mood-right > div { max-height: none; }
+      #moodMini { height: 180px; }
+      #moodLabels { height:20px; font-size:11px }
+    }
+
+    @media (max-width: 520px) {
+      /* mobile specific tightening - make emojis a bit smaller to fit single row */
+      .mood-top-container { gap: 10px; }
+      #moodMini { height: 150px; }
+      .mood-btn { font-size: clamp(14px, 6.5vw, 22px); width: clamp(32px, 12vw, 40px); height: clamp(32px, 12vw, 40px); }
+      .emoji-label { font-size:11px }
+      /* Ensure horizontal scrolling behaves nicely */
+      #emojiList { padding-left: 8px; padding-right: 8px; }
+    }
+
+    /* Ensure the recent mood card is horizontally centered on small screens */
+    @media (max-width: 520px) {
+      /* center the right column content */
+      .mood-right { justify-content: center !important; padding-left: 8px; padding-right: 8px; }
+
+      /* override inner card inline width: let it size to available space and keep a max width */
+      .mood-right > div {
+        width: calc(100% - 16px) !important; /* respect small horizontal padding */
+        max-width: 640px !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+        box-sizing: border-box !important;
+      }
+
+      /* Slightly relax left-nudge of the mood title on phones so alignment feels natural */
+      .mood-title { transform: translateX(-4px); }
+    }
+
+    /* Toggle and Calendar styles for Recent mood */
+    .view-toggle { display:flex; gap:6px; align-items:center; }
+    .view-toggle button {
+      background: transparent;
+      border: 1px solid rgba(0,0,0,0.06);
+      padding: 6px 8px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .view-toggle button.active { background: var(--green); color: #fff; border-color: var(--green); }
+
+  /* Slightly larger compact calendar for readability */
+  #moodCalendar { display:none; margin-top:6px; width:100%; height: calc(100% - 20px); overflow:hidden; border-radius:4px; padding:3px; box-sizing:border-box; display:flex; flex-direction:column; }
+  /* Nudge the calendar slightly left to better align with the emoji track */
+  #moodCalendar { transform: translateX(-12px); }
+  .mood-calendar-grid { flex:1; display:grid; grid-template-columns: repeat(7, 1fr); /* 6 rows; ensure even fit */ grid-auto-rows: calc((100% - 18px) / 6 - 2px); gap:3px; }
+    .mood-calendar-day { background: transparent; border-radius:4px; min-height:0; padding:3px; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; gap:3px; border:0; position:relative; overflow:hidden; }
+   /* Position the date number absolutely so it never changes the cell's
+     flow or size; this prevents it from shifting the emoji centering. */
+   .mood-calendar-day .date-num { font-size:9px; color:var(--muted); line-height:1; transition:opacity 200ms ease; position: absolute; top: 6px; left: 6px; z-index: 3; }
+    /* Large centered emoji that visually fills the calendar cell
+       The calendar uses an inner .mood-dot element now; keep .mood-emoji
+       harmless if present but don't let it overflow cells. Use flex centering
+       so glyphs (which can render slightly differently across platforms)
+       are visually centered. */
+    .mood-emoji {
+      position: absolute;
+      left: 50%; top: 50%;
+      transform: translate(calc(-50% + var(--emoji-nudge)), -50%);
+      display: flex; align-items: center; justify-content: center;
+      width: auto; height: auto;
+      border-radius: 50%;
+      font-size: 1.6rem; /* reasonable default that scales with cell */
+      line-height: 1;
+      pointer-events: none;
+      transition: font-size 140ms ease, background 140ms ease;
+      box-shadow: 0 4px 12px rgba(16,24,40,0.06);
+      z-index: 2; /* sit above the date number */
+      max-width: calc(100% - 6px);
+      max-height: calc(100% - 6px);
+      overflow: hidden;
+    }
+   /* Ensure the date number sits below the emoji when present (lower z-index)
+     We avoid depending on a JS-added `.has-emoji` class by giving the emoji
+     element a higher z-index so it visually covers the number. */
+   .mood-calendar-day .date-num { position: relative; z-index: 0; transition: opacity 200ms ease; }
+
+    /* Style the actual dot element created by JS so it shows only the emoji
+       (no background) and is centered within the cell. We add a .has-emoji
+       class from JS to hide the date number cleanly. */
+    .mood-calendar-day .mood-dot {
+      /* Center the mood dot precisely in the cell using top/left + transform
+         so it doesn't shift when the date number or other content changes. */
+      position: absolute;
+      top: 50%; left: 50%;
+      width: calc(100% - 6px);
+      height: calc(100% - 6px);
+      transform: translate(calc(-50% + var(--emoji-nudge)), -50%);
+      display: flex; align-items: center; justify-content: center;
+      padding: 0; margin: 0;
+      background: transparent !important; /* override inline bg set by JS */
+      box-shadow: none; border-radius: 6px;
+      font-size: 1.6rem; /* responsive, readable size */
+      line-height: 1;
+      text-align: center;
+      /* allow hover/tooltips on the mood dot */
+      pointer-events: auto;
+      cursor: default;
+      z-index: 2; /* sit above the date number */
+      color: inherit; /* allow emoji color to render normally */
+      overflow: hidden;
+    }
+
+    /* hide the date number when a mood emoji exists (clean removal) */
+    .mood-calendar-day.has-emoji .date-num { display: none; }
+    .mood-calendar-day.empty { opacity:0.2; background:transparent; }
+    @media (max-width: 520px) {
+  .mood-calendar-day .date-num { font-size:8px; }
+  /* on small screens keep the emoji centered but slightly smaller */
+  .mood-calendar-day .mood-dot {
+    /* small-screen centering with a slight right nudge to correct glyph bias */
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: calc(100% - 6px);
+    height: calc(100% - 6px);
+    transform: translate(calc(-50% + var(--emoji-nudge)), -50%);
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .mood-emoji { left: 50%; top: 50%; transform: translate(calc(-50% + var(--emoji-nudge)), -50%); font-size: 26px; }
+    }
+
+    /* Slightly reduce the left nudge on small screens so calendar doesn't overflow */
+    @media (max-width: 520px) {
+      #moodCalendar { transform: translateX(-8px); }
+    }
+
+    /* Content area */
+    .content {
+      padding: 30px;
+      margin-top: 40px;
+      margin-left: 250px;
+      transition: margin-left 0.3s ease;
+      min-height: calc(100vh - 60px);
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .content.shifted {
+      margin-left: 80px;
+    }
+
+    .page-header {
+      margin-bottom: 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .page-title {
+      color: #2d3748;
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 4px;
+      position: relative;
+      display: inline-block;
+      animation: slideInLeft 0.6s ease-out;
+    }
+
+    .page-title::after { display: none; }
+
+    /* Slide-in animation used by appointments.html (matches mobile animation) */
+    @keyframes slideInLeft {
+      from { opacity: 0; transform: translateX(-30px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+
+    .page-subtitle {
+      color: var(--text-light, #718096);
+      font-size: 16px;
+      margin: 0;
+      animation: slideInLeft 0.8s ease-out;
+    }
+    
+    /* Mobile / tablet adjustments: make the page header smaller and tighter on narrow viewports */
+    @media (max-width: 768px) {
+      .page-title { font-size: 22px; }
+      .page-subtitle { font-size: 16px; margin-top: 0; }
+      .page-header { margin-bottom: 16px; }
+    }
+
+    @media (max-width: 520px) {
+      .page-title { font-size: 22px; }
+      .page-subtitle { font-size: 16px; margin-top: 0; }
+      .page-header { margin-bottom: 12px; }
+      .content { padding-left: 12px; padding-right: 12px; }
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 25px;
+      flex: 1;
+    }
+
+   /* Ensure the grid (cards) sits below the mood area and doesn't overlap it
+     On desktop we keep the normal small gap; larger push-down is applied only
+     via the mobile media query below so desktop layout isn't affected. */
+   .grid { margin-top: 12px; }
+    
+    .grid > div {
+      display: flex;
+      flex-direction: column;
+      gap: 25px;
+    }
+
+    .card {
+      background: white;
+      border-radius: var(--radius);
+      padding: 25px;
+      box-shadow: var(--card-shadow);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      border: 1px solid rgba(0,0,0,0.03);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+      z-index: 0; /* ensure mood area with higher z-index can sit above */
+    }
+    
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      /* Solid green bar for a cleaner, consistent accent */
+      background: var(--green);
+    }
+    
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: var(--card-shadow-hover);
+    }
+    
+    .card h3 {
+      margin-bottom: 20px;
+      color: var(--green-dark);
+      font-size: 1.3rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .card h3 i {
+      color: var(--green);
+      background: var(--green-light);
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Test Result Card - keep consistent height and make content scrollable when needed */
+    .test-result-card {
+      /* decreased card height to make the container shorter while maintaining inner scroll */
+      height: 260px;
+      min-height: 260px;
+      max-height: 340px;
+      display: flex; /* ensure inner content can flex and scroll */
+      flex-direction: column;
+      /* add spacing to avoid overlapping the mood area above */
+      margin-top: 8px;
+    }
+
+    /* Increase the psychological result card height on desktop/windows view
+       so the result area has more vertical room (adjust values as needed) */
+    @media (min-width: 769px) {
+      .test-result-card {
+        height: 420px;
+        min-height: 360px;
+        max-height: 520px;
+      }
+    }
+    .test-result-card .test-result-content,
+    .test-result-card .test-result-hidden {
+      /* make the body area fill remaining card space and scroll when overflow */
+      flex: 1 1 auto;
+      overflow: auto;
+      padding-right: 6px; /* give space for scrollbar */
+    }
+    
+    .toggle-test-result {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 1.2rem;
+      color: var(--green);
+      transition: transform 0.3s ease;
+      margin-left: auto;
+    }
+    
+    .toggle-test-result:hover {
+      transform: scale(1.2);
+    }
+    
+    .test-result-content {
+      padding: 10px 0;
+      display: none;
+      animation: fadeIn 0.5s ease;
+    }
+    
+    .test-result-hidden {
+      padding: 30px 0;
+      text-align: center;
+      color: #888;
+      animation: fadeIn 0.5s ease;
+    }
+    
+    .status-badge {
+      display: inline-block;
+      padding: 5px 12px;
+      border-radius: 20px;
+      background: #e8f5e8;
+      color: #28a745;
+      font-weight: bold;
+      font-size: 0.9rem;
+    }
+    
+    .score-display {
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: var(--green);
+      display: inline-block;
+      padding: 5px 12px;
+      background: #f0f9f0;
+      border-radius: 6px;
+    }
+    
+    .result-item {
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .result-item:last-child {
+      margin-bottom: 0;
+    }
+    
+    .view-full-btn {
+      background: var(--green);
+      color: white;
+      padding: 10px 20px;
+      border-radius: 6px;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+      margin-top: 15px;
+      align-self: flex-start;
+    }
+    
+    .view-full-btn:hover {
+      background: var(--green-dark);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(15,122,52,0.3);
+    }
+
+    /* Assessment Items */
+    .assessment-list, .completed-list {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      flex: 1;
+      overflow-y: auto;
+      padding-right: 5px;
+    }
+    
+    .assessment-item, .completed-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 15px;
+      border-radius: 8px;
+      background: #f9fafb;
+      transition: all 0.3s ease;
+      border-left: 3px solid transparent;
+      animation: fadeIn 0.5s ease forwards;
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    
+    .assessment-item:nth-child(1) { animation-delay: 0.1s; }
+    .assessment-item:nth-child(2) { animation-delay: 0.2s; }
+    .assessment-item:nth-child(3) { animation-delay: 0.3s; }
+    .completed-item:nth-child(1) { animation-delay: 0.1s; }
+    .completed-item:nth-child(2) { animation-delay: 0.2s; }
+    
+    .assessment-item:hover, .completed-item:hover {
+      background: var(--green-light);
+      transform: translateY(-2px);
+      border-left-color: var(--green);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+    }
+    
+    .assessment-info, .completed-info {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+    
+    .assessment-icon, .completed-icon {
+      color: #fff;
+      font-size: 1.1rem;
+      background: var(--accent);
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+  box-shadow: 0 4px 8px rgba(255, 209, 102, 0.28);
+    }
+    
+    .assessment-title, .completed-title {
+      font-weight: 600;
+      color: #333;
+    }
+    
+    .assessment-meta, .completed-meta {
+      font-size: 0.85rem;
+      color: #666;
+      margin-top: 5px;
+    }
+    
+    .assessment-action, .completed-action {
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      text-decoration: none;
+      font-size: 0.9rem;
+      padding: 8px 16px;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+      background: var(--green);
+      border: none;
+      box-shadow: 0 2px 4px rgba(15,122,52,0.2);
+    }
+    
+    .assessment-action:hover, .completed-action:hover {
+      background: var(--green-dark);
+      transform: scale(1.05);
+      box-shadow: 0 4px 8px rgba(15,122,52,0.3);
+    }
+
+    /* Animations */
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0% {
+        box-shadow: 0 0 0 0 rgba(15, 122, 52, 0.4);
+      }
+      70% {
+        box-shadow: 0 0 0 10px rgba(15, 122, 52, 0);
+      }
+      100% {
+        box-shadow: 0 0 0 0 rgba(15, 122, 52, 0);
+      }
+    }
+
+    .pulse {
+      animation: pulse 2s infinite;
+    }
+
+    /* Mobile adjustments */
+    @media (max-width: 768px) {
+      .sidebar {
+        transform: translateX(-100%);
+      }
+      
+      .sidebar.mobile-open {
+        transform: translateX(0);
+      }
+      
+      .topbar {
+        left: 0;
+      }
+      
+      .content {
+        margin-left: 0;
+        padding: 20px 15px 80px 15px;
+        margin-top: 60px;
+      }
+      
+      .mobile-logo {
+        display: flex;
+      }
+      
+      .grid {
+        /* switch to a single-column stacked layout using flex so we can reorder cards
+          and keep consistent spacing on mobile */
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        margin-top: 160px; /* mobile-only: reduced so testing card moves up a bit */
+      }
+
+      /* collapse the left/right wrapper divs so their children become direct
+        children of the stacked `.grid` (so ordering works predictably) */
+      .grid > div { display: contents; }
+
+      /* explicit stacking order on mobile: show test result first, then progress,
+        then available assessments, then completed list */
+      .card.test-result-card { order: 1; }
+      #progressCard { order: 2; }
+      #availableCard { order: 3; }
+      #completedCard { order: 4; }
+      
+      /* Hide the hamburger on small screens (we want it visible on desktop/windows only) */
+      .hamburger {
+        display: none;
+      }
+      .content {
+        margin-left: 0;
+        /* match appointments page mobile bottom spacing (enough for bottom-nav) */
+        padding: 20px 15px 4rem 15px !important;
+        margin-top: 60px;
+      }
+      
+      .assessment-item, .completed-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+      }
+      
+      .assessment-action, .completed-action {
+        align-self: flex-end;
+      }
+    }
+
+    /* Footer mobile styling to mirror appointments.html */
+    @media (max-width: 768px) {
+      .footer { padding: 8px 0 !important; margin-left: 0 !important; max-width: 100% !important; box-sizing: border-box; }
+      .footer p { max-width: 600px !important; width: 94% !important; margin: 0 auto !important; font-size: 0.85rem !important; color: var(--text-light, #718096) !important; text-align: center; }
+      /* On small screens we use the simplified mobile `.footer` only to avoid duplicate footers */
+      .content-footer { display: none !important; }
+      .footer { display: block !important; padding: 8px 0 !important; margin-left: 0 !important; max-width: 100% !important; box-sizing: border-box; }
+      .footer p { max-width: 600px !important; width: 94% !important; margin: 0 auto !important; font-size: 0.85rem !important; color: var(--text-light, #718096) !important; text-align: center; }
+    }
+
+    /* Desktop/content footer styling: sit inside the .content column and center the inner block */
+    .content-footer { padding:1rem 0; box-sizing:border-box; width:100%; }
+    .content-footer > div { max-width:1200px; margin:0 auto; text-align:center; color:var(--text-light); font-size:0.95rem; }
+
+    /* Hide the simple `.footer` on larger screens in favor of `.content-footer` */
+    @media (min-width: 769px) { .footer { display: none !important; } }
+
+    /* Bottom Nav (mobile only) - match appointments page mobile style */
+    .bottom-nav {
+      display: none;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #1e8e3e; /* match topbar color */
+      justify-content: space-around;
+      padding: 0.6rem 0;
+      height: 64px;
+      z-index: 1000;
+      box-shadow: 0 -6px 20px rgba(0, 0, 0, 0.18);
+    }
+
+    @media (max-width: 768px) {
+      .bottom-nav {
+        display: flex !important;
+        height: 64px !important;
+        padding: 8px 0 !important;
+      }
+    }
+
+    .bottom-nav a {
+      flex: 1;
+      text-align: center;
+      color: #fff;
+      text-decoration: none;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      opacity: 1;
+      transition: var(--transition);
+      padding: 10px 6px !important;
+      border-radius: 8px;
+    }
+
+    .bottom-nav a.active {
+      color: #fff;
+      background: rgba(255,255,255,0.06);
+      transform: translateY(-4px);
+      box-shadow: 0 6px 14px rgba(0,0,0,0.12);
+    }
+
+    .bottom-nav a:hover:not(.active) {
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .bottom-nav a i {
+      font-size: 28px !important;
+      line-height: 1;
+      transition: var(--transition);
+      color: #ffffff; /* icons should be white on the green bar */
+      text-shadow: 0 1px 0 rgba(0,0,0,0.15);
+    }
+
+    .bottom-nav a:hover i {
+      transform: scale(1.05);
+    }
+
+    /* Topbar mobile adjustments: ensure it becomes full-width and compact on small screens */
+    @media (max-width: 768px) {
+      .topbar {
+        left: 0 !important;
+        right: 0 !important;
+        padding: 8px 12px !important;
+        height: 64px;
+      }
+      .mobile-logo { display: flex !important; }
+      .portal-title { gap: 0; }
+      /* ensure ID (rendered in the small element) is visible on mobile */
+      .portal-title small { display: inline-block; font-size:0.75rem; color: rgba(255,255,255,0.9); }
+    }
+
+  /* Hide bottom-nav text labels so only emoji/icons are shown */
+  .bottom-nav a .bn-label { display: none !important; }
+  .bottom-nav a .bn-emoji { font-size: 28px !important; line-height: 1; display: inline-block; }
+
+    /* Modal styling */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0,0,0,0.55);
+      z-index: 3000;
+      align-items: center;
+      justify-content: center;
+      animation: fadeIn 0.3s ease;
+      backdrop-filter: blur(6px);
+      padding: 16px; /* ensure spacing on small screens so modal doesn't touch edges */
+      box-sizing: border-box;
+    }
+    
+    .modal-box {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+      /* add extra bottom padding so lists / bullets don't sit against the edge */
+      padding: 20px 20px 34px;
+      /* wider modal so content fits horizontally (reduces long vertical stacking) */
+      max-width: 720px;
+      width: 86%;
+      /* limit height and make content scrollable on small screens */
+      max-height: calc(100vh - 120px);
+      overflow-y: auto;
+      text-align: left;
+      position: relative;
+      transform: scale(0.98);
+      animation: modalAppear 0.22s ease forwards;
+    }
+
+    /* on very small screens keep modal nearly full width and taller */
+    @media (max-width: 520px) {
+      .modal-box {
+        width: 96%;
+        max-width: 520px;
+        padding: 14px 14px 22px;
+        border-radius: 10px;
+        max-height: calc(100vh - 48px); /* leave a small gap from viewport edges */
+      }
+      .modal-close { top: 10px; right: 12px; font-size: 1.6rem; }
+    }
+
+    /* handle very short viewports (landscape mobile) */
+    @media (max-height: 480px) {
+      .modal-box { max-height: calc(100vh - 24px); padding: 10px; }
+      .modal-content { margin: 12px 0; }
+    }
+    
+    @keyframes modalAppear {
+      to {
+        transform: scale(1);
+      }
+    }
+    
+    .modal-close {
+      position: absolute;
+      top: 15px;
+      right: 20px;
+      font-size: 1.5rem;
+      color: #888;
+      cursor: pointer;
+      transition: color 0.2s ease;
+    }
+    
+    .modal-close:hover {
+      color: #333;
+    }
+    
+    .modal-content {
+      margin: 20px 0;
+      font-size: 1.1rem;
+      line-height: 1.5;
+    }
+    
+    .modal-ok {
+      background: var(--green);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 10px 25px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 4px rgba(15,122,52,0.2);
+    }
+    
+    .modal-ok:hover {
+      background: var(--green-dark);
+      transform: scale(1.05);
+    }
+
+    /* Improve suggestions list spacing inside the modal */
+    .modal-box .suggestions ul {
+      margin-top: 8px;
+      margin-bottom: 14px;
+      padding-left: 20px;
+    }
+    .modal-box .suggestions li {
+      margin-bottom: 10px;
+      line-height: 1.4;
+    }
+    .modal-box .pick-me-up { margin-top: 12px; margin-bottom: 6px; }
+
+    /* Responsive embedded video inside modal (16:9) */
+    .modal-box .modal-video {
+      position: relative;
+      width: 100%;
+      /* 16:9 aspect ratio */
+      padding-top: 56.25%;
+      margin-top: 8px;
+      border-radius: 8px;
+      overflow: hidden;
+      background: #000;
+    }
+    .modal-box .modal-video iframe {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%; border: 0;
+    }
+
+    /* Footer */
+    .footer {
+      text-align: center;
+      padding: 60px;
+      color: var(--muted);
+      font-size: 0.75rem;
+      margin-top: auto;
+    }
+    /* Topbar (admin-like appearance) - copied from appointments.html for exact match */
+    .topbar {
+      position: fixed;
+      top: 0;
+      left: 250px; /* sit to the right of the fixed sidebar */
+      right: 0;
+      height: 60px;
+      background-color: #1e8e3e;
+      color: white;
+      padding: 10px 30px;
+      display: flex; justify-content: space-between; align-items: center;
+      z-index: 1001;
+      transition: left 0.3s ease, margin-left 0.3s ease;
+    }
+    .topbar.shrink { left: 80px; }
+
+    .topbar-left { display:flex; align-items:center; gap:0.6rem; }
+    .hamburger {
+      font-size: 1.2rem;
+      cursor: pointer;
+      padding: 0.3rem;
+      border-radius: 4px;
+      transition: background 0.2s;
+    }
+    .hamburger:hover { background: rgba(255,255,255,0.1); }
+    .portal-title { display:flex; flex-direction:column; line-height:1.2; }
+    .portal-title strong span.safespace { display:none; margin-right:0.3rem; }
+    .portal-title small { font-size:0.75rem; opacity:0.9; }
+
+    /* Show SafeSpace text when sidebar is shrunk */
+    .topbar.shrink .portal-title strong span.safespace { display: inline; }
+
+    /* Mobile logo styling */
+    .mobile-logo {
+      display: none;
+      width: 28px;
+      height: 28px;
+      background: white;
+      border-radius: 50%;
+      align-items: center;
+      justify-content: center;
+      color: #00723f;
+      font-weight: bold;
+      font-size: 0.8rem;
+      margin-right: 0.5rem;
+    }
+  </style>
+  <style>
+    /* temporary highlight used when 'Continue Progress' points to an item */
+    .highlight-pick { box-shadow: 0 6px 18px rgba(15,122,52,0.18); background: linear-gradient(180deg, #fbfff9, #f0f9f0); transform: translateY(-3px); transition: all 220ms ease; }
+  </style>
+  <style id="appointments-copy">
+    :root {
+      --primary: #0f7a34;
+      --primary-light: #e8f5e9;
+      --primary-dark: #0a5a26;
+      --topbar-bg: #1e8e3e;
+      --secondary: #4361ee;
+      --accent: #7209b7;
+      --text: #2d3748;
+      --text-light: #718096;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      --card-shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.12);
+      --radius: 16px;
+      --radius-sm: 8px;
+      --sidebar-width: 280px;
+      --collapsed-width: 80px;
+      --topbar-height: 70px;
+      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      --transition-slow: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      font-size: 16px;
+      color: var(--text);
+    }
+
+    body {
+      background: var(--bg);
+      overflow-x: hidden;
+    }
+
+    /* ===== Sidebar (admin-like style) ===== */
+    .sidebar {
+      position:fixed; top:0; left:0;
+      width:250px; height:100%;
+      background:#f0f3f6; color:#1f2937;
+      padding:12px;
+      border-right:1px solid rgba(0,0,0,0.06);
+      display:flex; flex-direction:column;
+      transition:width 0.3s ease, transform 0.3s ease;
+      z-index:1200;
+    }
+
+    .sidebar .brand {
+      display:flex; align-items:center; gap:0.6rem;
+      margin-bottom:1rem; padding:8px 4px;
+    }
+
+    .sidebar .logo {
+      width:40px; height:40px; background:transparent;
+      border-radius:8px; display:flex; align-items:center; justify-content:center;
+      color:#10b981; font-weight:700; font-size:0.95rem;
+      flex-shrink:0; box-shadow:0 1px 2px rgba(0,0,0,0.04);
+    }
+
+    .sidebar .brand span { font-weight:700; font-size:1rem; color:#374151; }
+
+    /* collapsed (narrow) sidebar */
+    .sidebar.shrink { width:80px; padding:12px 8px; }
+    .sidebar.shrink .brand span { display:none; }
+    .sidebar.shrink a { text-align:center; font-size:1.1rem; }
+    .sidebar.shrink a span { display:none; }
+
+    /* nav items (anchors) styled similar to admin .nav-item */
+    .sidebar a {
+      display:flex; align-items:center; gap:12px; color:#1f2937;
+      text-decoration:none; margin:8px 0; font-size:15px;
+      padding:12px 10px; border-radius:8px; background:transparent;
+      transition:background 0.18s ease, color 0.18s ease;
+    }
+
+  .sidebar a .fa,
+  .sidebar a i { width:28px; text-align:center; font-size:18px; color:#1f2937; background:transparent; }
+
+    .sidebar a span { color:inherit; display:inline-block; white-space:nowrap; overflow:hidden; }
+
+    .sidebar a:hover,
+    .sidebar a.active {
+      background: rgba(15,122,52,0.08); color:#0f7a34; font-weight:600;
+    }
+
+    /* Admin-like header & sidebar overrides (no HTML changes) */
+    .header-and-sidebar-top {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      z-index: 1000;
+      display: flex;
+      background-color: #1e8e3e;
+      color: white;
+      height: 60px;
+      transition: left 0.3s ease;
+    }
+
+    .sidebar-top {
+      width: 250px;
+      display: flex;
+      align-items: center;
+      padding: 10px 20px;
+      box-sizing: border-box;
+      border-right: 1px solid rgba(255, 255, 255, 0.3);
+      height: 60px;
+      transition: width 0.3s ease;
+    }
+
+    .sidebar {
+      position: fixed; /* ensure sidebar spans full height and brand sits at top */
+      top: 0;
+      left: 0;
+      width: 250px;
+      height: 100vh;
+      background: #f0f3f6;
+      border-right: none; /* remove full-height border so brand can appear flush */
+      z-index: 1002; /* sit above topbar so brand overlays header area */
+      overflow: auto;
+    }
+
+    /* Hide the native scrollbar for the sidebar while keeping content scrollable */
+    .sidebar {
+      scrollbar-width: none; /* Firefox */
+      -ms-overflow-style: none; /* IE 10+ */
+    }
+    .sidebar::-webkit-scrollbar {
+      width: 0px;
+      height: 0px;
+      background: transparent;
+    }
+
+    /* vertical divider only below the brand area */
+    .sidebar::after {
+      content: '';
+      position: absolute;
+      left: 249px; /* 1px inside right edge */
+      top: 60px; /* start after brand/topbar */
+      width: 1px;
+      height: calc(100vh - 60px);
+      background: rgba(0,0,0,0.06);
+      z-index: 1001;
+    }
+
+    .nav-item, .sidebar a {
+      color: #1f2937;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 10px;
+      border-radius: 8px;
+      background: transparent;
+      cursor: pointer;
+      font-weight: 400;
+      font-size: 15px;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .nav-item:hover, .sidebar a:hover {
+      background: rgba(15,122,52,0.08) !important;
+      color: #0f7a34 !important;
+      font-weight: 400 !important;
+    }
+
+    .nav-item.active {
+      background: rgba(15,122,52,0.12) !important;
+      color: #0f7a34 !important;
+      font-weight: 600 !important;
+    }
+
+    /* adjust content to sit below the fixed topbar and to the right of the sidebar */
+    .content { margin-top: 60px; margin-left: 250px; }
+    .content.shrink { margin-left: 80px; }
+
+    /* Logo and brand name styling to mirror admin */
+    .sidebar .logo {
+      background: transparent;
+      width:72px; height:72px; border-radius:6px; box-shadow:none; color:transparent;
+      display:flex; align-items:center; justify-content:center; overflow:hidden; padding:0; border:0;
+    }
+    .sidebar .logo img{
+      width:auto; height:64px; max-width:100%; max-height:64px; object-fit:contain; display:block;
+      background:transparent; /* in case image has transparency preserve it */
+      image-rendering: -webkit-optimize-contrast;
+    }
+
+    /* keep brand/logo aligned with topbar height (60px) */
+    .sidebar .brand {
+      height: 60px;
+      align-items: center;
+      padding: 0 12px;
+      background: #1e8e3e; /* match topbar background for a seamless look */
+      color: white;
+      gap: 12px;
+    }
+
+    .sidebar .brand span { color: white; font-weight:700; margin-left:4px; }
+
+    /* push nav content below the brand area */
+    #nav { padding-top: 12px; margin-top: 60px; }
+
+    /* make the small top-area logo visible in header-like layout */
+    .header-and-sidebar-top .sidebar-logo span { color: white; font-weight:700; font-size:1.1rem; }
+
+    /* ===== Topbar (admin-like appearance) ===== */
+    .topbar {
+      position: fixed;
+      top: 0;
+      left: 250px; /* sit to the right of the fixed sidebar */
+      right: 0;
+      height: 60px;
+      background-color: var(--topbar-bg);
+      color: white;
+      padding: 10px 30px;
+      display: flex; justify-content: space-between; align-items: center;
+      z-index: 1001;
+      transition: left 0.3s ease, margin-left 0.3s ease;
+    }
+    .topbar.shrink { left: 80px; }
+
+    .topbar-left { display:flex; align-items:center; gap:0.6rem; }
+    .hamburger {
+      font-size: 1.2rem;
+      cursor: pointer;
+      padding: 0.3rem;
+      border-radius: 4px;
+      transition: background 0.2s;
+    }
+    .hamburger:hover { background: rgba(255,255,255,0.1); }
+  .portal-title { display:flex; flex-direction:column; line-height:1.2; }
+  .portal-title strong span.safespace { display:inline; margin-right:0.3rem; }
+    .portal-title small { font-size:0.75rem; opacity:0.9; }
+
+    /* Show SafeSpace text when sidebar is shrunk */
+    .topbar.shrink .portal-title strong span.safespace { display: inline; }
+
+    /* Mobile logo styling */
+    .mobile-logo {
+      display: none;
+      width: 44px;
+      height: 44px;
+      background: transparent; /* remove white circular background */
+      border-radius: 6px;
+      align-items: center;
+      justify-content: center;
+      color: #00723f;
+      font-weight: bold;
+      font-size: 0.8rem;
+      margin-right: 0.5rem;
+      padding:0;
+      overflow:hidden;
+    }
+  .mobile-logo img{ width:auto; height:34px; object-fit:contain; display:block; background:transparent }
+
+    /* Profile + Notifications */
+    .profile { width:38px; height:38px; border-radius:50%; background:#004c27;
+      display:flex; align-items:center; justify-content:center; font-weight:bold; cursor:pointer; }
+    .notif-wrapper { position:relative; cursor:pointer; font-size:1.3rem; color:white; }
+    .notif-badge {
+      position:absolute; bottom:0; right:0;
+      width:10px; height:10px; background:red;
+      border-radius:50%; border:2px solid #1e8e3e;
+    }
+    .notif-badge.hidden { display:none; }
+
+    .notif-dropdown {
+      position:absolute; top:48px; right:0;
+      background:white; color:#333;
+      width:260px; border-radius:8px;
+      box-shadow:0 4px 10px rgba(0,0,0,0.15);
+      display:none; flex-direction:column;
+      overflow:hidden; z-index:2000;
+    }
+    .notif-dropdown.active { display:flex; }
+    .notif-header { background:#1e8e3e; color:white; padding:0.6rem; font-weight:bold; }
+    .notif-list { max-height:220px; overflow-y:auto; }
+    .notif-item {
+      padding:0.6rem 0.8rem; border-bottom:1px solid #eee;
+      font-size:0.9rem; cursor:pointer;
+    }
+    .notif-item:hover { background:#f1f1f1; }
+
+    /* ===== Content ===== */
+    .content {
+      padding:1rem;
+      max-width:1200px; margin:auto;
+      margin-left:250px;
+      transition:margin-left 0.3s ease;
+    }
+    .content.shrink { margin-left:70px; }
+    .grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(350px,1fr)); gap:1rem; }
+    .card { background:white; border-radius:10px; padding:1rem; box-shadow:0 2px 6px rgba(0,0,0,0.1); }
+    .card h3 { margin-bottom:0.8rem; }
+
+    /* Hide hamburger on mobile */
+    @media (max-width:768px) {
+      .hamburger { display: none; }
+    }
+
+    /* ===== Mobile Bottom Nav ===== */
+    @media (max-width:768px) {
+      .sidebar { 
+        display: none !important;
+        transform: translateX(-100%);
+      }
+      .topbar { margin-left:0; }
+      .content { margin-left:0; }
+      .hamburger { display: none; }
+      
+      /* Show mobile logo and SafeSpace text */
+      .mobile-logo { display: flex; }
+      .portal-title strong span.safespace { display: inline; }
+      
+      .bottom-nav {
+        position:fixed; bottom:0; left:0; width:100%;
+        background:#1e8e3e; display:flex; justify-content:space-around;
+        padding:0.5rem 0; z-index:2000;
+      }
+      .bottom-nav a {
+        flex:1; text-align:center; color:white; text-decoration:none; font-size:0.9rem;
+        display:flex; align-items:center; justify-content:center; gap:0.25rem;
+        padding:0.6rem 0; opacity:1; background:transparent; border-radius:8px;
+      }
+      .bottom-nav a i { font-size:22px; line-height:1; }
+      .bottom-nav a.active { color:#ffc107; }
+    }
+    
+    /* Hide bottom nav on larger screens */
+    .bottom-nav { display: none; }
+
+    @media (max-width: 768px) {
+      .bottom-nav { 
+        display: flex !important;
+        position: fixed;
+        bottom: 0; left: 0; right: 0;
+        background: var(--primary-dark); /* solid colored bar */
+        justify-content: space-around;
+        padding: 0.6rem 0; height:64px; z-index: 2000;
+      }
+    }
+
+    /* ===== Misc ===== */
+    .hidden {
+      display: none !important;
+    }
+
+    /* --- START: NEW ADMIN SYNC STYLES --- */
+    .sidebar {
+        width: 250px;
+        background: #f0f3f6;
+        border-right: 1px solid rgba(0,0,0,0.06);
+        position: fixed;
+        top: 60px; /* Starts below the header */
+        left: 0;
+        height: calc(100vh - 60px);
+        z-index: 999;
+        padding: 12px;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        transition: width 0.3s ease, transform 0.3s ease;
+    }
+    
+    .sidebar .brand {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 250px;
+        height: 60px;
+        background-color: #1e8e3e;
+        color: white;
+        display: flex;
+        align-items: center;
+        padding: 10px 20px;
+        box-sizing: border-box;
+        z-index: 1002;
+        border-right: 1px solid rgba(255, 255, 255, 0.3);
+        transition: width 0.3s ease;
+    }
+    
+  .sidebar .brand .logo {
+    height: 40px;
+    width: 40px;
+    background: transparent url("safespace.png") center/contain no-repeat;
+    color: transparent;
+    border-radius: 8px;
+  }
+    
+    .sidebar .brand span {
+        font-weight: bold;
+        font-size: 1.2rem;
+        color: white;
+        white-space: nowrap;
+        margin-left: 10px;
+        transition: opacity 0.3s ease, width 0.3s ease;
+    }
+    
+    .sidebar a {
+        margin: 0; /* Nav links start at the top of the sidebar container */
+    }
+    
+    .topbar {
+        position: fixed;
+        top: 0;
+        left: 250px;
+        right: 0;
+        height: 60px;
+        background-color: #1e8e3e;
+        color: white;
+        padding: 10px 30px;
+        z-index: 1000;
+        transition: left 0.3s ease;
+    }
+    
+    .content {
+        margin-top: 60px;
+        margin-left: 250px;
+        transition: margin-left 0.3s ease;
+    }
+    
+   /* --- Collapsed State --- */
+.sidebar.collapsed {
+  width: 80px;
+  padding: 12px 8px;
+}
+
+.sidebar.collapsed .brand {
+  width: 80px;
+  justify-content: center;
+}
+
+.sidebar.collapsed .brand span {
+  opacity: 0;
+  pointer-events: none;
+  width: 0;
+}
+
+.sidebar.collapsed a span {
+  display: none;
+}
+.sidebar.collapsed a {
+  justify-content: center;
+}
+
+/* ADD THIS NEW CODE RIGHT HERE - Keep emoji icons visible when collapsed */
+.sidebar.collapsed a::before {
+  content: attr(data-emoji);
+  font-size: 1.3rem;
+}
+
+.sidebar a::before {
+  content: attr(data-emoji);
+  margin-right: 8px;
+}
+
+.sidebar.collapsed a::before {
+  margin-right: 0;
+}
+/* END OF NEW CSS CODE */
+    
+    .sidebar.collapsed a span {
+        display: none;
+    }
+    .sidebar.collapsed a {
+        justify-content: center;
+    }
+    
+    .topbar.shifted {
+        left: 80px;
+    }
+    
+    .content.shifted {
+        margin-left: 80px;
+    }
+    
+    /* --- Mobile Overlay & Sidebar --- */
+    .sidebar-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 998;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    
+    .sidebar-overlay.active {
+        display: block;
+        opacity: 1;
+    }
+    
+    @media (max-width: 768px) {
+        .sidebar {
+            top: 0; /* On mobile, the sidebar is full height */
+            height: 100vh;
+            width: 280px;
+            transform: translateX(-100%);
+            box-shadow: 4px 0 15px rgba(0, 0, 0, 0.2);
+            z-index: 1200; /* Above overlay */
+        }
+    
+        .sidebar.mobile-open {
+            transform: translateX(0);
+        }
+    
+        /* Prevent collapsing on mobile view */
+        .sidebar.collapsed {
+            width: 280px;
+            transform: translateX(-100%);
+        }
+    
+        .sidebar .brand {
+            width: 280px; /* Brand takes full width of mobile sidebar */
+        }
+    
+        .sidebar .brand.collapsed {
+            width: 280px;
+            justify-content: flex-start;
+        }
+    
+        .sidebar .brand.collapsed span {
+            opacity: 1;
+            pointer-events: auto;
+            width: auto;
+        }
+    
+        .topbar, .topbar.shifted {
+            left: 0;
+        }
+        .content, .content.shifted {
+            margin-left: 0;
+        }
+    }
+    /* --- END: NEW ADMIN SYNC STYLES --- */
+  </style>
+  <style id="mobile-footer-visible">
+    @media (max-width: 768px) {
+      /* Match appointments.html: ensure footer text is slightly smaller on mobile */
+      .content-footer > div { font-size: 0.75rem !important; color: var(--text-light) !important; }
+      /* Make bottom navigation use the same topbar green on mobile for visual parity */
+      .bottom-nav { background: #1e8e3e !important; }
+      .bottom-nav a .emoji, .bottom-nav a i { color: #ffffff !important; }
+      /* Make sure bottom-nav stays above content */
+      .bottom-nav { z-index: 2000 !important; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Sidebar from appointments.html -->
+  <div class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="logo"><img src="safespace.png" alt="SafeSpace logo"></div>
+      <span>SafeSpace</span>
+    </div>
+    <a href="appointments.html" data-emoji="📅"><span>Appointments</span></a> 
+    <a href="history.html" data-emoji="📋"><span>History</span></a>
+    <a href="assessments.html" class="active"data-emoji="📝"><span>Assessments</span></a>
+    <a href="resources.html" data-emoji="📚"><span>Resources</span></a>
+    <a href="messages.html" data-emoji="💬"><span>Messages</span></a>
+    <a href="settings.html" data-emoji="⚙️"><span>Settings</span></a>
+  </div>
+
+  <!-- Topbar from appointments.html -->
+  <div class="topbar" id="topbar">
+    <div class="topbar-left">
+      <div class="hamburger">
+        <i class="fas fa-bars"></i>
+      </div>
+      <div class="mobile-logo"><img src="safespace.png" alt="SafeSpace" style="width:24px;height:24px;object-fit:contain"></div>
+      <div class="portal-title">
+        <strong><span class="safespace">RSU SafeSpace: </span>Student Portal</strong>
+        <small></small>
+      </div>
+    </div>
+    <div style="display:flex; align-items:center; gap:1rem; position:relative;">
+      <div class="notif-wrapper" onclick="toggleNotif()">
+        <span class="icon-btn">🔔</span>
+        <div class="notif-badge" style="position:absolute;right:4px;bottom:8px;width:8px;height:8px;background:#ef4444;border-radius:50%;border:2px solid var(--green)"></div>
+      </div>
+      <div id="notifDropdown" class="notif-dropdown">
+        <div class="notif-header">Notifications</div>
+        <div class="notif-list">
+          <div class="notif-item" onclick="goToSection('appointments')">🔔 New counseling slots available</div>
+          <div class="notif-item" onclick="goToSection('messages')">📩 You have a new message from your counselor</div>
+          <div class="notif-item" onclick="goToSection('assessments')">⚠ Reminder: Complete your assessment</div>
+        </div>
+      </div>
+      <div class="profile" onclick="window.location.href='profile.html'"></div>
+    </div>
+  </div>
+
+  <!-- Content -->
+  <div class="content" id="content">
+    <div class="page-header">
+      <div style="display:flex; align-items:center; justify-content:space-between; width:100%;">
+        <div>
+          <h1 class="page-title">Assessments</h1>
+          <p class="page-subtitle">Take self-checks and quizzes.</p>
+        </div>
+      </div>
+    </div>
+    <!-- Mood top: left emoticons, right daily-mood graph -->
+  <div class="mood-top-container" style="padding:4px 18px 6px 18px; margin-bottom:28px;">
+  <div class="mood-left" style="display:flex;align-items:center;gap:14px">
+        <div id="moodPicker" style="display:flex;flex-direction:column;align-items:flex-start;gap:8px;">
+          <div style="font-size:13px;color:white;background:var(--green);padding:6px 12px;border-radius:999px;font-weight:700">Mood of the Day</div>
+          <div id="emojiList" style="display:flex;gap:12px;justify-content:center;padding:6px;background:linear-gradient(180deg,#ffffff,#f7fff7);border-radius:14px;box-shadow:0 6px 16px rgba(16,24,40,0.06)">
+              <div class="emoji-col"><button class="mood-btn" data-value="7" title="Great">😺</button><div class="emoji-label">Great</div></div>
+              <div class="emoji-col"><button class="mood-btn" data-value="6" title="Good">🐶</button><div class="emoji-label">Good</div></div>
+              <div class="emoji-col"><button class="mood-btn" data-value="5" title="Okay">🙂</button><div class="emoji-label">Okay</div></div>
+              <div class="emoji-col"><button class="mood-btn" data-value="4" title="Tired">😴</button><div class="emoji-label">Tired</div></div>
+              <div class="emoji-col"><button class="mood-btn" data-value="3" title="Anxious">😟</button><div class="emoji-label">Anxious</div></div>
+              <div class="emoji-col"><button class="mood-btn" data-value="2" title="Sad">😿</button><div class="emoji-label">Sad</div></div>
+              <div class="emoji-col"><button class="mood-btn" data-value="1" title="Angry">😡</button><div class="emoji-label">Angry</div></div>
+            </div>
+          <div id="streakDisplay" style="font-size:12px;color:var(--muted);margin-top:6px">Streak: 0 🔥</div>
+        </div>
+      </div>
+
+    <div class="mood-right" style="display:flex;align-items:center;justify-content:flex-end;flex:1">
+      <div style="background:linear-gradient(180deg,#ffffff,#f8fff8);padding:12px;border-radius:12px;box-shadow:0 6px 20px rgba(16,24,40,0.04);width:100%;height:100%;box-sizing:border-box;">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+              <div style="font-weight:700;color:var(--green-dark)">Recent Mood</div>
+              <div style="display:flex;align-items:center;gap:8px">
+                <div id="recentMoodLabel" style="font-size:12px;color:var(--muted);margin-right:8px">Last 7 days</div>
+                <div class="view-toggle" role="tablist" aria-label="Mood view toggle">
+                  <button id="viewGraphBtn" class="active" aria-pressed="true">Weekdays</button>
+                  <button id="viewCalendarBtn" aria-pressed="false">Calendar</button>
+                </div>
+              </div>
+            </div>
+            <canvas id="moodMini" style="width:100%;flex:1;margin-top:8px;display:block;border-radius:8px"></canvas>
+            <!-- textual day labels (Mon/Tue/...) to ensure visibility even when canvas text is clipped -->
+            <div id="moodLabels" style="display:flex;justify-content:space-between;padding-top:8px;font-size:12px;color:var(--muted);gap:2px"></div>
+            <!-- Calendar view (hidden by default) -->
+            <div id="moodCalendar" aria-hidden="true"></div>
+          </div>
+      </div>
+    </div>
+
+    
+    <div class="grid">
+      <!-- Left Column -->
+      <div>
+        <div class="card test-result-card">
+          <h3>
+            <i class="fas fa-chart-line"></i>
+            Annual Psychological Testing
+            <button id="toggleTestResult" class="toggle-test-result">
+              <i id="eyeIcon" class="fas fa-eye"></i>
+            </button>
+          </h3>
+          <div id="testResultContent" class="test-result-content">
+            <div class="result-item">
+              <strong>Status:</strong> <span class="status-badge">Good Mental Health</span>
+            </div>
+            <div class="result-item">
+              <strong>Score:</strong> <span class="score-display">85 / 100</span>
+            </div>
+            <div class="result-item">
+              <strong>Assessment Date:</strong> December 15, 2023
+            </div>
+            <div class="result-item">
+              <strong>Summary:</strong> You are maintaining healthy mental wellness. Continue monthly check-ins and keep up your positive habits.
+            </div>
+            <a href="#" class="view-full-btn">
+              <i class="fas fa-external-link-alt"></i>
+              View Full Assessment
+            </a>
+          </div>
+          <div id="testResultHidden" class="test-result-hidden">
+            <i class="fas fa-lock" style="font-size: 2rem; margin-bottom: 15px; opacity: 0.5;"></i>
+            <p>Result is hidden. Click the eye icon to reveal.</p>
+          </div>
+        </div>
+        
+        <div id="availableCard" class="card">
+          <h3><i class="fas fa-clipboard-list"></i> Available Assessments</h3>
+          <div id="assessmentList" class="assessment-list">
+            <!-- Rendered by JS: list of interactive assessments -->
+          </div>
+        </div>
+      </div>
+      
+      <!-- Right Column -->
+      <div>
+        <div class="card" id="completedCard" style="height:300px;min-height:270px;max-height:350px;display:flex;flex-direction:column;">
+          <h3><i class="fas fa-check-circle"></i> Completed Assessments</h3>
+          <div id="completedList" class="completed-list" style="flex:1 1 auto;overflow-y:auto;padding-right:6px;">
+            <!-- Completed assessments rendered here (from localStorage / Firebase) -->
+          </div>
+        </div>
+        
+        <div id="progressCard" class="card">
+          <h3><i class="fas fa-chart-pie"></i> Assessment Progress</h3>
+          <div style="padding: 10px 0; text-align: center;">
+            <canvas id="progressChart" width="220" height="220" style="display:block;margin:0 auto;border-radius:8px;background:linear-gradient(180deg,#fbfff9,#f0f9f0);"></canvas>
+            <div style="margin-top:8px; display:flex; align-items:center; justify-content:center; gap:12px">
+              <div style="text-align:center">
+                <div style="font-size:18px; color:var(--green); font-weight:700" id="progressPercent">0%</div>
+                <div style="font-size:12px; color:var(--muted)">Assessments completed</div>
+              </div>
+              <div style="text-align:left">
+                <div style="font-size:14px; color:#444" id="completedCount">0</div>
+                <div style="font-size:12px; color:var(--muted)">Total results saved</div>
+              </div>
+            </div>
+            <div id="last7" style="margin-top:12px; display:flex; gap:8px; justify-content:center; align-items:center"></div>
+            <button class="assessment-action" style="margin-top: 12px;" onclick="continueRecommended()">Continue Progress</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="card" style="margin-top:18px;">
+  <h3><i class="fas fa-info-circle"></i> About these Assessments</h3>
+  <p style="color:#555;line-height:1.4">These quizzes are for fun. They are not medical tests. If you are worried about your mental health, contact counseling or emergency services.</p>
+  <p style="color:#666;font-size:0.9rem;margin-top:8px">Content adapted for educational use and inspired by public-domain/open resources including <a href="https://openpsychometrics.org/" target="_blank">OpenPsychometrics</a>, <a href="https://www.mindful.org/" target="_blank">Mindful.org</a>, and <a href="https://www.smilingmind.com.au/" target="_blank">Smiling Mind</a>.</p>
+    </div>
+
+    <!-- Desktop/content footer (matches appointments.html layout) -->
+    <div class="content-footer">
+      <div>
+        © 2025 RSU SafeSpace | Student Support Management System
+      </div>
+    </div>
+
+    <!-- Mobile footer fallback (kept for small screens) -->
+    <div class="footer">
+      <p>© 2025 RSU SafeSpace | Student Support Management System</p>
+    </div>
+  </div>
+
+  <!-- Bottom Navigation from appointments.html -->
+  <div class="bottom-nav">
+    <a href="appointments.html"><span class="bn-emoji">📅</span><span class="bn-label">Appointments</span></a>
+    <a href="history.html"><span class="bn-emoji">📋</span><span class="bn-label">History</span></a>
+    <a href="assessments.html" class="active"><span class="bn-emoji">📝</span><span class="bn-label">Assessments</span></a>
+    <a href="resources.html"><span class="bn-emoji">📚</span><span class="bn-label">Resources</span></a>
+    <a href="messages.html"><span class="bn-emoji">💬</span><span class="bn-label">Messages</span></a>
+    <a href="settings.html"><span class="bn-emoji">⚙️</span><span class="bn-label">Settings</span></a>
+  </div>  
+
+  <!-- Modal Overlay -->
+  <div id="modalOverlay" class="modal-overlay">
+    <div id="modalBox" class="modal-box">
+      <span id="modalClose" class="modal-close">&times;</span>
+  <div id="modalContent" class="modal-content"></div>
+    </div>
+  </div>
+
+  <!-- Add Firebase SDKs before your main script -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+  <script src="firebase_config.js"></script>
+  <script>
+    // Use firebase_config.js to centralize Firebase initialization.
+    // `firebase_config.js` exposes `window.db` (Realtime Database) and ensures firebase is initialized.
+    const auth = window.firebase && window.firebase.auth ? window.firebase.auth() : (firebase ? firebase.auth() : null);
+    const db = window.db || (window.firebase && window.firebase.database ? window.firebase.database() : null);
+
+    if (!auth || !db) {
+      console.warn('Firebase auth or db not initialized yet. Ensure firebase SDKs and firebase_config.js are loaded.');
+    }
+
+    auth && auth.onAuthStateChanged(function(user) {
+      if (user) {
+        // Try to read a /students profile for richer UI, but many projects lock that path.
+        // If rules block it, silently fall back to using the auth profile (displayName/photoURL/email).
+        (async function(){
+          try {
+            if (db) {
+              const snapshot = await db.ref('students').orderByChild('uid').equalTo(user.uid).once('value');
+              if (snapshot && snapshot.exists()) {
+                snapshot.forEach(function(child) {
+                  const data = child.val();
+                  // Update profile image in topbar/sidebar
+                  const topbarProfile = document.querySelector('.profile');
+                  if (topbarProfile) {
+                    if (data.photo_url) {
+                      topbarProfile.innerHTML = `<img src="${data.photo_url}" alt="Profile Photo" style="width:38px;height:38px;border-radius:50%;object-fit:cover;">`;
+                    } else {
+                      topbarProfile.textContent = (data.username || data.first_name || 'U')[0].toUpperCase();
+                    }
+                  }
+                  // Update student ID in topbar and expose it for easy retrieval
+                  const topbarStudentId = document.querySelector('.portal-title small');
+                  if (topbarStudentId) {
+                    const sid = data.student_id || 'N/A';
+                    topbarStudentId.textContent = "ID: " + sid;
+                    // expose a JS variable and a data-* attribute so other scripts can read it
+                    try { window.currentStudentId = data.student_id || null; } catch (e) { /* ignore */ }
+                    try { document.documentElement.dataset.studentId = data.student_id || ''; } catch (e) { /* ignore */ }
+                  }
+                });
+                return; // done
+              }
+            }
+          } catch (e) {
+            // Most likely a rules denial; fall back to auth profile
+            console.warn('Could not read /students (may be blocked by rules). Using auth profile as fallback.', e);
+          }
+
+          // Fallback: use auth user profile info (will work when only /assessments is allowed)
+          try {
+            const topbarProfile = document.querySelector('.profile');
+            if (topbarProfile) {
+              if (user.photoURL) {
+                topbarProfile.innerHTML = `<img src="${user.photoURL}" alt="Profile Photo" style="width:38px;height:38px;border-radius:50%;object-fit:cover;">`;
+              } else {
+                const hint = (user.displayName || user.email || 'U')[0] || 'U';
+                topbarProfile.textContent = hint.toUpperCase();
+              }
+            }
+            const topbarStudentId = document.querySelector('.portal-title small');
+            // If we couldn't read the richer /students profile, show the auth UID as a fallback
+            const fid = user && user.uid ? user.uid : '';
+            if (topbarStudentId) topbarStudentId.textContent = fid ? ('ID: ' + fid) : '';
+            try { window.currentStudentId = fid || null; } catch (e) {}
+            try { document.documentElement.dataset.studentId = fid || ''; } catch (e) {}
+          } catch (e) { /* ignore UI fallback errors */ }
+        })();
+      } else {
+        window.location.href = "signin.html";
+      }
+    });
+  </script>
+
+  <script>
+    // --- START: NEW ADMIN SYNC SIDEBAR SCRIPT ---
+    const menuIcon = document.querySelector('.hamburger');
+    const sidebar = document.getElementById('sidebar');
+    const mainContent = document.getElementById('content');
+    const sidebarTop = document.querySelector('.sidebar .brand');
+    const topbar = document.getElementById('topbar');
+    
+    // Create overlay for mobile
+    const overlay = document.createElement('div');
+    overlay.className = 'sidebar-overlay';
+    document.body.appendChild(overlay);
+    
+    // Mobile detection
+    function isMobile() {
+        return window.innerWidth <= 768;
+    }
+    
+    // Toggle sidebar with mobile responsiveness
+    if (menuIcon) {
+        menuIcon.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            if (isMobile()) {
+                // Mobile behavior - overlay sidebar
+                const isOpen = sidebar.classList.toggle('mobile-open');
+                overlay.classList.toggle('active', isOpen);
+                document.body.style.overflow = isOpen ? 'hidden' : '';
+            } else {
+                // Desktop behavior - collapse sidebar
+                const isCollapsed = sidebar.classList.toggle('collapsed');
+                mainContent.classList.toggle('shifted', isCollapsed);
+                sidebarTop.classList.toggle('collapsed', isCollapsed);
+                topbar.classList.toggle('shifted', isCollapsed);
+            }
+        });
+    }
+    
+    // Close mobile sidebar when clicking overlay
+    overlay.addEventListener('click', () => {
+        sidebar.classList.remove('mobile-open');
+        overlay.classList.remove('active');
+        document.body.style.overflow = '';
+    });
+    
+    // Handle window resize
+    window.addEventListener('resize', () => {
+        if (!isMobile()) {
+            // Reset mobile states when switching to desktop
+            sidebar.classList.remove('mobile-open');
+            overlay.classList.remove('active');
+            document.body.style.overflow = '';
+            // Ensure desktop state is consistent
+            const isCollapsed = sidebar.classList.contains('collapsed');
+            mainContent.classList.toggle('shifted', isCollapsed);
+            sidebarTop.classList.toggle('collapsed', isCollapsed);
+            topbar.classList.toggle('shifted', isCollapsed);
+        } else {
+            // Reset desktop states when switching to mobile
+            sidebar.classList.remove('collapsed');
+            mainContent.classList.remove('shifted');
+            sidebarTop.classList.remove('collapsed');
+            topbar.classList.remove('shifted');
+        }
+    });
+    
+    // Close mobile sidebar when clicking a menu item
+    document.querySelectorAll('.sidebar a').forEach(link => {
+        link.addEventListener('click', () => {
+            if (isMobile()) {
+                sidebar.classList.remove('mobile-open');
+                overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        });
+    });
+    // --- END: NEW ADMIN SYNC SIDEBAR SCRIPT ---
+
+    // Notification toggle
+    function toggleNotif() {
+      const dropdown = document.getElementById("notifDropdown");
+      const badge = document.querySelector(".notif-badge");
+      dropdown.classList.toggle("active");
+      if (dropdown.classList.contains("active")) { badge.classList.add("hidden"); }
+    }
+
+    // Close notification dropdown when clicking outside
+    document.addEventListener("click", function(e){
+      const dropdown = document.getElementById("notifDropdown");
+      const notifBtn = document.querySelector(".notif-wrapper");
+      if (notifBtn && dropdown && !notifBtn.contains(e.target) && !dropdown.contains(e.target)) {
+        dropdown.classList.remove("active");
+      }
+    });
+
+    // Navigation
+    function goToSection(sectionId) {
+      if (sectionId === 'appointments') {
+        window.location.href = 'appointments.html';
+      } else if (sectionId === 'history') {
+        window.location.href = 'history.html';
+      } else if (sectionId === 'assessments') {
+        window.location.href = 'assessments.html';
+      } else if (sectionId === 'resources') {
+        window.location.href = 'resources.html';
+      } else if (sectionId === 'messages') {
+        window.location.href = 'messages.html';
+      } else {
+        alert("Navigation to " + sectionId);
+      }
+      document.getElementById("notifDropdown").classList.remove("active");
+    }
+
+    // Initialize page
+    document.addEventListener('DOMContentLoaded', function() {
+      // Set up event listeners
+      document.getElementById('toggleTestResult').addEventListener('click', toggleTestResult);
+  document.getElementById('modalClose').addEventListener('click', closeModal);
+      
+      // Close modal when clicking outside
+      document.getElementById('modalOverlay').addEventListener('click', function(e) {
+        if (e.target === this) closeModal();
+      });
+      
+      // Initialize test result as hidden
+      document.getElementById('testResultContent').style.display = 'none';
+      document.getElementById('testResultHidden').style.display = 'block';
+    });
+
+    // Toggle test result visibility
+    function toggleTestResult() {
+      const content = document.getElementById('testResultContent');
+      const hidden = document.getElementById('testResultHidden');
+      const eyeIcon = document.getElementById('eyeIcon');
+      
+      if (content.style.display === 'block') {
+        content.style.display = 'none';
+        hidden.style.display = 'block';
+        eyeIcon.className = 'fas fa-eye';
+      } else {
+        content.style.display = 'block';
+        hidden.style.display = 'none';
+        eyeIcon.className = 'fas fa-eye-slash';
+      }
+    }
+
+    // Modal functions
+    function showModalHtml(html) {
+      const modalOverlay = document.getElementById('modalOverlay');
+      const modalContent = document.getElementById('modalContent');
+      modalContent.innerHTML = html;
+      modalOverlay.style.display = 'flex';
+    }
+
+    function closeModal() {
+      const modalOverlay = document.getElementById('modalOverlay');
+      modalOverlay.style.display = 'none';
+    }
+
+    // --- Assessment system ---
+    const ASSESSMENTS_KEY = 'ss_assessments_log';
+    const MOOD_KEY = 'ss_mood_log';
+
+    // Mood levels (ordered high -> low). Add/remove levels here to change available emotions.
+    const MOOD_LEVELS = [
+      { value: 7, label: 'Great', emoji: '😺', color: '#059669' },
+      { value: 6, label: 'Good', emoji: '🐶', color: '#10b981' },
+      { value: 5, label: 'Okay', emoji: '🙂', color: '#f59e0b' },
+      { value: 4, label: 'Tired', emoji: '😴', color: '#f97316' },
+      { value: 3, label: 'Anxious', emoji: '😟', color: '#f97316' },
+      { value: 2, label: 'Sad', emoji: '😿', color: '#ef4444' },
+      { value: 1, label: 'Angry', emoji: '😡', color: '#9b1c1c' }
+    ];
+
+    function moodLevelByValue(v) { return MOOD_LEVELS.find(l => Number(l.value) === Number(v)); }
+    function moodEmoji(v) { const m = moodLevelByValue(v); return m ? m.emoji : '•'; }
+    function moodLabel(v) { const m = moodLevelByValue(v); return m ? m.label : 'Unknown'; }
+    function moodColor(v) { const m = moodLevelByValue(v); return m ? (m.color||'#aaa') : '#aaa'; }
+
+    const assessments = [
+      {
+        id: 'wellness-check',
+        title: 'Wellness Check',
+        description: 'A short self-reflection on sleep, energy, mood, and social connection.',
+        estimatedMinutes: 8,
+        questions: [
+          'I felt cheerful and in good spirits.',
+          'I felt calm and relaxed.',
+          'I felt active and vigorous.',
+          'I woke up feeling rested.',
+          'I had energy to do the things I wanted to do.',
+          'I felt connected to others.',
+          'I felt able to cope with daily stresses.',
+          'I enjoyed my usual activities.',
+          'I felt optimistic about the future.',
+          'I slept well last night.'
+        ]
+        // no reverse-scored items: higher = better
+        , reverse: []
+      },
+      {
+        id: 'stress-coping',
+        title: 'Stress & Coping',
+        description: 'Measures how you have been handling stress and coping strategies.',
+        estimatedMinutes: 10,
+        questions: [
+          'I found it difficult to relax.',
+          'I felt overwhelmed by tasks.',
+          'I had trouble concentrating.',
+          'I used healthy strategies (exercise, talk, breathing).',
+          'I felt tense or restless.',
+          'I felt irritable or easily annoyed.',
+          'I used substances to cope (alcohol/drugs).',
+          'I took breaks when needed.',
+          'I sought support when needed.',
+          'I could plan and organize my day.'
+        ]
+        // many items are negatively worded: higher = worse, so mark indices to reverse (0-based)
+        , reverse: [0,1,2,4,5,6]
+      },
+      {
+        id: 'self-esteem',
+        title: 'Self-Esteem Snapshot',
+        description: 'A quick look at how you feel about yourself and your abilities.',
+        estimatedMinutes: 6,
+        questions: [
+          'I feel that I have a number of good qualities.',
+          'I am able to do things as well as most people.',
+          'I feel I do not have much to be proud of.',
+          'I certainly feel useless at times.',
+          'I feel that I am a person of worth, at least on an equal plane with others.',
+          'I wish I could have more respect for myself.',
+          'On the whole, I am satisfied with myself.'
+        ]
+        // some items are negatively worded and should be reverse-scored
+        , reverse: [2,3,5]
+      }
+    ];
+
+    // Additional assessments added: sleep-quality, anxiety-snapshot, social-connection
+    assessments.push(
+      {
+        id: 'sleep-quality',
+        title: 'Sleep & Energy Check',
+        description: 'Quick check of sleep, rest, and daytime energy.',
+        estimatedMinutes: 4,
+        questions: [
+          'I fell asleep within a reasonable time and slept through the night.',
+          'I woke up feeling rested and ready for the day.',
+          'I felt alert and had energy during the day.',
+          'I napped or slept during the day because I was very tired.',
+          'My sleep problems made it hard to do my daily activities.'
+        ],
+        // last two are negatively worded -> reverse-score (indices 3,4)
+        reverse: [3,4]
+      }
+    );
+
+    assessments.push(
+      {
+        id: 'anxiety-snapshot',
+        title: 'Anxiety Snapshot',
+        description: 'Short survey about feeling nervous, worried, or on edge recently.',
+        estimatedMinutes: 5,
+        questions: [
+          'I felt nervous, anxious, or on edge.',
+          'I had trouble controlling worrying thoughts.',
+          'I was restless and had difficulty sitting still.',
+          'I felt calm and relaxed.',
+          'Worry made it hard to concentrate on tasks.',
+          'I used a healthy coping strategy (breathing, walk, talk) to manage worry.'
+        ],
+        // items 0,1,2,4 are negatively worded (higher = worse) -> reverse; item 3 and 5 are positive
+        reverse: [0,1,2,4]
+      }
+    );
+
+    assessments.push(
+      {
+        id: 'social-connection',
+        title: 'Social Connection Check',
+        description: 'A quick look at how connected and supported you feel.',
+        estimatedMinutes: 3,
+        questions: [
+          'I felt close to people who care about me.',
+          'I had chances to talk with friends or family when I wanted to.',
+          'I felt left out or isolated.',
+          'I felt I belonged in my social groups.',
+          'I felt able to ask for help when needed.'
+        ],
+        // index 2 is negatively worded -> reverse
+        reverse: [2]
+      }
+    );
+
+    // Utility: database-only helpers. All persistent reads/writes go under /assessments/{uid}/...
+    async function getUidOrThrow() {
+      if (!auth || !auth.currentUser) throw new Error('Not authenticated');
+      return auth.currentUser.uid;
+    }
+
+    // Fetch all partials + completed entries as an array (like the old local log)
+    async function fetchAllEntries() {
+      const uid = await getUidOrThrow();
+      if (!db) return [];
+      const base = db.ref('assessments/' + uid);
+      const [partialsSnap, completedSnap] = await Promise.all([
+        base.child('partials').once('value'),
+        base.child('completed').once('value')
+      ]);
+      const list = [];
+      if (partialsSnap && partialsSnap.exists()) {
+        partialsSnap.forEach(child => {
+          const v = child.val(); v._remoteKey = child.key; list.push(v);
+        });
+      }
+      if (completedSnap && completedSnap.exists()) {
+        completedSnap.forEach(child => {
+          const v = child.val(); v._remoteKey = child.key; list.push(v);
+        });
+      }
+      // sort by time ascending
+      list.sort((a,b) => (a.time||0) - (b.time||0));
+      return list;
+    }
+
+    // Fetch mood entries object converted to array [{day,value,time}, ...]
+    async function fetchMoodLogs() {
+      try {
+        const uid = await getUidOrThrow();
+        if (!db) return [];
+        const snap = await db.ref('assessments/' + uid + '/mood').once('value');
+        const arr = [];
+        if (snap && snap.exists()) {
+          snap.forEach(child => {
+            const v = child.val(); arr.push(v);
+          });
+        }
+        // sort by day ascending
+        arr.sort((a,b) => (a.day||'') < (b.day||'') ? -1 : 1);
+        return arr;
+      } catch (e) { return []; }
+    }
+
+    // Return a YYYY-MM-DD key using local time (avoid UTC toISOString issues)
+    function localDayKey(date) {
+      const d = new Date(date);
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${y}-${m}-${day}`;
+    }
+
+    // Push a partial entry to DB (under /assessments/{uid}/partials)
+    async function pushPartialToDb(entry) {
+      try {
+        const uid = await getUidOrThrow();
+        if (!db) throw new Error('Database not initialized');
+        const ref = db.ref('assessments/' + uid + '/partials').push();
+        await ref.set(entry);
+        return true;
+      } catch (e) { console.warn('pushPartialToDb failed', e); return false; }
+    }
+
+    // Push a completed entry to DB (under /assessments/{uid}/completed)
+    async function pushCompletedToDb(entry) {
+      try {
+        const uid = await getUidOrThrow();
+        if (!db) throw new Error('Database not initialized');
+        const ref = db.ref('assessments/' + uid + '/completed').push();
+        await ref.set(entry);
+        return true;
+      } catch (e) { console.warn('pushCompletedToDb failed', e); return false; }
+    }
+
+    // Render the assessments list dynamically
+    async function renderAssessments() {
+      const container = document.getElementById('assessmentList');
+      container.innerHTML = '';
+      let logs = [];
+      try { logs = await fetchAllEntries(); } catch(e){ logs = []; }
+
+      assessments.forEach(a => {
+        // hide fully completed assessments (non-partial entries)
+        const completedFull = logs.find(e => e.id === a.id && !e.partial);
+        if (completedFull) return; // skip showing this assessment in available list
+
+        // compute progress percent from latest partial attempt (if any)
+        const partials = logs.filter(e => e.id === a.id && e.partial).sort((x,y)=> (y.time||0)-(x.time||0));
+        let pct = 0;
+        if (partials.length) {
+          const last = partials[0];
+          const answers = last.answers || [];
+          const answered = answers.filter(x=>x!==null && x!==undefined).length;
+          pct = Math.round((answered / Math.max(1, a.questions.length)) * 100);
+        }
+
+        const item = document.createElement('div');
+        item.className = 'assessment-item';
+        item.innerHTML = `
+          <div class="assessment-info">
+            <span class="assessment-icon">📝</span>
+            <div>
+              <div style="display:flex;align-items:center;gap:8px">
+                <div style="font-weight:700;color:#0f7a34">${pct}%</div>
+                <div class="assessment-title">${a.title}</div>
+              </div>
+              <div class="assessment-meta">${a.estimatedMinutes} minutes • ${a.questions.length} questions</div>
+            </div>
+          </div>
+          <button class="assessment-action" data-id="${a.id}">Take</button>
+        `;
+        container.appendChild(item);
+      });
+
+      // attach click
+      container.querySelectorAll('.assessment-action').forEach(btn => {
+        btn.addEventListener('click', () => openAssessment(btn.getAttribute('data-id')));
+      });
+    }
+
+    // Render completed list from DB (only fully completed results)
+    async function renderCompleted() {
+      const all = await (async ()=>{ try { return await fetchAllEntries(); } catch(e){ return []; } })();
+      // only include entries that are not marked partial (fully finished)
+      const completed = all.filter(e => !e.partial).slice().reverse();
+      const container = document.getElementById('completedList');
+      container.innerHTML = '';
+      if (!completed.length) {
+        container.innerHTML = '<div class="test-result-hidden">No saved results yet — try an assessment.</div>';
+        return;
+      }
+      completed.forEach(entry => {
+        const item = document.createElement('div');
+        item.className = 'completed-item';
+        item.innerHTML = `
+          <div class="completed-info">
+            <span class="completed-icon">✅</span>
+            <div>
+              <div class="completed-title">${entry.title}</div>
+              <div class="completed-meta">Completed on ${new Date(entry.time).toLocaleString()}</div>
+            </div>
+          </div>
+          <button class="completed-action" data-time="${entry.time}">Results</button>
+        `;
+        container.appendChild(item);
+      });
+
+      container.querySelectorAll('.completed-action').forEach(btn => {
+        btn.addEventListener('click', () => showResultByTime(btn.getAttribute('data-time')));
+      });
+    }
+
+    async function showResultByTime(time) {
+      const list = await (async ()=>{ try { return await fetchAllEntries(); } catch(e){ return []; } })();
+      const entry = list.find(e => String(e.time) === String(time));
+      if (!entry) return alert('Result not found');
+      openResultModal(entry);
+    }
+
+    // Open assessment runner modal (async so we can optionally resume partials from DB)
+    async function openAssessment(id) {
+      const a = assessments.find(x => x.id === id);
+      if (!a) return alert('Assessment not found');
+      // initialize a fresh assessment object
+      currentAssessment = {
+        id: a.id,
+        title: a.title,
+        description: a.description,
+        questions: a.questions,
+        answers: Array(a.questions.length).fill(null),
+        // copy reverse config so scoring knows which items to invert
+        reverse: Array.isArray(a.reverse) ? a.reverse.slice() : [],
+        // start at -1 to show an introductory "for-fun" disclaimer page before the first question
+        index: -1
+      };
+
+      // Try to load the latest partial attempt for this assessment so the student resumes where they left off
+      try {
+        const all = await fetchAllEntries().catch(()=>[]);
+        const partials = (all || []).filter(e => e.id === id && e.partial).sort((x,y) => (y.time||0) - (x.time||0));
+        if (partials.length) {
+          const last = partials[0];
+          if (Array.isArray(last.answers)) {
+            // copy answers into a correctly-sized array (in case question counts changed)
+            const ans = Array(a.questions.length).fill(null);
+            for (let i = 0; i < Math.min(ans.length, last.answers.length); i++) {
+              const v = last.answers[i];
+              ans[i] = (v === null || v === undefined) ? null : Number(v);
+            }
+            currentAssessment.answers = ans;
+            // compute where to resume: first unanswered index, otherwise the last question so user can finish
+            const answeredCount = ans.filter(x => x !== null && x !== undefined).length;
+            if (answeredCount === 0) {
+              // no progress stored: keep the intro page
+              currentAssessment.index = -1;
+            } else {
+              let nextIndex = ans.findIndex(x => x === null || x === undefined);
+              if (nextIndex === -1) nextIndex = Math.max(0, ans.length - 1);
+              currentAssessment.index = nextIndex;
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('Could not resume partial assessment (DB read failed)', e);
+        // continue with a fresh attempt if DB read fails
+      }
+
+      renderAssessmentModal();
+    }
+
+    let currentAssessment = null;
+
+    function renderAssessmentModal() {
+      const c = currentAssessment;
+      if (!c) return;
+      let html = '';
+      // If index === -1 show an introductory disclaimer page before questions
+      if (c.index === -1) {
+        html = `
+          <div style="text-align:left">
+            <h3 style="margin-bottom:6px">${c.title}</h3>
+            <p style="color:var(--muted);margin-bottom:10px">${c.description}</p>
+            <div style="margin:10px 0;font-weight:600">A quick note before you begin</div>
+            <div style="background:#fff8f0;border-radius:8px;padding:12px;margin-bottom:12px;color:#333;border:1px solid rgba(0,0,0,0.04)">
+              <strong>For fun only</strong>
+              <div style="margin-top:6px;color:var(--muted);font-size:0.95rem">
+                These questions are for fun. They can help you think about your feelings.
+                They are not medical tests. If you feel very upset or unsafe, contact counseling or emergency services.
+              </div>
+            </div>
+            <div style="display:flex;justify-content:space-between;margin-top:8px">
+              <button id="cancelIntro" class="modal-ok" style="background:#ddd;color:#333">Cancel</button>
+              <button id="startIntro" class="modal-ok">Next</button>
+            </div>
+          </div>
+        `;
+      } else {
+        const q = c.questions[c.index];
+        html = `
+          <div style="text-align:left">
+            <h3 style="margin-bottom:6px">${c.title}</h3>
+            <p style="color:var(--muted);margin-bottom:10px">${c.description} — question ${c.index+1} of ${c.questions.length}</p>
+            <div style="margin:10px 0;font-weight:600">${q}</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap" id="answerBtns">
+              <label style="flex:1"><input type="radio" name="ans" value="0"> Never</label>
+              <label style="flex:1"><input type="radio" name="ans" value="1"> Rarely</label>
+              <label style="flex:1"><input type="radio" name="ans" value="2"> Sometimes</label>
+              <label style="flex:1"><input type="radio" name="ans" value="3"> Often</label>
+            </div>
+            <div style="display:flex;justify-content:space-between;margin-top:14px">
+              <button id="backQ" class="modal-ok" style="background:#ddd;color:#333">Back</button>
+              <div>
+                <button id="saveQuit" class="modal-ok" style="background:#f3f4f6;color:#333;margin-right:8px">Save & Exit</button>
+                <button id="nextQ" class="modal-ok">${c.index+1===c.questions.length? 'Finish' : 'Next'}</button>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+      showModalHtml(html);
+
+      // If we displayed the intro, wire start/cancel buttons and return
+      if (c.index === -1) {
+        document.getElementById('cancelIntro').addEventListener('click', () => { currentAssessment = null; closeModal(); });
+        document.getElementById('startIntro').addEventListener('click', () => { c.index = 0; renderAssessmentModal(); });
+        return;
+      }
+
+      // Pre-select if answer exists
+      const existing = c.answers[c.index];
+      if (existing !== null) {
+        const radios = document.getElementsByName('ans');
+        radios.forEach(r => { if (r.value == existing) r.checked = true; });
+      }
+
+      document.getElementById('backQ').addEventListener('click', () => {
+        // allow going back to the quick intro when on the first question
+        if (c.index > 0) {
+          c.index--; renderAssessmentModal();
+        } else if (c.index === 0) {
+          c.index = -1; renderAssessmentModal();
+        }
+      });
+      document.getElementById('saveQuit').addEventListener('click', async () => {
+        // if user selected an answer on the current question, store it before saving partial
+        try {
+          const radios = document.getElementsByName('ans');
+          let val = null; radios.forEach(r=>{ if (r.checked) val = Number(r.value); });
+          if (val !== null) c.answers[c.index] = val;
+        } catch(e){}
+        await savePartial(); closeModal(); await drawProgressChart();
+      });
+      document.getElementById('nextQ').addEventListener('click', async () => {
+        const radios = document.getElementsByName('ans');
+        let val = null; radios.forEach(r=>{ if (r.checked) val = Number(r.value); });
+        if (val === null) return alert('Please select an answer before continuing.');
+        c.answers[c.index] = val;
+        if (c.index+1 < c.questions.length) {
+          c.index++; renderAssessmentModal();
+        } else {
+          await finishAssessment();
+        }
+      });
+    }
+
+  async function savePartial() {
+      // store partially completed attempt (timestamp + partial answers) locally
+      if (!currentAssessment) return;
+      // compute progress
+      const answers = currentAssessment.answers || [];
+      const answered = answers.filter(x=>x!==null && x!==undefined).length;
+      const total = currentAssessment.questions.length;
+      const pct = Math.round((answered / Math.max(1, total)) * 100);
+      // capture last mood snapshot (from DB)
+      const moods = await fetchMoodLogs().catch(()=>[]);
+      const lastMood = moods.length ? moods[moods.length-1] : null;
+      const moodSnap = lastMood ? { value: lastMood.value, time: lastMood.time, label: moodLabel(lastMood.value), emoji: moodEmoji(lastMood.value) } : null;
+      const entry = {
+        id: currentAssessment.id,
+        title: currentAssessment.title,
+        time: Date.now(),
+        partial: true,
+        answers: currentAssessment.answers,
+        progress: { answered, total, pct },
+        mood: moodSnap,
+        description: currentAssessment.description || ''
+      };
+      // push to DB only (no local/session storage)
+      try {
+        const ok = await pushPartialToDb(entry);
+        if (!ok) throw new Error('DB push failed');
+      } catch (e) {
+        console.warn('Failed to save partial to DB', e);
+        return alert('Could not save progress to the server. Please check your connection.');
+      }
+      // update available list (show progress percent)
+      try { await renderAssessments(); } catch(e){}
+    }
+
+  async function finishAssessment() {
+      const c = currentAssessment;
+      if (!c) return;
+      // treat unanswered as 0
+      // normalize answers: reverse-score items where needed so higher always means "better" for scoring
+      const rev = Array.isArray(c.reverse) ? c.reverse : (c.reverse || []);
+      const answers = c.answers.map((x,i)=>{
+        const val = x === null ? 0 : Number(x);
+        if (rev && rev.indexOf(i) !== -1) {
+          // reverse 0..3 => 3..0
+          return 3 - val;
+        }
+        return val;
+      });
+      const score = answers.reduce((s,v)=>s+v,0);
+      const max = c.questions.length * 3;
+      const pct = Math.round((score/max)*100);
+      const category = scoreCategory(score, max);
+      const recommendations = generateRecommendations(c.id, category);
+      // compute progress summary
+      const answered = answers.filter(x=>x!==null && x!==undefined).length;
+      const total = c.questions.length;
+      const progress = { answered, total, pct };
+  // mood snapshot (read from DB)
+  const moods = await fetchMoodLogs().catch(()=>[]);
+  const lastMood = moods.length ? moods[moods.length-1] : null;
+  const moodSnap = lastMood ? { value: lastMood.value, time: lastMood.time, label: moodLabel(lastMood.value), emoji: moodEmoji(lastMood.value) } : null;
+
+      const entry = {
+        id: c.id,
+        title: c.title,
+        time: Date.now(),
+        score,
+        max,
+        pct,
+        category,
+        answers,
+        recommendations,
+        progress,
+        mood: moodSnap,
+        description: c.description || ''
+      };
+
+      // push completed entry to DB-only (no local storage)
+      try {
+        // If the Try Again flow set an overwrite key, update that existing completed record
+        if (window._overwriteCompletedKey) {
+          try {
+            const uid = await getUidOrThrow();
+            if (!db) throw new Error('Database not initialized');
+            await db.ref('assessments/' + uid + '/completed/' + window._overwriteCompletedKey).set(entry);
+            // clear overwrite key after successful update
+            window._overwriteCompletedKey = null;
+          } catch (e) {
+            console.warn('Failed to overwrite completed result', e);
+            throw e;
+          }
+        } else {
+          const ok = await pushCompletedToDb(entry);
+          if (!ok) throw new Error('DB push failed');
+        }
+      } catch (e) {
+        console.warn('Failed to save completed result to DB', e);
+        return alert('Could not save result to the server. Please check your connection.');
+      }
+
+      currentAssessment = null;
+      closeModal();
+      await renderCompleted();
+      await drawProgressChart();
+      // update available assessments list (hide completed)
+      try { await renderAssessments(); } catch(e){}
+      openResultModal(entry);
+    }
+
+    function scoreCategory(score, max) {
+      const pct = (score/max);
+      if (pct >= 0.8) return 'Healthy';
+      if (pct >= 0.6) return 'Moderate';
+      if (pct >= 0.35) return 'At Risk';
+      return 'Low';
+    }
+
+    function generateRecommendations(id, category) {
+      // Return short, simple suggestions and small actions. Use plain language.
+      const simple = {
+        'Healthy': [
+          'Your answers show many positive signs. Keep the routines that work for you: regular sleep, moving a little each day, and staying connected with friends.',
+          'Keep noticing the good things: when something small goes well, say to yourself "I did that".'
+        ],
+        'Moderate': [
+          'Some areas are OK but could improve. Try one small change today: 1 minute breathing or a 5 minute walk to clear your head.',
+          'Try writing 3 small good things that happened today — this helps you see positives even on busy days.',
+          'If you feel unsure, talk to a friend or a trusted staff member about one small step you can try.'
+        ],
+        'At Risk': [
+          'Consider scheduling a short check-in with campus counseling. They can listen and suggest next steps.',
+          'Try journaling for 2–5 minutes: write 3 small things that went OK today to notice positives.',
+          'Try a short routine: sleep a little earlier, take short walks, and talk to one person you trust.'
+        ],
+        'Low': [
+          'You may be having a hard time. It can help to tell one person you trust how you feel — a friend, family member, or counselor.',
+          'If you feel unsafe or the feelings are very strong, contact emergency services or your counseling center now.',
+          'If you can, try a small soothing step: sit quietly for one minute and take slow breaths, or step outside for a short walk.'
+        ]
+      };
+      // base recommendations for the category (these are most important)
+      const categoryRecs = (simple[category] || simple['Moderate']).slice();
+
+      // assessment-specific additions (keep language simple) - pick the most relevant one
+      const specific = {
+        'wellness-check': [
+          'Try tracking sleep: note your bedtime and wake time for a few days to spot changes.',
+          'If energy is low, try a short walk or move for 5 minutes to boost mood.'
+        ],
+        'stress-coping': [
+          'If you are busy, try short breaks: one minute breathing, or a five minute walk, then return to tasks.',
+          'Try to plan one small task per day so the day feels easier to manage.'
+        ],
+        'self-esteem': [
+          'Try saying one positive thing about yourself each morning (even small things).',
+          'Do one small task and notice you completed it — this helps your confidence.'
+        ]
+      };
+
+        // Add specific suggestions for newly added assessments
+        specific['sleep-quality'] = [
+          'Try a consistent bedtime for a few nights and avoid screens 30 minutes before bed.',
+          'If you wake at night, practice slow breathing for a few minutes before trying to sleep again.'
+        ];
+        specific['anxiety-snapshot'] = [
+          'Use a 3-minute breathing exercise when you notice worry starting.',
+          'Try naming the worry for 1 minute and then set a 10-minute "worry time" later.'
+        ];
+        specific['social-connection'] = [
+          'Reach out to one friend or classmate today and ask how they are — connection grows by small steps.',
+          'Join one short campus group or online event this week to meet others with similar interests.'
+        ];
+
+      // build the final list: category-first, then one assessment-specific tip, then 2 resource links
+      const recs = [];
+      // add up to 3 category-specific items (priority)
+      for (let i=0;i<Math.min(3, categoryRecs.length); i++) recs.push(categoryRecs[i]);
+      // add one assessment-specific suggestion if present
+      if (specific[id] && specific[id].length) recs.push(specific[id][0]);
+      // then add resource links (keep 2)
+  // more accessible resources (text/audio + low-bandwidth guides)
+  recs.push('Try a short guided breathing exercise (text & audio): <a href="https://www.mindful.org/breathing-exercises-for-anxiety/" target="_blank" rel="noopener">Mindful.org breathing exercises</a>');
+  recs.push('Low-bandwidth self-help & short practices: <a href="https://www.nhs.uk/mental-health/self-help/" target="_blank" rel="noopener">NHS self-help resources</a>');
+
+      // return a short, prioritized list (max 5 items)
+      return recs.slice(0,5);
+    }
+
+    // Per-category curated video embeds (YouTube nocookie embeds as a starting point).
+    // These are short, public videos or search-embed fallbacks; you can replace the URLs
+    // below with preferred campus / curated video IDs later.
+    const CATEGORY_VIDEOS = {
+      'Healthy': 'https://www.youtube-nocookie.com/embed?listType=search&list=positive+habits+short+video',
+      'Moderate': 'https://www.youtube-nocookie.com/embed?listType=search&list=5+minute+breathing+exercise',
+      'At Risk': 'https://www.youtube-nocookie.com/embed?listType=search&list=guided+breathing+3+minute',
+      'Low': 'https://www.youtube-nocookie.com/embed?listType=search&list=calming+guided+breathing+5+minute'
+    };
+
+    function openResultModal(entry) {
+      // Build a simpler, friendlier result view. Use short sentences and one uplifting line.
+      // If the saved entry doesn't include recommendations (old saved data), generate fresh ones
+      const recs = (entry.recommendations && entry.recommendations.length) ? entry.recommendations : generateRecommendations(entry.id, entry.category);
+      const recsList = recs.map(r=>`<li>${r}</li>`).join('');
+      // Pick a short uplifting line based on category
+      const uplifts = {
+        'Healthy': ['Nice work — you are doing good! 🍪'],
+        'Moderate': ['Small steps win — you got this! 👍'],
+        'At Risk': ['A small step helps — one breath at a time. 🌤️'],
+        'Low': ['You are not alone. Please reach out — we care. 🤗']
+      };
+      const uplift = (uplifts[entry.category] && uplifts[entry.category][0]) || 'Take a small step today — you matter.';
+
+      // Select per-category video (embed). Use nocookie URL for privacy when possible.
+      const videoUrl = CATEGORY_VIDEOS[entry.category] || null;
+      const videoHtml = videoUrl ? `
+        <div class="modal-video" aria-hidden="false">
+          <iframe src="${videoUrl}" title="Short video for ${entry.category}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe>
+        </div>
+        <div style="font-size:0.9rem;color:var(--muted);margin-top:6px">If the video does not load here, <a href="https://www.youtube.com/results?search_query=${encodeURIComponent(entry.category + ' guided breathing') }" target="_blank" rel="noopener">open similar videos on YouTube</a>.</div>
+      ` : '';
+
+      const html = `
+        <div style="text-align:left">
+          <h3 style="margin-bottom:6px">${entry.title} — Result</h3>
+          <p style="color:var(--muted);margin-bottom:8px">You scored <strong>${entry.score}/${entry.max}</strong> — <strong>${entry.pct}%</strong>. <span style="color:var(--green);font-weight:700">${entry.category}</span></p>
+          <div style="margin-bottom:8px"><strong>What this means</strong>
+            <div style="color:var(--muted);margin-top:6px">
+              ${entry.category === 'Healthy' ? 'Your answers show good signs. Keep your good habits.' : ''}
+              ${entry.category === 'Moderate' ? 'Some things are OK, but small changes can help.' : ''}
+              ${entry.category === 'At Risk' ? 'Your answers show you may be feeling worried, stressed, or low at times. This can make daily tasks harder. Small steps can help — try short breathing, short walks, or talking with someone you trust. If these feelings stay or get worse, a counselor can help.' : ''}
+              ${entry.category === 'Low' ? 'You may be struggling. Please seek help from someone you trust or from counseling.' : ''}
+            </div>
+          </div>
+          <div class="suggestions" style="margin-bottom:8px"><strong>Simple suggestions</strong>
+            <ul>${recsList}</ul>
+          </div>
+          <div style="margin-bottom:8px"><strong>Short videos</strong>
+            ${videoHtml}
+            <div style="margin-top:8px;color:var(--muted)">
+              <a href="https://www.youtube.com/results?search_query=guided+breathing+3+minute" target="_blank" rel="noopener">YouTube: guided breathing (3 min)</a>
+              &nbsp;•&nbsp;
+              <a href="https://www.youtube.com/results?search_query=guided+relaxation+5+minute" target="_blank" rel="noopener">YouTube: short relaxation (5 min)</a>
+            </div>
+          </div>
+          <div style="background:#fff8f0;border-radius:8px;padding:10px;margin-top:8px;color:#333;border:1px solid rgba(0,0,0,0.04)">
+            <strong>Pick-me-up:</strong>
+            <div style="margin-top:6px">${uplift}</div>
+          </div>
+          <div style="font-size:0.85rem;color:var(--muted);margin-top:8px">Not a medical test. If you are in danger, contact emergency services now.</div>
+          <div style="display:flex;justify-content:flex-end;margin-top:10px;gap:8px">
+            <button class="modal-ok" onclick="(function(){ closeModal(); setTimeout(function(){ beginTryAgain('${entry.id}'); }, 220); })()">Try Again</button>
+            <button class="modal-ok" onclick="closeModal()">Close</button>
+          </div>
+        </div>
+      `;
+      showModalHtml(html);
+    }
+
+    // Progress / chart utilities
+    async function drawProgressChart() {
+      const canvas = document.getElementById('progressChart');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const list = await (async ()=>{ try { return await fetchAllEntries(); } catch(e){ return []; } })();
+
+      // compute overall percent complete (completed results, not partials)
+      const completedCount = list.filter(e => !e.partial).length;
+      const pct = list.length ? Math.round((completedCount / Math.max(1, assessments.length)) * 100) : 0;
+
+      // prepare high-DPI canvas sizing using client size
+      const DPR = window.devicePixelRatio || 1;
+      const clientW = Math.max(120, canvas.clientWidth || canvas.width || 220);
+      const clientH = Math.max(120, canvas.clientHeight || canvas.height || 220);
+      canvas.width = Math.round(clientW * DPR);
+      canvas.height = Math.round(clientH * DPR);
+      ctx.setTransform(DPR,0,0,DPR,0,0);
+
+      // clear background
+      ctx.clearRect(0,0,clientW,clientH);
+      ctx.fillStyle = '#fff'; ctx.fillRect(0,0,clientW,clientH);
+
+      // donut parameters
+      const cx = clientW/2, cy = clientH/2;
+      const radius = Math.min(clientW, clientH) * 0.35;
+      const lineW = Math.max(12, Math.round(radius * 0.5));
+      const startAngle = -Math.PI/2; // start at top
+      const endAngle = startAngle + (Math.max(0, Math.min(100,pct))/100) * Math.PI * 2;
+
+      // background ring
+      ctx.beginPath(); ctx.lineWidth = lineW; ctx.lineCap = 'round';
+      ctx.strokeStyle = 'rgba(15,23,42,0.06)'; ctx.arc(cx, cy, radius, 0, Math.PI*2); ctx.stroke();
+
+  // progress arc (use a warm yellow -> green gradient for a friendly, energetic look)
+  const g = ctx.createLinearGradient(cx - radius, cy - radius, cx + radius, cy + radius);
+  // tasteful stops (Warm & Rich palette chosen): gold -> mint -> deep emerald
+  g.addColorStop(0, '#FFD166'); // gold (small presence)
+  g.addColorStop(0.35, '#4ADE80'); // mint-lime (transition)
+  g.addColorStop(1, '#059669'); // deep emerald (dominant)
+  // add a subtle shadow to give depth (reset after stroke)
+  ctx.save();
+  ctx.shadowColor = 'rgba(16,24,40,0.08)';
+  ctx.shadowBlur = 8;
+  ctx.beginPath(); ctx.strokeStyle = g; ctx.lineWidth = lineW; ctx.arc(cx, cy, radius, startAngle, endAngle); ctx.stroke();
+  ctx.restore();
+
+  // center text: percent (darker green for contrast with warm ring)
+  ctx.fillStyle = '#065f46'; ctx.font = 'bold ' + Math.round(radius*0.6) + 'px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(pct + '%', cx, cy + 4);
+  // small label under percent
+  ctx.font = Math.round(radius*0.17) + 'px Arial'; ctx.fillStyle = '#6b7280'; ctx.fillText('completed', cx, cy + Math.round(radius*0.9));
+
+      // update counters (keep simple numeric display)
+      document.getElementById('progressPercent').textContent = pct + '%';
+      document.getElementById('completedCount').textContent = completedCount;
+
+      // the last7 mood icons/text are intentionally removed from the Assessment Progress container
+      // hide the element entirely so no emojis or dots appear here
+      try {
+        const last7 = document.getElementById('last7');
+        if (last7) {
+          last7.innerHTML = '';
+          last7.style.display = 'none';
+        }
+      } catch (e) { /* ignore hide errors */ }
+    }
+
+    // draw mini mood graph (last 7 days) on the moodMini canvas
+    async function drawMoodMini() {
+      const canvas = document.getElementById('moodMini');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      // prepare last 7 days data and resize canvas for high-DPI
+      const logs = await fetchMoodLogs();
+      const today = new Date();
+      const days = [];
+      for (let i=6;i>=0;i--) {
+        const d = new Date(); d.setDate(today.getDate()-i);
+        const key = localDayKey(d);
+        const entry = logs.find(x=>x.day===key);
+        days.push({ day:key, val: entry? entry.value : null });
+      }
+
+      // handle high DPI: set canvas pixel size to client size * DPR
+      const DPR = window.devicePixelRatio || 1;
+      const clientW = Math.max(200, canvas.clientWidth || 300);
+      const clientH = Math.max(110, canvas.clientHeight || 110);
+      canvas.width = Math.round(clientW * DPR);
+      canvas.height = Math.round(clientH * DPR);
+      ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+
+      // layout paddings
+  const padLeftLegend = 28; // space for emoji legend on left (emoji only)
+  const padL = padLeftLegend + 8; const padR = 32; const padTop = 12; const padBottom = 28;
+      const usableW = clientW - padL - padR;
+
+      // clear and subtle background
+      ctx.clearRect(0,0,clientW,clientH);
+      ctx.fillStyle = '#ffffff'; ctx.fillRect(0,0,clientW,clientH);
+
+      // horizontal grid lines for each mood level (use MOOD_LEVELS length)
+      ctx.strokeStyle = 'rgba(16,24,40,0.06)'; ctx.lineWidth = 1;
+      const levelsCountForGrid = MOOD_LEVELS.length;
+      for (let i=0;i<levelsCountForGrid;i++){
+        const y = padTop + (i/(levelsCountForGrid-1)) * (clientH - padTop - padBottom);
+        ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(clientW - padR, y); ctx.stroke();
+      }
+
+      // draw emoji legend on left aligned to gridlines using MOOD_LEVELS
+      ctx.font = '14px serif';
+      const levelsCount = MOOD_LEVELS.length;
+      for (let i=0;i<levelsCount;i++){
+        const lvl = MOOD_LEVELS[i];
+        const idxFromTop = i; // 0..n-1 top->bottom
+        const y = padTop + (idxFromTop/(levelsCount-1)) * (clientH - padTop - padBottom);
+  ctx.fillText(lvl.emoji, 8, y+5);
+  // label intentionally omitted to keep legend emoji-only
+  ctx.font = '14px serif'; ctx.fillStyle = '#000';
+      }
+
+      const step = usableW / 6;
+      // compute positions for later use
+      days.forEach((d,i) => { const x = padL + i*step; d._x = x; });
+
+      // map values to y using MOOD_LEVELS length
+      const nLevels = MOOD_LEVELS.length;
+      const coords = days.map((d,i)=>{
+        const x = padL + i*step;
+        const v = d.val === null ? null : (d.val);
+        let y = null;
+        if (v !== null) {
+          const lvlIdx = MOOD_LEVELS.findIndex(l => Number(l.value) === Number(v));
+          const idxFromTop = Math.max(0, lvlIdx); // 0..n-1
+          y = padTop + (idxFromTop/(nLevels-1)) * (clientH - padTop - padBottom);
+        }
+        return {x,y,v,day:d.day};
+      });
+
+      // draw colored segments between consecutive known points
+      for (let i=0;i<coords.length-1;i++) {
+        const a = coords[i], b = coords[i+1];
+        if (a.y===null || b.y===null) continue;
+        // choose color based on average mood of the segment
+        const avg = Math.round((a.v + b.v)/2);
+  const col = moodColor(avg);
+        ctx.beginPath(); ctx.lineWidth = 3; ctx.strokeStyle = col; ctx.lineCap = 'round'; ctx.moveTo(a.x, a.y);
+        const cx = (a.x + b.x)/2; const cy = (a.y + b.y)/2;
+        ctx.quadraticCurveTo(a.x, a.y, cx, cy); ctx.quadraticCurveTo(b.x, b.y, b.x, b.y);
+        ctx.stroke();
+      }
+
+      // fill under the composed path with a gentle gradient (build path from known points)
+      const known = coords.filter(c=>c.y!==null);
+      if (known.length >= 2) {
+        ctx.beginPath(); ctx.moveTo(known[0].x, known[0].y);
+        for (let i=1;i<known.length;i++){
+          const prev = known[i-1], cur = known[i];
+          const mx = (prev.x+cur.x)/2; const my = (prev.y+cur.y)/2;
+          ctx.quadraticCurveTo(prev.x, prev.y, mx, my);
+        }
+        const last = known[known.length-1]; ctx.lineTo(last.x, last.y);
+        // line down to baseline
+        ctx.lineTo(last.x, clientH - padBottom);
+        ctx.lineTo(known[0].x, clientH - padBottom);
+        ctx.closePath();
+        const g = ctx.createLinearGradient(0, padTop, 0, clientH);
+        g.addColorStop(0, 'rgba(16,185,129,0.12)'); g.addColorStop(1, 'rgba(16,185,129,0.02)');
+        ctx.fillStyle = g; ctx.fill();
+      }
+
+      // draw points with emoji inside the marker
+      coords.forEach(c=>{
+        if (c.y===null) {
+          ctx.fillStyle = 'rgba(0,0,0,0.06)'; ctx.beginPath(); ctx.arc(c.x, clientH - padBottom, 5,0,Math.PI*2); ctx.fill();
+        } else {
+          const col = moodColor(c.v);
+          // draw outer circle (colored stroke) with white fill
+          ctx.beginPath(); ctx.fillStyle = '#fff'; ctx.strokeStyle = col; ctx.lineWidth = 2; ctx.arc(c.x, c.y, 12,0,Math.PI*2); ctx.fill(); ctx.stroke();
+          // draw emoji centered inside the circle
+          const emoji = moodEmoji(c.v);
+          ctx.font = '14px serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#000';
+          ctx.fillText(emoji, c.x, c.y+1);
+          // reset text align/baseline to defaults
+          ctx.textAlign = 'start'; ctx.textBaseline = 'alphabetic';
+        }
+      });
+
+      // highlight the most recent known point(s) with an outer ring so the Weekdays view
+      // matches the clicked-button appearance (stronger visual emphasis)
+      try {
+        const knownIdxs = coords.map((c,i)=> c.y!==null ? i : -1).filter(i=>i>=0);
+        if (knownIdxs.length) {
+          const lastIdx = knownIdxs[knownIdxs.length-1];
+          const prevIdx = knownIdxs.length>1 ? knownIdxs[knownIdxs.length-2] : null;
+          // draw an emphasized ring for the most recent point
+          const last = coords[lastIdx];
+          if (last && last.y!==null) {
+            ctx.beginPath(); ctx.lineWidth = 3.6; ctx.strokeStyle = moodColor(last.v) || '#059669';
+            ctx.shadowColor = 'rgba(16,24,40,0.12)'; ctx.shadowBlur = 6;
+            ctx.arc(last.x, last.y, 16, 0, Math.PI*2); ctx.stroke(); ctx.shadowBlur = 0;
+          }
+          // draw a subtle ring for the previous point if present
+          if (prevIdx !== null) {
+            const prev = coords[prevIdx];
+            if (prev && prev.y!==null) {
+              ctx.beginPath(); ctx.lineWidth = 2; ctx.strokeStyle = moodColor(prev.v) || '#4ade80';
+              ctx.arc(prev.x, prev.y, 14, 0, Math.PI*2); ctx.stroke();
+            }
+          }
+        }
+      } catch(e) { /* ignore highlight draw errors */ }
+
+      // store coords for interaction
+      window._moodCoords = coords;
+
+      // populate textual day labels under the canvas to avoid relying on canvas text
+      // (this ensures labels are visible even when the canvas drawing area is tight)
+      try {
+        const labelsEl = document.getElementById('moodLabels');
+        if (labelsEl) {
+          labelsEl.innerHTML = '';
+          days.forEach(d => {
+            const dt = new Date(d.day);
+            const name = dt.toLocaleDateString(undefined, { weekday: 'short' });
+            const div = document.createElement('div');
+            div.style.flex = '1';
+            div.style.textAlign = 'center';
+            div.style.fontSize = '12px';
+            div.style.color = 'var(--muted)';
+            div.textContent = name;
+            labelsEl.appendChild(div);
+          });
+        }
+      } catch (e) { /* ignore label population failures */ }
+
+  // update connected areas
+  await drawProgressChart();
+
+      // subtle entrance animation for the canvas so redraws look nicer
+      try {
+        canvas.style.transition = 'opacity 520ms cubic-bezier(.22,.9,.33,1), transform 520ms cubic-bezier(.22,.9,.33,1)';
+        canvas.style.opacity = '0';
+        canvas.style.transform = 'translateY(8px)';
+        requestAnimationFrame(()=>{
+          canvas.style.opacity = '1';
+          canvas.style.transform = 'translateY(0)';
+        });
+      } catch(e) { /* ignore if styling unsupported */ }
+    }
+
+    // Begin a "Try Again" flow: mark the latest completed entry for `id` as partial
+    // so the assessment reappears in the available list, and store the remote key so
+    // finishAssessment can update the existing record instead of pushing a new one.
+    async function beginTryAgain(id) {
+      try {
+        const uid = await getUidOrThrow();
+        if (!db) throw new Error('DB not initialized');
+        const base = db.ref('assessments/' + uid + '/completed');
+        // query completed entries by id and pick the most recent (time)
+        const snap = await base.orderByChild('id').equalTo(id).once('value');
+        if (!snap || !snap.exists()) {
+          // nothing to update — simply open the assessment
+          window._overwriteCompletedKey = null;
+          return openAssessment(id);
+        }
+        let latestKey = null; let latestTime = 0;
+        snap.forEach(child => {
+          const v = child.val(); const k = child.key;
+          const t = (v && v.time) ? Number(v.time) : 0;
+          if (t >= latestTime) { latestTime = t; latestKey = k; }
+        });
+        if (!latestKey) { window._overwriteCompletedKey = null; return openAssessment(id); }
+
+        // Move the existing completed record into /partials so it no longer appears
+        // under completed and becomes available as a partial (preserves progress).
+        const rec = snap.exists() ? (function(){ let out=null; snap.forEach(child=>{ if (child.key===latestKey) out = child.val(); }); return out; })() : null;
+        try {
+          if (rec) {
+            // ensure the moved record is marked as partial and timestamped
+            const partialEntry = Object.assign({}, rec, { partial: true, time: Date.now() });
+            // push into partials
+            await db.ref('assessments/' + uid + '/partials').push(partialEntry);
+          }
+          // remove the original completed record so it no longer shows in completed list
+          await base.child(latestKey).remove();
+
+          // remember the original completed key so finishAssessment will recreate/overwrite it
+          window._overwriteCompletedKey = latestKey;
+        } catch (e) {
+          console.warn('beginTryAgain move failed', e);
+          window._overwriteCompletedKey = null;
+        }
+
+        // re-render lists so available assessments reflect the change before opening
+        try { await renderAssessments(); await renderCompleted(); await drawProgressChart(); } catch(e){}
+
+        // open the assessment for retake
+        return openAssessment(id);
+      } catch (e) {
+        console.error('beginTryAgain failed', e);
+        // fallback to just opening the assessment
+        window._overwriteCompletedKey = null;
+        try { return openAssessment(id); } catch(e2){}
+      }
+    }
+
+    // Mood picker logic
+    function bindMoodButtons() {
+      document.querySelectorAll('.mood-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const v = Number(btn.getAttribute('data-value')) || 3;
+          await saveMoodToday(v);
+          await updateStreakDisplay();
+          await drawMoodMini();
+          // small confirmation
+          btn.classList.add('pulse'); setTimeout(()=>btn.classList.remove('pulse'),700);
+        });
+      });
+    }
+
+    // Save mood to DB only under /assessments/{uid}/mood/{dayKey}
+    async function saveMoodToday(value) {
+      const today = new Date();
+      const dayKey = localDayKey(today);
+      const entry = { day: dayKey, value, time: Date.now() };
+      try {
+        if (auth && auth.currentUser && db) {
+          const uid = auth.currentUser.uid;
+          await db.ref('assessments/'+uid+'/mood/'+dayKey).set(entry);
+        } else {
+          throw new Error('Auth/DB not ready');
+        }
+      } catch (e) {
+        console.warn('Failed to save mood to DB', e);
+        return alert('Could not save mood to the server. Please check your connection.');
+      }
+      // update UI graphs
+      await drawMoodMini();
+    }
+
+    async function updateStreakDisplay() {
+      const list = (await fetchMoodLogs().catch(()=>[])).slice().sort((a,b)=> (a.day||'').localeCompare(b.day||''));
+      if (!list.length) { document.getElementById('streakDisplay').textContent = 'Streak: 0 🔥'; return; }
+      // compute consecutive days ending today
+      let streak = 0; const today = new Date();
+      for (let i=0;i<365;i++) {
+        const d = new Date(); d.setDate(today.getDate()-i);
+        const key = localDayKey(d);
+        if (list.find(e=>e.day===key)) streak++; else break;
+      }
+      document.getElementById('streakDisplay').textContent = 'Streak: ' + streak + ' 🔥';
+    }
+
+    async function continueRecommended() {
+      // pick the assessment with fewest completions
+      const logs = await (async ()=>{ try { return await fetchAllEntries(); } catch(e){ return []; } })();
+      const counts = {};
+      assessments.forEach(a=>counts[a.id]=0);
+      logs.forEach(l=>{ if (l.id) counts[l.id] = (counts[l.id]||0)+1; });
+      const pick = Object.keys(counts).sort((a,b)=>counts[a]-counts[b])[0];
+      // Scroll the available assessments container into view so user sees where the
+      // selected assessment will appear. Use smooth scrolling and then open the
+      // assessment after a short delay so the UI focus is clear.
+      try {
+        const avail = document.getElementById('availableCard') || document.getElementById('assessmentList');
+        if (avail && typeof avail.scrollIntoView === 'function') {
+          avail.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      } catch(e) { /* ignore scroll errors */ }
+
+      // Do NOT open the assessment modal automatically; just show the available
+      // assessments area so the user can choose. Optionally highlight the picked
+      // item if it's present in the list.
+      try {
+        const list = document.getElementById('assessmentList');
+        if (list) {
+          const btn = list.querySelector(`button.assessment-action[data-id="${pick}"]`);
+          if (btn) {
+            // briefly highlight the row to draw attention
+            const row = btn.closest('.assessment-item');
+            if (row) {
+              row.classList.add('highlight-pick');
+              setTimeout(()=> row.classList.remove('highlight-pick'), 1400);
+            }
+          }
+        }
+      } catch(e) { /* ignore */ }
+    }
+
+    // initialization: wait for Firebase auth to be ready before attempting DB reads
+    document.addEventListener('DOMContentLoaded', function() {
+      // bind the mood canvas tooltip events immediately
+      attachMoodMiniEvents();
+
+      // If firebase auth is available, wait for onAuthStateChanged so we have a uid
+      if (auth && typeof auth.onAuthStateChanged === 'function') {
+        auth.onAuthStateChanged(async function(user) {
+          if (!user) {
+            // not signed in: redirect to signin (existing behavior) after small delay
+              // detach any realtime listeners we may have had
+              try { if (window._moodListenerRef && typeof window._moodListenerRef.off === 'function') { window._moodListenerRef.off(); window._moodListenerRef = null; } } catch(e){}
+              setTimeout(()=>{ window.location.href = 'signin.html'; }, 400);
+            return;
+          }
+          try {
+            // Only run the heavy DB-backed renders once we have a user
+            bindMoodButtons();
+            await renderAssessments();
+            await renderCompleted();
+            await updateStreakDisplay();
+            await drawProgressChart();
+            await drawMoodMini();
+            // Ensure the weekdays graph view is active on initial load so it looks like the
+            // view after clicking the 'Weekdays' button (keeps visibility and active button state)
+            try { if (typeof toggleMoodView === 'function') toggleMoodView('graph'); } catch(e){}
+            // align available list now that progress card has been drawn
+            try { alignAvailableToProgress(); } catch(e) {}
+            // Attach realtime listener for mood calendar so changes appear instantly across clients
+            try {
+              if (db) {
+                // detach existing listener if any
+                if (window._moodListenerRef && typeof window._moodListenerRef.off === 'function') {
+                  window._moodListenerRef.off();
+                  window._moodListenerRef = null;
+                }
+                const moodRef = db.ref('assessments/' + user.uid + '/mood');
+                window._moodListenerRef = moodRef;
+                moodRef.on('value', async function(_snap) {
+                  // re-render calendar and mini-graph on any change under mood
+                  try {
+                    await renderMoodCalendar();
+                    await drawMoodMini();
+                    await updateStreakDisplay();
+                  } catch(e) { console.error('Realtime mood update failed', e); }
+                });
+              }
+            } catch (e) { console.warn('Could not attach realtime mood listener', e); }
+          } catch (e) {
+            console.error('Initialization after auth failed', e);
+            // show a small in-page notice if DB is unavailable
+            const top = document.getElementById('content');
+            if (top) {
+              const n = document.createElement('div');
+              n.style.background = '#fff3f2'; n.style.color='#6b1c1c'; n.style.padding='10px'; n.style.borderRadius='8px'; n.style.margin='8px 0';
+              n.textContent = 'Could not load assessments from the server. Please check your connection or sign-in status.';
+              top.insertBefore(n, top.firstChild);
+            }
+          }
+        });
+      } else {
+        // No auth object: attempt graceful fallback to run renderers but they will likely no-op
+        (async function(){
+          bindMoodButtons();
+          await renderAssessments();
+          await renderCompleted();
+          await updateStreakDisplay();
+          await drawProgressChart();
+          await drawMoodMini();
+          try { if (typeof toggleMoodView === 'function') toggleMoodView('graph'); } catch(e){}
+        })();
+      }
+    });
+
+    // redraw mini on resize for responsive layout
+    window.addEventListener('resize', function(){
+      // small debounce
+      clearTimeout(window._moodMiniResize);
+      window._moodMiniResize = setTimeout(()=>{ drawMoodMini(); }, 140);
+    });
+
+    // tooltip element for moodMini
+    function ensureMoodTooltip() {
+      let t = document.getElementById('moodTooltip');
+      if (!t) {
+        t = document.createElement('div');
+        t.id = 'moodTooltip';
+        t.style.position = 'absolute';
+        t.style.pointerEvents = 'none';
+        t.style.padding = '8px 10px';
+        t.style.background = 'rgba(0,0,0,0.8)';
+        t.style.color = 'white';
+        t.style.fontSize = '12px';
+        t.style.borderRadius = '8px';
+        t.style.whiteSpace = 'nowrap';
+        t.style.transform = 'translate(-50%, -110%)';
+        t.style.display = 'none';
+        t.style.zIndex = 5000;
+        document.body.appendChild(t);
+      }
+      return t;
+    }
+
+    // attach hover handler to moodMini canvas for tooltips
+    function attachMoodMiniEvents() {
+      const canvas = document.getElementById('moodMini');
+      if (!canvas) return;
+      const tooltip = ensureMoodTooltip();
+      canvas.addEventListener('mousemove', function(ev){
+        const rect = canvas.getBoundingClientRect();
+        const x = ev.clientX - rect.left;
+        const y = ev.clientY - rect.top;
+        const coords = window._moodCoords || [];
+        // find nearest point (coords are in client units)
+        let nearest = null; let nd = Infinity;
+        coords.forEach(c => {
+          if (c.y===null) return;
+          const dx = c.x - x; const dy = c.y - y;
+          const d = Math.sqrt(dx*dx + dy*dy);
+          if (d < nd) { nd = d; nearest = c; }
+        });
+        if (nearest && nd < 18) {
+          const dt = new Date(nearest.day);
+          const label = moodLabel(nearest.v);
+          tooltip.textContent = `${dt.toLocaleDateString()} — ${label}`;
+          tooltip.style.left = (ev.clientX) + 'px';
+          tooltip.style.top = (ev.clientY - 12) + 'px';
+          tooltip.style.display = 'block';
+        } else {
+          tooltip.style.display = 'none';
+        }
+      });
+      canvas.addEventListener('mouseout', function(){ const t = document.getElementById('moodTooltip'); if (t) t.style.display='none'; });
+    }
+
+    // call attach once
+    document.addEventListener('DOMContentLoaded', attachMoodMiniEvents);
+
+    /* Toggle between Weekdays graph and Calendar view for Recent mood */
+    function toggleMoodView(view) {
+      const graph = document.getElementById('moodMini');
+      const labels = document.getElementById('moodLabels');
+      const cal = document.getElementById('moodCalendar');
+      const recentLabel = document.getElementById('recentMoodLabel');
+      const gBtn = document.getElementById('viewGraphBtn');
+      const cBtn = document.getElementById('viewCalendarBtn');
+      if (!graph || !cal) return;
+      // Keep the weekdays container size stable when showing the calendar by overlaying
+      // the calendar absolute inside the same parent. The graph remains in the flow
+      // (and keeps its height) while we show the calendar on top.
+      const parent = cal.parentElement;
+      if (parent) {
+        // ensure parent is positioned so absolute children align to it
+        const cs = window.getComputedStyle(parent);
+        if (cs.position === 'static') parent.style.position = 'relative';
+      }
+
+      if (view === 'calendar') {
+        // hide the canvas visuals but keep its space so layout doesn't shift
+        graph.style.visibility = 'hidden';
+        if (labels) labels.style.visibility = 'hidden';
+
+        // position calendar absolutely to overlay the graph area
+        cal.style.display = 'block';
+        cal.style.position = 'absolute';
+        // account for the parent's inner padding so calendar fits visually
+        // use 12px default padding similar to the parent wrapper (safe fallback)
+  // nudge down slightly so header/controls feel less cramped
+  // move calendar further left so it aligns closer to the container edge
+  // negative left moves it beyond the parent's left padding — adjust if this
+  // overflows undesirably on small screens
+  // position calendar as an overlay but keep it inside the parent on small screens
+  cal.style.top = '38px'; cal.style.left = '0'; cal.style.right = '0'; cal.style.bottom = '12px';
+        cal.style.zIndex = 5;
+        cal.setAttribute('aria-hidden','false');
+        if (recentLabel) recentLabel.style.display = 'none';
+        if (gBtn) gBtn.classList.remove('active'), gBtn.setAttribute('aria-pressed','false');
+        if (cBtn) cBtn.classList.add('active'), cBtn.setAttribute('aria-pressed','true');
+        renderMoodCalendar();
+      } else {
+        // restore visibility and hide calendar overlay
+        graph.style.visibility = 'visible';
+        if (labels) labels.style.visibility = 'visible';
+
+        cal.style.display = 'none';
+        cal.style.position = '';
+        cal.style.top = '';
+        cal.style.left = '';
+        cal.style.right = '';
+        cal.style.bottom = '';
+        cal.style.zIndex = '';
+        cal.setAttribute('aria-hidden','true');
+  if (recentLabel) recentLabel.style.display = '';
+        if (gBtn) gBtn.classList.add('active'), gBtn.setAttribute('aria-pressed','true');
+        if (cBtn) cBtn.classList.remove('active'), cBtn.setAttribute('aria-pressed','false');
+        // ensure graph redraw
+        drawMoodMini();
+      }
+    }
+
+    async function renderMoodCalendar() {
+      const container = document.getElementById('moodCalendar');
+      if (!container) return;
+      container.innerHTML = '';
+      // build a simple month calendar for the current month
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = now.getMonth();
+      const first = new Date(year, month, 1);
+      const last = new Date(year, month + 1, 0);
+      const startWeekday = first.getDay(); // 0..6 (Sun..Sat)
+      const daysInMonth = last.getDate();
+
+      // fetch mood logs and map by day key (YYYY-MM-DD)
+      const logs = await fetchMoodLogs().catch(()=>[]);
+      const map = {};
+      logs.forEach(l => { if (l && l.day) map[l.day] = l; });
+
+  // render a compact month/year header for the calendar
+  const header = document.createElement('div');
+  header.style.display = 'flex'; header.style.justifyContent = 'center'; header.style.alignItems = 'center';
+  header.style.fontWeight = '700'; header.style.fontSize = '13px'; header.style.marginBottom = '6px'; header.style.color = 'var(--muted)';
+  header.textContent = first.toLocaleString(undefined, { month: 'short', year: 'numeric' });
+  container.appendChild(header);
+
+      // (weekday header removed per request) — calendar will render only day cells below
+
+      // grid of days: always render 6 rows x 7 cols = 42 cells so cell sizes scale to container and no scrollbar appears
+      const grid = document.createElement('div'); grid.className = 'mood-calendar-grid';
+      const totalCells = 42; // 6 weeks to guarantee fit
+      for (let i=0; i<totalCells; i++) {
+        const cell = document.createElement('div'); cell.className = 'mood-calendar-day';
+        // determine if this cell maps to a valid day in the month
+        const dayIndex = i - startWeekday + 1; // 1-based day number
+          if (dayIndex >= 1 && dayIndex <= daysInMonth) {
+          const d = dayIndex;
+          const key = localDayKey(new Date(year, month, d));
+          const entry = map[key];
+          const num = document.createElement('div'); num.className = 'date-num'; num.textContent = d; cell.appendChild(num);
+          if (entry && entry.value) {
+            const dot = document.createElement('div'); dot.className = 'mood-dot'; dot.textContent = moodEmoji(entry.value);
+            // style the dot background using moodColor but keep text readable
+            const bg = moodColor(entry.value) || '#ffffff';
+            dot.style.background = bg;
+            // choose contrast color (simple test)
+            dot.style.color = '#fff';
+            // tooltip: show date first, then mood name; also expose via aria-label
+            const dateStr = new Date(entry.time).toLocaleDateString();
+            const label = moodLabel(entry.value);
+            dot.title = dateStr + ' — ' + label;
+            dot.setAttribute('aria-label', dateStr + ' — ' + label);
+            cell.appendChild(dot);
+            // mark the cell so CSS can hide the date number cleanly
+            cell.classList.add('has-emoji');
+          } else {
+            const placeholder = document.createElement('div'); placeholder.style.height='18px'; cell.appendChild(placeholder);
+          }
+        } else {
+          cell.classList.add('empty');
+        }
+        grid.appendChild(cell);
+      }
+
+      container.appendChild(grid);
+  // (footer message removed per request)
+    }
+
+    // wire toggle buttons
+    document.addEventListener('DOMContentLoaded', function(){
+      const gBtn = document.getElementById('viewGraphBtn');
+      const cBtn = document.getElementById('viewCalendarBtn');
+      if (gBtn) gBtn.addEventListener('click', ()=> toggleMoodView('graph'));
+      if (cBtn) cBtn.addEventListener('click', ()=> toggleMoodView('calendar'));
+    });
+
+    // adjust mood-top container height to match Completed Assessments card
+    function adjustMoodHeight() {
+      try {
+        const completedCard = document.querySelector('.grid > div:nth-child(2) .card');
+        const moodCardWrapper = document.querySelector('.mood-right > div');
+        const moodTop = document.querySelector('.mood-top-container');
+        if (completedCard && moodCardWrapper && moodTop) {
+          // measure completed card height but cap to avoid excessive height
+          const measured = completedCard.getBoundingClientRect().height;
+          const MAX_MOOD_CARD = 340; // px - increased cap so recent mood doesn't need an inner scrollbar
+          const h = Math.min(measured, MAX_MOOD_CARD);
+          // set explicit heights so left and right visually align, but respect cap
+          moodCardWrapper.style.height = h + 'px';
+          moodTop.style.height = h + 'px';
+          // keep width fluid to align with the page grid; ensure child fills available space
+          moodCardWrapper.style.width = '';
+          moodTop.style.maxWidth = '';
+          moodTop.style.marginLeft = '';
+        }
+      } catch (e) { console.warn('adjustMoodHeight failed', e); }
+    }
+
+    // Align the Available Assessments list height to match the visible Assessment Progress card
+    function alignAvailableToProgress() {
+      try {
+        const avail = document.getElementById('availableCard');
+        const progress = document.getElementById('progressCard');
+        if (!avail || !progress) return;
+        // measure heights
+        const progRect = progress.getBoundingClientRect();
+        const availHeader = avail.querySelector('h3');
+        const headerH = availHeader ? availHeader.getBoundingClientRect().height : 48;
+        const availStyle = window.getComputedStyle(avail);
+        const padTop = parseFloat(availStyle.paddingTop) || 0;
+        const padBottom = parseFloat(availStyle.paddingBottom) || 0;
+        // reserve a little breathing room
+        const reserve = 18;
+        const innerMax = Math.max(80, progRect.height - headerH - padTop - padBottom - reserve);
+        const list = avail.querySelector('.assessment-list');
+        if (list) {
+          list.style.maxHeight = innerMax + 'px';
+          list.style.overflowY = 'auto';
+        }
+      } catch (e) { console.warn('alignAvailableToProgress failed', e); }
+    }
+
+    // call adjustMoodHeight after content changes and on resize
+    const _adjustDeb = () => { clearTimeout(window._adjustMood); window._adjustMood = setTimeout(adjustMoodHeight, 120); };
+    window.addEventListener('resize', _adjustDeb);
+    // call alignAvailableToProgress on resize too (debounced)
+    const _alignAvailDeb = () => { clearTimeout(window._alignAvail); window._alignAvail = setTimeout(alignAvailableToProgress, 140); };
+    window.addEventListener('resize', _alignAvailDeb);
+    // also call when completed list or progress updates
+  const origRenderCompleted = renderCompleted;
+  renderCompleted = async function(){ await origRenderCompleted(); adjustMoodHeight(); };
+  const origDrawProgressChart = drawProgressChart;
+    drawProgressChart = async function(){ await origDrawProgressChart(); adjustMoodHeight(); alignAvailableToProgress(); };
+
+    // wrap renderAssessments so available list alignment runs after it renders
+    const origRenderAssessments = renderAssessments;
+    renderAssessments = async function(){ await origRenderAssessments(); alignAvailableToProgress(); };
+  </script>
+</body>
+</html>
