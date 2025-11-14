@@ -1077,7 +1077,7 @@
       <div class="logo"><img src="safespace.png" alt="SafeSpace logo"></div>
       <span>SafeSpace</span>
     </div>
-    <a href="index.html" data-emoji="📅"><span>Appointments</span></a>
+    <a href="appointments.html" data-emoji="📅"><span>Appointments</span></a>
     <a href="history.html" data-emoji="📋"><span>History</span></a>
     <a href="assessments.html" data-emoji="📝"><span>Assessments</span></a>
     <a href="resources.html" data-emoji="📚"><span>Resources</span></a>
@@ -1224,15 +1224,15 @@
         </div>
       </div>
 
-      <!-- Sign Out Section -->
+      <!-- Account Section -->
       <div class="settings-section">
-        <h3><i class="fas fa-sign-out-alt"></i> Sign Out</h3>
-        <div class="settings-item">
+        <h3><i class="fas fa-user-circle"></i>Account</h3>
+        <div class="settings-item" id="signOutButton" style="cursor: pointer;">
           <div>
-            <div class="settings-label">Sign Out of SafeSpace</div>
+            <div class="settings-label">Sign Out</div>
             <div class="settings-description">You will be returned to the sign-in page.</div>
           </div>
-          <button id="signOutBtn" class="signout-btn" style="background:#dc2626;color:#fff;padding:10px 18px;border-radius:8px;border:none;cursor:pointer">Sign Out</button>
+          <i class="fas fa-chevron-right"></i>
         </div>
       </div>
 
@@ -1241,7 +1241,7 @@
 
   <!-- Bottom Nav (Mobile Only) -->
   <div class="bottom-nav">
-    <a href="index.html"><span>📅</span><span>Appointments</span></a>
+    <a href="appointments.html"><span>📅</span><span>Appointments</span></a>
     <a href="history.html"><span>📋</span><span>History</span></a>
     <a href="assessments.html"><span>📝</span><span>Assessments</span></a>
     <a href="resources.html"><span>📚</span><span>Resources</span></a>
@@ -1271,266 +1271,27 @@
     </div>
 
   <!-- Add Firebase SDKs -->
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-  <script>
-    // Firebase config
-    const firebaseConfig = {
-      apiKey: "AIzaSyAhGG1-VyUOD5BllSzDxrPEcd_mhqSNxj0",
-      authDomain: "safespace-fbd7f.firebaseapp.com",
-      databaseURL: "https://safespace-fbd7f-default-rtdb.firebaseio.com",
-      projectId: "safespace-fbd7f",
-      storageBucket: "safespace-fbd7f.appspot.com",
-      messagingSenderId: "16930797102",
-      appId: "1:16930797102:web:c0b10204cc5e31a06cd1bf"
-    };
-    if (!firebase.apps.length) {
-      firebase.initializeApp(firebaseConfig);
-    }
-    const auth = firebase.auth();
-    const db = firebase.database();
-
-    // --- START: SIDEBAR SCRIPT ---
-    const menuIcon = document.querySelector('.hamburger');
-    const sidebar = document.getElementById('sidebar');
-    const mainContent = document.getElementById('content');
-    const sidebarTop = document.querySelector('.sidebar .brand');
-    const topbar = document.getElementById('topbar');
-    
-    // Create overlay for mobile
-    const overlay = document.createElement('div');
-    overlay.className = 'sidebar-overlay';
-    document.body.appendChild(overlay);
-    
-    // Mobile detection
-    function isMobile() {
-        return window.innerWidth <= 768;
-    }
-    
-    // Toggle sidebar with mobile responsiveness
-    if (menuIcon) {
-        menuIcon.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            
-            if (isMobile()) {
-                // Mobile behavior - overlay sidebar
-                const isOpen = sidebar.classList.toggle('mobile-open');
-                overlay.classList.toggle('active', isOpen);
-                document.body.style.overflow = isOpen ? 'hidden' : '';
-            } else {
-                // Desktop behavior - collapse sidebar
-                const isCollapsed = sidebar.classList.toggle('collapsed');
-                mainContent.classList.toggle('shifted', isCollapsed);
-                sidebarTop.classList.toggle('collapsed', isCollapsed);
-                topbar.classList.toggle('shifted', isCollapsed);
-            }
-        });
-    }
-    
-    // Close mobile sidebar when clicking overlay
-    overlay.addEventListener('click', () => {
-        sidebar.classList.remove('mobile-open');
-        overlay.classList.remove('active');
-        document.body.style.overflow = '';
-    });
-    
-    // Handle window resize
-    window.addEventListener('resize', () => {
-        if (!isMobile()) {
-            // Reset mobile states when switching to desktop
-            sidebar.classList.remove('mobile-open');
-            overlay.classList.remove('active');
-            document.body.style.overflow = '';
-            // Ensure desktop state is consistent
-            const isCollapsed = sidebar.classList.contains('collapsed');
-            mainContent.classList.toggle('shifted', isCollapsed);
-            sidebarTop.classList.toggle('collapsed', isCollapsed);
-            topbar.classList.toggle('shifted', isCollapsed);
-        } else {
-            // Reset desktop states when switching to mobile
-            sidebar.classList.remove('collapsed');
-            mainContent.classList.remove('shifted');
-            sidebarTop.classList.remove('collapsed');
-            topbar.classList.remove('shifted');
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+<script src="firebase_config.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const signOutButton = document.getElementById('signOutBtn');
+    if (signOutButton) {
+      signOutButton.addEventListener('click', () => {
+        if (confirm('Are you sure you want to sign out?')) {
+          firebase.auth().signOut().then(() => {
+            console.log('User signed out successfully.');
+            window.location.href = 'signin.html';
+          }).catch((error) => {
+            console.error('Sign out error:', error);
+            alert('An error occurred during sign out. Please try again.');
+          });
         }
-    });
-    
-    // Close mobile sidebar when clicking a menu item
-    document.querySelectorAll('.sidebar a').forEach(link => {
-        link.addEventListener('click', () => {
-            if (isMobile()) {
-                sidebar.classList.remove('mobile-open');
-                overlay.classList.remove('active');
-                document.body.style.overflow = '';
-            }
-        });
-    });
-    // --- END: SIDEBAR SCRIPT ---
-
-    // Notification toggle
-    function toggleNotif() {
-      const dropdown = document.getElementById("notifDropdown");
-      const badge = document.querySelector(".notif-badge");
-      dropdown.classList.toggle("active");
-      if (dropdown.classList.contains("active")) { badge.classList.add("hidden"); }
-    }
-
-    document.addEventListener("click", function(e){
-      const dropdown = document.getElementById("notifDropdown");
-      const notifBtn = document.querySelector(".notif-wrapper");
-      if (!notifBtn.contains(e.target) && !dropdown.contains(e.target)) {
-        dropdown.classList.remove("active");
-      }
-    });
-
-    // Navigation
-    function goToSection(sectionId) {
-      if (sectionId === 'appointments') {
-        window.location.href = 'index.html';
-      } else if (sectionId === 'messages') {
-        window.location.href = 'messages.html';
-      } else if (sectionId === 'assessments') {
-        window.location.href = 'assessments.html';
-      }
-      document.getElementById("notifDropdown").classList.remove("active");
-    }
-
-    // Action Card functions
-    function showActionCard(title, message) {
-      document.getElementById('actionTitle').textContent = title;
-      document.getElementById('actionMessage').textContent = message;
-      document.getElementById('actionCard').style.display = 'flex';
-    }
-
-    function closeActionCard() {
-      document.getElementById('actionCard').style.display = 'none';
-    }
-
-    // Dark Mode Functionality
-    function initializeDarkMode() {
-      const darkModeToggle = document.getElementById('darkModeToggle');
-      const darkModeSwitch = document.getElementById('darkModeSwitch');
-      const body = document.body;
-      
-      // Load dark mode preference
-      const isDarkMode = localStorage.getItem('darkMode') === 'true';
-      
-      // Apply dark mode if enabled
-      if (isDarkMode) {
-        body.classList.add('dark-mode');
-        darkModeSwitch.checked = true;
-        updateDarkModeButton(true);
-      }
-      
-      // Toggle dark mode with switch
-      darkModeSwitch.addEventListener('change', function() {
-        const isDark = this.checked;
-        body.classList.toggle('dark-mode', isDark);
-        localStorage.setItem('darkMode', isDark);
-        updateDarkModeButton(isDark);
-      });
-      
-      // Toggle dark mode with button
-      darkModeToggle.addEventListener('click', function() {
-        const isDark = !body.classList.contains('dark-mode');
-        body.classList.toggle('dark-mode', isDark);
-        darkModeSwitch.checked = isDark;
-        localStorage.setItem('darkMode', isDark);
-        updateDarkModeButton(isDark);
-      });
-      
-      function updateDarkModeButton(isDark) {
-        const icon = darkModeToggle.querySelector('i');
-        const text = darkModeToggle.querySelector('span');
-        
-        if (isDark) {
-          icon.className = 'fas fa-sun';
-          text.textContent = 'Light Mode';
-        } else {
-          icon.className = 'fas fa-moon';
-          text.textContent = 'Dark Mode';
-        }
-      }
-    }
-
-    // Load user profile for topbar
-    auth.onAuthStateChanged(async (user) => {
-      if (user) {
-        const snapshot = await db.ref('students').orderByChild('uid').equalTo(user.uid).once('value');
-        if (snapshot.exists()) {
-          const data = Object.values(snapshot.val())[0];
-          
-          // Update topbar
-          document.getElementById('topbarStudentId').textContent = "ID: " + (data.student_id || 'N/A');
-          
-          if (data.photo_url) {
-            document.getElementById('topbarProfile').innerHTML = `<img src="${data.photo_url}" alt="Profile Photo" style="width:38px;height:38px;border-radius:50%;object-fit:cover;">`;
-          } else {
-            const initials = (data.first_name || data.username || 'U')[0].toUpperCase();
-            document.getElementById('topbarProfile').textContent = initials;
-          }
-        }
-      } else {
-        window.location.href = "signin.html";
-      }
-    });
-
-    // Settings Save Functionality
-    document.addEventListener('DOMContentLoaded', function() {
-      // Initialize dark mode
-      initializeDarkMode();
-      
-      // Load saved settings
-      const savedSettings = JSON.parse(localStorage.getItem('safeSpaceSettings') || '{}');
-      
-      // Set initial states
-      document.getElementById('appointmentReminders').checked = savedSettings.appointmentReminders !== false;
-      document.getElementById('messageNotifications').checked = savedSettings.messageNotifications !== false;
-      document.getElementById('autoLogout').checked = savedSettings.autoLogout !== false;
-
-      // Save on change
-      document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
-        checkbox.addEventListener('change', function() {
-          const settings = {
-            appointmentReminders: document.getElementById('appointmentReminders').checked,
-            messageNotifications: document.getElementById('messageNotifications').checked,
-            autoLogout: document.getElementById('autoLogout').checked
-          };
-          localStorage.setItem('safeSpaceSettings', JSON.stringify(settings));
-          showActionCard('Settings Saved', 'Your preferences have been updated.');
-        });
-      });
-    });
-
-    // Mobile detection for sidebar
-    function isMobile() {
-      return window.innerWidth <= 768;
-    }
-
-    // Close sidebar when clicking on mobile
-    if (isMobile()) {
-      document.querySelectorAll('.sidebar a').forEach(link => {
-        link.addEventListener('click', function() {
-          sidebar.classList.remove('collapsed');
-          content.classList.remove('shifted');
-          topbar.classList.remove('shifted');
-        });
       });
     }
-
-    // Sign Out functionality
-    document.getElementById('signOutBtn').addEventListener('click', function() {
-      auth.signOut().then(() => {
-        // Sign-out successful.
-        window.location.href = 'signin.html';
-      }).catch((error) => {
-        // An error happened.
-        console.error('Sign Out Error', error);
-        alert('Error signing out: ' + error.message);
-      });
-    });
-  </script>
+  });
+</script>
 </body>
 </html>
