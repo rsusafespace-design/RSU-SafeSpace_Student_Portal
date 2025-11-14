@@ -278,22 +278,22 @@
         transition: width 0.3s ease, transform 0.3s ease;
     }
     
-  .sidebar .brand {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 250px;
-    height: 60px; /* desktop default: 60px */
-    background-color: #1e8e3e;
-    color: white;
-    display: flex;
-    align-items: center;
-    padding: 10px 20px;
-    box-sizing: border-box;
-    z-index: 1002;
-    border-right: 1px solid rgba(255, 255, 255, 0.3);
-    transition: width 0.3s ease;
-  }
+    .sidebar .brand {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 250px;
+        height: 60px; /* desktop default: 60px */
+        background-color: #1e8e3e;
+        color: white;
+        display: flex;
+        align-items: center;
+        padding: 10px 20px;
+        box-sizing: border-box;
+        z-index: 1002;
+        border-right: 1px solid rgba(255, 255, 255, 0.3);
+        transition: width 0.3s ease;
+    }
     
   /* Match index.html: use the sidebar logo sizing and prefer the inline image
      Note: use the same image-rendering hint that appointments uses for crisper pixels */
@@ -477,20 +477,6 @@
         .content, .content.shifted {
             margin-left: 0;
         }
-    /* Mobile-only: increase brand area and logo container so the artwork doesn't get clipped */
-    .sidebar .brand {
-      height: 80px; /* larger brand area on mobile */
-      align-items: center;
-      padding: 12px 20px;
-    }
-    .sidebar .brand .logo {
-      width: 80px;
-      height: 80px;
-      border-radius: 8px;
-    }
-    /* push nav content further below the enlarged brand on mobile */
-    .sidebar::after { top: 80px; height: calc(100vh - 80px); }
-    #nav { margin-top: 80px; }
     }
     /* --- END: NEW ADMIN SYNC STYLES --- */
 
@@ -1420,7 +1406,7 @@
     }
     .hamburger:hover { background: rgba(255,255,255,0.1); }
     .portal-title { display:flex; flex-direction:column; line-height:1.2; }
-    .portal-title strong span.safespace { display:none; margin-right:0.3rem; }
+    .portal-title strong span.safespace { display:inline; margin-right:0.3rem; }
     .portal-title small { font-size:0.75rem; opacity:0.9; }
 
     /* Show SafeSpace text when sidebar is shrunk */
@@ -1628,14 +1614,9 @@
 
     /* Logo and brand name styling to mirror admin */
     .sidebar .logo {
+      /* don't use background-image here; use the inline <img> to avoid scaling/blurring differences */
       background: transparent;
-      width:72px; height:72px; border-radius:6px; box-shadow:none; color:transparent;
-      display:flex; align-items:center; justify-content:center; overflow:hidden; padding:0; border:0;
-    }
-    .sidebar .logo img{
-      width:auto; height:64px; max-width:100%; max-height:64px; object-fit:contain; display:block;
-      background:transparent; /* in case image has transparency preserve it */
-      image-rendering: -webkit-optimize-contrast;
+      width:44px; height:44px; border-radius:6px; box-shadow:none; color:transparent;
     }
 
     /* keep brand/logo aligned with topbar height (60px) */
@@ -1650,8 +1631,8 @@
 
     .sidebar .brand span { color: white; font-weight:700; margin-left:4px; }
 
-    /* push nav content below the brand area */
-    #nav { padding-top: 12px; margin-top: 60px; }
+  /* push nav content below the brand area (desktop default: 60px) */
+  #nav { padding-top: 12px; margin-top: 60px; }
 
     /* make the small top-area logo visible in header-like layout */
     .header-and-sidebar-top .sidebar-logo span { color: white; font-weight:700; font-size:1.1rem; }
@@ -1663,7 +1644,7 @@
       left: 250px; /* sit to the right of the fixed sidebar */
       right: 0;
       height: 60px;
-      background-color: var(--topbar-bg);
+      background-color: #1e8e3e;
       color: white;
       padding: 10px 30px;
       display: flex; justify-content: space-between; align-items: center;
@@ -1672,7 +1653,7 @@
     }
     .topbar.shrink { left: 80px; }
 
-    .topbar-left { display:flex; align-items:center; gap:0.6rem; }
+  .topbar-left { display:flex; align-items:center; gap:0.15rem; }
     .hamburger {
       font-size: 1.2rem;
       cursor: pointer;
@@ -1681,8 +1662,8 @@
       transition: background 0.2s;
     }
     .hamburger:hover { background: rgba(255,255,255,0.1); }
-  .portal-title { display:flex; flex-direction:column; line-height:1.2; }
-  .portal-title strong span.safespace { display:inline; margin-right:0.3rem; }
+    .portal-title { display:flex; flex-direction:column; line-height:1.2; }
+    .portal-title strong span.safespace { display:inline; margin-right:0.3rem; }
     .portal-title small { font-size:0.75rem; opacity:0.9; }
 
     /* Show SafeSpace text when sidebar is shrunk */
@@ -1746,86 +1727,106 @@
     .card { background:white; border-radius:10px; padding:1rem; box-shadow:0 2px 6px rgba(0,0,0,0.1); }
     .card h3 { margin-bottom:0.8rem; }
 
-    /* Hide hamburger on mobile */
-    @media (max-width:768px) {
-      .hamburger { display: none; }
+    /* Your Progress chart responsive styles */
+    .progress-chart-container {
+        position: relative;
+        width: 100%;
+        max-width: 220px; /* Max size of the chart */
+        margin: 0 auto;
     }
 
-    /* ===== Mobile Bottom Nav ===== */
-    @media (max-width:768px) {
-      .sidebar { 
-        display: none !important;
-        transform: translateX(-100%);
-      }
-      .topbar { margin-left:0; }
-      .content { margin-left:0; }
-      .hamburger { display: none; }
-      
-      /* Show mobile logo and SafeSpace text */
-      .mobile-logo { display: flex; }
-      .portal-title strong span.safespace { display: inline; }
-      
-      .bottom-nav {
-        position:fixed; bottom:0; left:0; width:100%;
-        background:#1e8e3e; display:flex; justify-content:space-around;
-        padding:0.5rem 0; z-index:2000;
-      }
-      .bottom-nav a {
-        flex:1; text-align:center; color:white; text-decoration:none; font-size:0.9rem;
-        display:flex; align-items:center; justify-content:center; gap:0.25rem;
-        padding:0.6rem 0; opacity:1; background:transparent; border-radius:8px;
-      }
-      .bottom-nav a i { font-size:22px; line-height:1; }
-      .bottom-nav a.active { color:#ffc107; }
+    #progressChart {
+        width: 100% !important;
+        height: auto !important;
+        max-width: 220px;
+        display: block;
     }
-    
-    /* Hide bottom nav on larger screens */
-    .bottom-nav { display: none; }
 
     @media (max-width: 768px) {
-      .bottom-nav { 
-        display: flex !important;
-        position: fixed;
-        bottom: 0; left: 0; right: 0;
-        background: var(--primary-dark); /* solid colored bar */
-        justify-content: space-around;
-        padding: 0.6rem 0; height:64px; z-index: 2000;
-      }
+        .progress-chart-container {
+            max-width: 180px; /* Smaller chart on mobile */
+        }
     }
 
-    /* ===== Misc ===== */
-    .hidden {
-      display: none !important;
+    @media (max-width: 480px) {
+        .progress-chart-container {
+            max-width: 150px; /* Even smaller on very small screens */
+        }
+    }
+    /* temporary highlight used when 'Continue Progress' points to an item */
+    .highlight-pick { box-shadow: 0 6px 18px rgba(15,122,52,0.18); background: linear-gradient(180deg, #fbfff9, #f0f9f0); transform: translateY(-3px); transition: all 220ms ease; }
+  </style>
+  <style id="appointments-copy">
+    :root {
+      --primary: #0f7a34;
+      --primary-light: #e8f5e9;
+      --primary-dark: #0a5a26;
+      --topbar-bg: #1e8e3e;
+      --secondary: #4361ee;
+      --accent: #7209b7;
+      --text: #2d3748;
+      --text-light: #718096;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      --card-shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.12);
+      --radius: 16px;
+      --radius-sm: 8px;
+      --sidebar-width: 280px;
+      --collapsed-width: 80px;
+      --topbar-height: 70px;
+      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      --transition-slow: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    /* --- START: NEW ADMIN SYNC STYLES --- */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      font-size: 16px;
+      color: var(--text);
+    }
+
+    body {
+      background: var(--bg);
+      overflow-x: hidden;
+    }
+
+    /* ===== Sidebar (admin-like style) ===== */
     .sidebar {
-        width: 250px;
-        background: #f0f3f6;
-        border-right: 1px solid rgba(0,0,0,0.06);
-        position: fixed;
-        top: 60px; /* Starts below the header */
-        left: 0;
-        height: calc(100vh - 60px);
-        z-index: 999;
-        padding: 12px;
-        box-sizing: border-box;
-        display: flex;
-        flex-direction: column;
-        transition: width 0.3s ease, transform 0.3s ease;
+      position:fixed; top:0; left:0;
+      width:250px; height:100%;
+      background:#f0f3f6; color:#1f2937;
+      padding:12px;
+      border-right:1px solid rgba(0,0,0,0.06);
+      display:flex; flex-direction:column;
+      transition:width 0.3s ease, transform 0.3s ease;
+      z-index:1200;
     }
-    
+
     .sidebar .brand {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 250px;
-        height: 60px;
-        background-color: #1e8e3e;
-        color: white;
-        display: flex;
-        align-items: center;
-        padding: 10px 20px;
+      display:flex; align-items:center; gap:0.6rem;
+      margin-bottom:1rem; padding:8px 4px;
+    }
+
+    .sidebar .logo {
+      width:40px; height:40px; background:transparent;
+      border-radius:8px; display:flex; align-items:center; justify-content:center;
+      color:#10b981; font-weight:700; font-size:0.95rem;
+      flex-shrink:0; box-shadow:0 1px 2px rgba(0,0,0,0.04);
+    }
+
+    .sidebar .brand span { font-weight:700; font-size:1rem; color:#374151; }
+
+    /* collapsed (narrow) sidebar */
+    .sidebar.shrink { width:80px; padding:12px 8px; }
+    .sidebar.shrink .brand span { display:none; }
+    .sidebar.shrink a { text-align:center; font-size:1.1rem; }
+    .sidebar .brand {
         box-sizing: border-box;
         z-index: 1002;
         border-right: 1px solid rgba(255, 255, 255, 0.3);
@@ -2150,7 +2151,7 @@
         
         <div id="progressCard" class="card">
           <h3><i class="fas fa-chart-pie"></i> Assessment Progress</h3>
-          <div style="padding: 10px 0; text-align: center;">
+          <div class="progress-chart-container" style="padding: 10px 0; text-align: center;">
             <canvas id="progressChart" width="220" height="220" style="display:block;margin:0 auto;border-radius:8px;background:linear-gradient(180deg,#fbfff9,#f0f9f0);"></canvas>
             <div style="margin-top:8px; display:flex; align-items:center; justify-content:center; gap:12px">
               <div style="text-align:center">
@@ -3877,5 +3878,4 @@
     renderAssessments = async function(){ await origRenderAssessments(); alignAvailableToProgress(); };
   </script>
 </body>
-
 </html>
