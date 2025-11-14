@@ -1176,7 +1176,7 @@
         display: flex !important;
         position: fixed;
         bottom: 0; left: 0; right: 0;
-        background: #1e8e3e; /* solid colored bar */
+        background: var(--primary-dark); /* solid colored bar */
         justify-content: space-around;
         padding: 0.6rem 0; height:64px; z-index: 2000;
       }
@@ -1310,7 +1310,7 @@
       <div class="logo"><img src="safespace.png" alt="SafeSpace logo"></div>
       <span>SafeSpace</span>
     </div>
-    <a href="index.html" data-emoji="📅"><span>Appointments</span></a>
+    <a href="appointments.html" data-emoji="📅"><span>Appointments</span></a>
     <a href="history.html" data-emoji="📋"><span>History</span></a>
     <a href="assessments.html" data-emoji="📝"><span>Assessments</span></a>
     <a href="resources.html" data-emoji="📚"><span>Resources</span></a>
@@ -1362,7 +1362,7 @@
         <!-- Chat Header -->
         <div class="chat-header">
       <div class="counselor-info">
-        <button id="backToList" class="mobile-back" aria-label="Back" style="display:none;border:0;background:transparent;font-size:20px;margin-right:8px;cursor:pointer">
+        <button id="backToList" class="mobile-back" aria-label="Back" style="display:none;border:0;background:transparent;font-size:20px;margin-right:8px;cursor:pointer" onclick="document.body.classList.remove('mobile-chat-open'); document.body.style.overflow = '';">
           <i class="fas fa-circle-chevron-left" aria-hidden="true"></i>
         </button>
         <div class="counselor-avatar" id="counselorAvatar">
@@ -1407,7 +1407,7 @@
 
   <!-- Bottom Nav (mobile only) -->
   <div class="bottom-nav">
-    <a href="index.html"><span class="bn-emoji">📅</span><span class="bn-label">Appointments</span></a>
+    <a href="appointments.html"><span class="bn-emoji">📅</span><span class="bn-label">Appointments</span></a>
     <a href="history.html"><span class="bn-emoji">📋</span><span class="bn-label">History</span></a>
     <a href="assessments.html"><span class="bn-emoji">📝</span><span class="bn-label">Assessments</span></a>
     <a href="resources.html"><span class="bn-emoji">📚</span><span class="bn-label">Resources</span></a>
@@ -1812,7 +1812,7 @@
     // Navigation
     function goToSection(sectionId) {
       if (sectionId === 'appointments') {
-        window.location.href = 'index.html';
+        window.location.href = 'appointments.html';
       } else {
         alert("Navigation to " + sectionId);
       }
@@ -1828,7 +1828,7 @@
         window.history.back();
       } else {
         // Fallback to a default page (e.g., dashboard or appointments)
-        window.location.href = 'index.html';
+        window.location.href = 'appointments.html';
       }
     }
     
@@ -1988,50 +1988,15 @@
       });
 
       // Wire mobile back button to return to conversations list
-      document.addEventListener('DOMContentLoaded', function(){
-        const back = document.getElementById('backToList');
-        if (back){
-            back.addEventListener('click', function(e){
-              e.preventDefault();
-              try{ 
-                document.body.classList.remove('mobile-chat-open'); 
-                document.body.style.overflow = ''; 
-              }catch(err){}
-              // Restore the conversations list visibility and scroll the active item into view
-              try{
-                setTimeout(function(){
-                  const list = document.getElementById('conversationsList');
-                  if (list){
-                    // Find highlighted/active conv and scroll it into view
-                    const active = list.querySelector('.conv-item.active');
-                    if (active && typeof active.scrollIntoView === 'function'){
-                      active.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                      try{ active.focus(); }catch(e){}
-                    } else {
-                      // focus the list container for accessibility
-                      try{ list.focus(); }catch(e){}
-                    }
-                  }
-                }, 60);
-              }catch(e){}
-            });
+      document.addEventListener('click', function(event) {
+        // Use event delegation to catch clicks on the back button
+        if (event.target.closest('#backToList')) {
+          event.preventDefault();
+          event.stopPropagation();
+          document.body.classList.remove('mobile-chat-open');
+          document.body.style.overflow = '';
         }
       });
-
-        // Delegated click handler: ensure back button works even if bound earlier/later
-        document.addEventListener('click', function(ev){
-          try{
-            const b = ev.target.closest && ev.target.closest('#backToList');
-            if (!b) return;
-            ev.preventDefault();
-            document.body.classList.remove('mobile-chat-open');
-            document.body.style.overflow = '';
-            setTimeout(function(){
-              const list = document.getElementById('conversationsList');
-              if (list){ const active = list.querySelector('.conv-item.active'); if (active && typeof active.scrollIntoView === 'function'){ active.scrollIntoView({ behavior: 'smooth', block: 'center' }); try{ active.focus(); }catch(e){} } else { try{ list.focus(); }catch(e){} } }
-            }, 60);
-          }catch(e){}
-        });
 
       _ws.addEventListener('message', (ev)=>{
         let msg = null; try{ msg = JSON.parse(ev.data); }catch(e){ return; }
@@ -3585,5 +3550,3 @@
   </div>
 </body>
 </html>
-
-
