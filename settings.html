@@ -824,7 +824,8 @@
     }
     .hamburger:hover { background: rgba(255,255,255,0.1); }
     .portal-title { display:flex; flex-direction:column; line-height:1.2; }
-    .portal-title strong span.safespace { display:inline; margin-right:0.3rem; }
+    .portal-title strong { font-size: 1.1rem; }
+    .portal-title strong span.safespace { display:none; margin-right:0.3rem; }
     .portal-title small { font-size:0.75rem; opacity:0.9; }
 
     /* Show SafeSpace text when sidebar is shrunk */
@@ -1229,10 +1230,10 @@
         <h3><i class="fas fa-user-circle"></i>Account</h3>
         <div class="settings-item" id="signOutButton" style="cursor: pointer;">
           <div>
-            <div class="settings-label">Sign Out</div>
+            <div class="settings-label" style="color: #dc3545; font-weight: bold;">Sign Out</div>
             <div class="settings-description">You will be returned to the sign-in page.</div>
           </div>
-          <i class="fas fa-chevron-right"></i>
+          <i class="fas fa-chevron-right" style="color: #dc3545;"></i>
         </div>
       </div>
 
@@ -1270,6 +1271,19 @@
       </div>
     </div>
 
+  <!-- Sign Out Confirmation Modal -->
+    <div id="signOutModal" class="action-card">
+      <div class="action-card-content">
+        <button id="closeSignOutModal" class="close-btn">&times;</button>
+        <h3>Sign Out</h3>
+        <p>Are you sure you want to sign out?</p>
+        <div style="margin-top: 1.5rem; display: flex; justify-content: center; gap: 1rem;">
+          <button id="cancelSignOut" style="padding: 0.5rem 1rem; border-radius: 5px; border: 1px solid #ccc; background: #f0f0f0; cursor: pointer;">Cancel</button>
+          <button id="confirmSignOut" style="padding: 0.5rem 1rem; border-radius: 5px; border: none; background: #dc3545; color: white; cursor: pointer;">Sign Out</button>
+        </div>
+      </div>
+    </div>
+
   <!-- Add Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
@@ -1277,20 +1291,48 @@
 <script src="firebase_config.js"></script>
 <script>
   document.addEventListener('DOMContentLoaded', function () {
-    const signOutButton = document.getElementById('signOutBtn');
+    const signOutButton = document.getElementById('signOutButton');
+    const signOutModal = document.getElementById('signOutModal');
+    const closeSignOutModal = document.getElementById('closeSignOutModal');
+    const cancelSignOut = document.getElementById('cancelSignOut');
+    const confirmSignOut = document.getElementById('confirmSignOut');
+
     if (signOutButton) {
       signOutButton.addEventListener('click', () => {
-        if (confirm('Are you sure you want to sign out?')) {
-          firebase.auth().signOut().then(() => {
-            console.log('User signed out successfully.');
-            window.location.href = 'signin.html';
-          }).catch((error) => {
-            console.error('Sign out error:', error);
-            alert('An error occurred during sign out. Please try again.');
-          });
-        }
+        signOutModal.style.display = 'flex';
       });
     }
+
+    if (closeSignOutModal) {
+      closeSignOutModal.addEventListener('click', () => {
+        signOutModal.style.display = 'none';
+      });
+    }
+
+    if (cancelSignOut) {
+      cancelSignOut.addEventListener('click', () => {
+        signOutModal.style.display = 'none';
+      });
+    }
+
+    if (confirmSignOut) {
+      confirmSignOut.addEventListener('click', () => {
+        firebase.auth().signOut().then(() => {
+          console.log('User signed out successfully.');
+          window.location.href = 'signin.html';
+        }).catch((error) => {
+          console.error('Sign out error:', error);
+          alert('An error occurred during sign out. Please try again.');
+        });
+      });
+    }
+
+    // Close modal if clicking outside of it
+    window.addEventListener('click', (event) => {
+      if (event.target == signOutModal) {
+        signOutModal.style.display = 'none';
+      }
+    });
   });
 </script>
 </body>
