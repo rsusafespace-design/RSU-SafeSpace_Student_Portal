@@ -814,6 +814,16 @@
       flex: 1;
     }
 
+    @media (max-width: 768px) {
+      .grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+      .card {
+        padding: 20px;
+      }
+    }
+
    /* Ensure the grid (cards) sits below the mood area and doesn't overlap it
      On desktop we keep the normal small gap; larger push-down is applied only
      via the mobile media query below so desktop layout isn't affected. */
