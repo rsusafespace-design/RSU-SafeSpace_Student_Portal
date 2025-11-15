@@ -629,7 +629,7 @@
     /* Ensure the recent mood card is horizontally centered on small screens */
     @media (max-width: 520px) {
       /* center the right column content */
-      .mood-right { justify-content: center !important; padding-left: 8px; padding-right: 8px; }
+      .mood-right { justify-content: center !important; transform: translateX(-8px); }
 
       /* override inner card inline width: let it size to available space and keep a max width */
       .mood-right > div {
@@ -821,6 +821,17 @@
       }
       .card {
         padding: 20px;
+      }
+      /* Prevent horizontal scrolling */
+      * {
+        max-width: 100%;
+        box-sizing: border-box;
+      }
+      input, textarea, select {
+        max-width: 100%;
+      }
+      .content {
+        max-width: 100% !important;
       }
     }
 
