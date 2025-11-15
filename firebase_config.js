@@ -4,17 +4,16 @@
 (function() {
   // Firebase config for rsu-safespace (used by verification pages)
   // NOTE: keep this file out of public repos if these keys are sensitive for your workflow.
-  require('dotenv').config();
   
   var firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  databaseURL: import.meta.env.VITE_FIREBASE_DATABASE_URL,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
+    apiKey: "AIzaSyD4eMHzsieWnIH6nHLgBl1PDTiIETeVmnA",
+    authDomain: "rsu-safespace.firebaseapp.com",
+    databaseURL: "https://rsu-safespace-default-rtdb.firebaseio.com",
+    projectId: "rsu-safespace",
+    storageBucket: "rsu-safespace.firebasestorage.app",
+    messagingSenderId: "490237933031",
+    appId: "1:490237933031:web:0d17829f4359da952db942",
+    measurementId: "G-YY33W1QM2N"
   };
 
   try {
