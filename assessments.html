@@ -607,7 +607,7 @@
 
     @media (max-width: 900px) {
       /* collapse to a single column on tablet / narrow screens */
-      .mood-top-container { grid-template-columns: 1fr; padding: 12px 12px 12px 0; margin-left: -12px; gap: 12px; }
+      .mood-top-container { grid-template-columns: 1fr; padding: 12px 12px 12px 0; margin-left: -24px; gap: 12px; }
       .mood-left, .mood-right { width:100%; }
       #emojiList { justify-content: center; }
   .emoji-col { min-width: 34px; flex: 0 0 auto; }
@@ -629,7 +629,7 @@
     /* Ensure the recent mood card is horizontally centered on small screens */
     @media (max-width: 520px) {
       /* center the right column content */
-      .mood-right { justify-content: center !important; transform: translateX(-16px); }
+      .mood-right { justify-content: center !important; transform: translateX(12px); }
 
       /* override inner card inline width: let it size to available space and keep a max width */
       .mood-right > div {
@@ -638,6 +638,7 @@
         margin-left: auto !important;
         margin-right: auto !important;
         box-sizing: border-box !important;
+        text-align: center;
       }
 
       /* Slightly relax left-nudge of the mood title on phones so alignment feels natural */
