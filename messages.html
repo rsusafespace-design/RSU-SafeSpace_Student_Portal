@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+3<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -210,7 +210,7 @@
 
     /* Mobile logo styling */
     .mobile-logo {
-      display: none;
+      display: none !important;
       width: 28px;
       height: 28px;
       background: white;
@@ -522,6 +522,10 @@
 
     .chat-input-bar .icon-btn-inline:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(2,6,23,0.08); }
 
+    .chat-input-bar .icon-btn-inline:disabled { background: #ccc; color: #999; }
+
+    .chat-input-bar .icon-btn-inline:disabled i { color: #999; }
+
     .chat-input { flex: 1; padding: 0.9rem 1.1rem; border-radius: 999px; border: 1px solid #e6eef7; font-size: 1rem; outline: none; background: #fbfdff; min-width: 0; }
     .chat-input:focus { border-color: #9ae6b4; box-shadow: 0 4px 14px rgba(16,185,129,0.06); }
 
@@ -546,6 +550,10 @@
 
     .chat-send-btn i { font-size: 16px; }
 
+    .chat-send-btn:disabled { background: #ccc; color: #999; }
+
+    .chat-send-btn:disabled i { color: #999; }
+
     .conversations-list { padding: 4px 0; }
     .conversations-list .conv-item.card { display:block; padding:12px; border:1px solid #eef2f6; border-radius:12px; margin-bottom:12px; background:#fff; box-shadow:0 6px 18px rgba(16,24,40,0.04); text-align:left; }
     .conversations-list .conv-item.card:hover { transform: translateY(-2px); box-shadow:0 10px 24px rgba(16,24,40,0.06); }
@@ -564,7 +572,7 @@
         bottom: 0;
         left: 0;
         width: 100%;
-        background: #004c27;
+        background: #1e8e3e;
         justify-content: space-around;
         padding: 0.5rem 0;
         z-index: 2000;
@@ -666,9 +674,12 @@
       /* send button: circular green */
       .chat-send-btn { width:44px; height:44px; border-radius:50%; background:#0f7a34; color:#fff; display:inline-flex; align-items:center; justify-content:center; border:none; box-shadow:0 6px 18px rgba(0,0,0,0.12); }
       .chat-send-btn i { transform:translateY(1px); }
+      .chat-send-btn:disabled { background: #ccc; color: #999; }
       /* image attach icon style */
       .icon-btn-inline { width:44px; height:44px; border-radius:50%; background:#f1f5f9; display:inline-flex; align-items:center; justify-content:center; border:none; }
       .icon-btn-inline i { font-size:18px; color:#0f7a34; }
+      .icon-btn-inline:disabled { background: #ccc; color: #999; }
+      .icon-btn-inline:disabled i { color: #999; }
     }
 
     /* Icon enabled/disabled coloring: green on desktop, yellow on mobile when enabled */
@@ -719,13 +730,13 @@
       .chat-input-bar .chat-input { flex:1 1 auto; }
 
       /* Give space for the bottom nav so the input isn't covered */
-      body.mobile-chat-open .chat-panel { padding-bottom: 84px; }
+      /* body.mobile-chat-open .chat-panel { padding-bottom: 84px; } */
       .bottom-nav { z-index: 1300; }
 
       /* When a conversation is opened we want the chat to occupy the full viewport
          and hide the topbar and bottom navigation for an immersive experience. */
       body.mobile-chat-open #topbar { display: none !important; }
-      body.mobile-chat-open .bottom-nav { display: none !important; }
+      /* body.mobile-chat-open .bottom-nav { display: none !important; } */
 
       /* Make the chat-panel fixed and fill the entire viewport when opened */
       body.mobile-chat-open .chat-panel {
@@ -733,8 +744,8 @@
         top: 0 !important;
         left: 0 !important;
         right: 0 !important;
-        bottom: 0 !important;
-        height: 100vh !important;
+        bottom: 64px !important;
+        height: calc(100vh - 64px) !important;
         z-index: 2000 !important;
         background: #fff;
       }
@@ -748,6 +759,10 @@
       .chat-header .counselor-details .counselor-status { font-size: 12px !important; }
       .chat-panel #messagesContainer .sys-message { font-size: 12px !important; }
       /* reduce padding around message bubbles slightly */
+      .chat-input-bar { padding: 6px; gap: 6px; }
+      .chat-input-bar .chat-input { font-size: 14px; padding: 8px 10px; }
+      #attachmentPreview { width: 64px !important; height: 64px !important; }
+      #attachmentRemove { width: 32px !important; height: 32px !important; font-size: 16px !important; top: -8px !important; right: -8px !important; }
       .chat-panel #messagesContainer div[style] { padding: 8px 10px !important; }
     }
   </style>
@@ -812,14 +827,19 @@
 
     /* Hide bottom-nav text labels so only emoji/icons are shown */
     .bottom-nav a .bn-label { display: none !important; }
-    .bottom-nav a .bn-emoji { font-size: 28px !important; line-height: 1; display: inline-block; }
+    .bottom-nav a .emoji { font-size: 28px !important; line-height: 1; display: inline-block; }
 
     /* Topbar mobile adjustments to match assessments.html */
     @media (max-width: 768px) {
-      .topbar { left: 0 !important; right: 0 !important; padding: 8px 12px !important; height: 64px; }
+      .topbar { left: 0 !important; right: 0 !important; padding: 8px 12px !important; }
       .mobile-logo { display: flex !important; }
       .portal-title { gap: 0; }
       .portal-title small { display: inline-block; font-size:0.75rem; color: rgba(255,255,255,0.9); }
+    }
+
+    /* Ensure mobile-logo is hidden in desktop */
+    @media (min-width: 769px) {
+      .mobile-logo { display: none !important; }
     }
 
     /* Make mobile logo image size and brand spacing match assessments exactly */
@@ -831,7 +851,7 @@
       .sidebar .brand .logo img { height:40px !important; width:auto !important; }
       /* Ensure sidebar is hidden on mobile (assessments shows bottom nav instead) */
       .sidebar { display: none !important; transform: translateX(-100%) !important; }
-      .content { margin-left: 0 !important; padding: 20px 15px 4rem 15px !important; margin-top: 60px !important; }
+      .content { margin-left: 0 !important; padding: 20px 15px 4rem 15px !important; margin-top: 60px !important; overflow-x: hidden; }
     }
   </style>
   <style id="appointments-copy">
@@ -1407,12 +1427,12 @@
 
   <!-- Bottom Nav (mobile only) -->
   <div class="bottom-nav">
-    <a href="index.html"><span class="bn-emoji">📅</span><span class="bn-label">Appointments</span></a>
-    <a href="history.html"><span class="bn-emoji">📋</span><span class="bn-label">History</span></a>
-    <a href="assessments.html"><span class="bn-emoji">📝</span><span class="bn-label">Assessments</span></a>
-    <a href="resources.html"><span class="bn-emoji">📚</span><span class="bn-label">Resources</span></a>
-    <a href="messages.html" class="active"><span class="bn-emoji">💬</span><span class="bn-label">Messages</span></a>
-    <a href="settings.html"><span class="bn-emoji">⚙️</span><span class="bn-label">Settings</span></a>
+    <a href="index.html" aria-label="Appointments"><span class="emoji" aria-hidden="true">📅</span></a>
+    <a href="history.html" aria-label="History"><span class="emoji" aria-hidden="true">📋</span></a>
+    <a href="assessments.html" aria-label="Assessments"><span class="emoji" aria-hidden="true">📝</span></a>
+    <a href="resources.html" aria-label="Resources"><span class="emoji" aria-hidden="true">📚</span></a>
+    <a href="messages.html" aria-label="Messages" class="active"><span class="emoji" aria-hidden="true">💬</span></a>
+    <a href="settings.html" aria-label="Settings"><span class="emoji" aria-hidden="true">⚙️</span></a>
   </div>
 
   
@@ -2385,7 +2405,7 @@
         }catch(e){ console.warn('failed to auto-open conversation after clearing roomStatus', e); }
         // Prompt student to rate the session when the consultation/video was ended by leaving/closing
         try{
-          const endEvents = ['video_left','student_close','jitsi_ui_close','jitsi_removed','student_decline','video_ended','student_left'];
+          const endEvents = ['video_left','student_close','jitsi_ui_close','jitsi_removed','video_ended','student_left'];
           if (consultId && clearedBy && endEvents.indexOf(String(clearedBy)) !== -1){
             // avoid showing the prompt multiple times for the same consultation
             try{
@@ -2536,7 +2556,7 @@
           container.appendChild(wrapper);
         }
       });
-      container.scrollTop = container.scrollHeight;
+      setTimeout(() => container.scrollTop = container.scrollHeight, 0);
     }
       // ---------------- Video call (student-side) helpers -----------------
   let jitsiApi = null;
@@ -2825,6 +2845,13 @@
                     const el = document.querySelector(`.conv-item[data-id="${consultParam}"]`);
                     if (el){ el.classList.add('active'); el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
                   }catch(e){}
+                  // Show rating modal after video ends, if not already prompted
+                  try{
+                    if (!localStorage.getItem('rating_prompted_' + consultParam)){
+                      setTimeout(()=>{ try{ showRatingModal(consultParam); }catch(e){ console.warn('showRatingModal error', e); } }, 1000);
+                      localStorage.setItem('rating_prompted_' + consultParam, '1');
+                    }
+                  }catch(e){}
                 }catch(e){ console.warn('auto-open conversation after video end failed', e); }
               }, 350);
             }
@@ -2943,16 +2970,28 @@
     // Fetch counselor profile from RTDB and set avatar image / initials
     async function fetchAndSetCounselorProfile(counselorUid) {
       try {
-  const q = db.ref('counselors').orderByChild('uid').equalTo(counselorUid);
-        const snap = await q.once('value');
-        const val = snap.val();
         let profile = null;
-        if (val) {
-          const keys = Object.keys(val);
-          profile = val[keys[0]];
+        // First, try to fetch directly by key (assuming counselorUid is the record key)
+        const directSnap = await db.ref('counselors/' + counselorUid).once('value');
+        if (directSnap.exists()) {
+          profile = directSnap.val();
+        } else {
+          // Fallback: query by uid field
+          const q = db.ref('counselors').orderByChild('uid').equalTo(counselorUid);
+          const snap = await q.once('value');
+          const val = snap.val();
+          if (val) {
+            const keys = Object.keys(val);
+            profile = val[keys[0]];
+          }
         }
         // store globally for the info modal
         try{ currentCounselorProfile = profile || null; }catch(e){}
+        // Update header name if profile has name and header is still default
+        const headerName = document.querySelector('.counselor-details h3');
+        if (headerName && profile && (profile.first_name || profile.last_name) && (headerName.textContent === 'Counselor' || headerName.textContent === 'SafeSpace Counselor')) {
+          headerName.textContent = `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || 'Counselor';
+        }
         const avatarEl = document.getElementById('counselorAvatar');
         if (!avatarEl) return;
         // clear existing
@@ -3297,9 +3336,20 @@
           if (!uid) return null;
           if (profileCache[uid]) return profileCache[uid];
           try{
-            const snap = await db.ref('counselors').orderByChild('uid').equalTo(uid).once('value');
-            const v = snap.val();
-            if (v){ const k = Object.keys(v)[0]; const p = v[k]; const photo = p.photo_url || ''; profileCache[uid] = { photo, profile: p }; return profileCache[uid]; }
+            let p = null;
+            // First, try direct fetch by key
+            const directSnap = await db.ref('counselors/' + uid).once('value');
+            if (directSnap.exists()) {
+              p = directSnap.val();
+            } else {
+              // Fallback to query by uid
+              const snap = await db.ref('counselors').orderByChild('uid').equalTo(uid).once('value');
+              const v = snap.val();
+              if (v){ const k = Object.keys(v)[0]; p = v[k]; }
+            }
+            const photo = p ? (p.photo_url || '') : '';
+            profileCache[uid] = { photo, profile: p };
+            return profileCache[uid];
           }catch(e){ console.warn('failed to fetch counselor profile', e); }
           profileCache[uid] = { photo: null, profile: null };
           return profileCache[uid];
@@ -3397,6 +3447,31 @@
         currentSessions = sessions;
         // choose active session as the latest one (if any)
         if (sessions.length) activeConsultationId = sessions[sessions.length-1].id; else activeConsultationId = null;
+        // disable input and buttons if active session is closed
+        const input = document.getElementById('messageInput');
+        const attachBtn = document.getElementById('attachBtn');
+        const sendBtn = document.getElementById('sendMessageBtn');
+        if (input && attachBtn && sendBtn) {
+          if (activeConsultationId && sessions.length) {
+            const activeSession = sessions.find(s => s.id === activeConsultationId);
+            if (activeSession && activeSession.data.status === 'CLOSED') {
+              input.disabled = true;
+              input.placeholder = 'Session closed';
+              attachBtn.disabled = true;
+              sendBtn.disabled = true;
+            } else {
+              input.disabled = false;
+              input.placeholder = 'Type your message...';
+              attachBtn.disabled = false;
+              sendBtn.disabled = false;
+            }
+          } else {
+            input.disabled = false;
+            input.placeholder = 'Type your message...';
+            attachBtn.disabled = false;
+            sendBtn.disabled = false;
+          }
+        }
         // detect if any session (prefer latest) has a video room and prompt the student to join
         try{
           if (sessions.length){
@@ -3535,7 +3610,7 @@
         const wrapper = document.createElement('div'); wrapper.style.display='flex'; wrapper.style.width='100%'; wrapper.style.justifyContent = isOwn ? 'flex-end' : 'flex-start'; wrapper.appendChild(bubble);
         container.appendChild(wrapper);
       });
-      container.scrollTop = container.scrollHeight;
+      setTimeout(() => container.scrollTop = container.scrollHeight, 0);
     }
   </script>
   <!-- Thank-you modal (appears after rating submit) -->
@@ -3550,5 +3625,4 @@
   </div>
 </body>
 </html>
-
 
