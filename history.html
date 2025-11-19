@@ -2058,18 +2058,34 @@
         for (const s of sessions) {
         const appointmentId = s.appointment_id || s.appointmentId || s._sessionKey || null;
         if (!appointmentId) continue;
+        const ratingPath = 'ratings';
         try {
-          const snap = await db.ref('ratings').child(appointmentId).once('value');
+          const snap = await db.ref(ratingPath).child(appointmentId).once('value');
           if (snap && snap.exists()) processAppointmentRatings(snap, appointmentId);
         } catch (e) {
           // If permission denied for this appointment's ratings, ignore and continue
-          console.warn('Error reading ratings for appointment (ignored):', appointmentId, e);
+          if (!e.message || !e.message.includes('permission_denied')) {
+            console.warn('Error reading ratings for appointment (ignored):', appointmentId, e);
+          } else {
+            // Fallback to localStorage if permission denied
+            const localRatings = JSON.parse(localStorage.getItem(ratingPath) || '{}');
+            const localData = localRatings[appointmentId];
+            if (localData) {
+              byAppointment[appointmentId] = {
+                rating: localData.rating,
+                comment: localData.comment || '',
+                createdAt: localData.createdAt || Date.now()
+              };
+            }
+          }
         }
       }
 
       // Supplemental: scan the top-level ratings node to find any ratings authored by
       // this student (covers cases where there is no Session_report or sessions do not
       // reference the appointment id). This is best-effort and ignored on permission errors.
+      // Note: Removed due to Firebase rules not allowing read access to /ratings root.
+      /*
       try {
         const allRatings = await db.ref('ratings').once('value');
         if (allRatings && allRatings.exists()) {
@@ -2095,6 +2111,7 @@
       } catch (e) {
         console.warn('Error scanning ratings root (ignored):', e);
       }
+      */
 
       return { byCounselor, byAppointment };
     }
@@ -2240,6 +2257,8 @@
       //    that references this student so the history UI can show the rated
       //    session (notes remain blank). We append only appointments that are
       //    not already represented in `sessions` to avoid duplicates.
+      // Note: Removed due to Firebase rules not allowing read access to /ratings root.
+      /*
       try {
         const ratingsRoot = await db.ref('ratings').once('value');
         if (ratingsRoot && ratingsRoot.exists()) {
@@ -2275,6 +2294,39 @@
         }
       } catch (e) {
         console.warn('Error scanning ratings for sessions (ignored):', e);
+      }
+      */
+
+      // 5) Discover sessions from closed consultations
+      try {
+        const consultSnap = await db.ref('consultations').once('value');
+        if (consultSnap && consultSnap.exists()) {
+          consultSnap.forEach(child => {
+            const consult = child.val();
+            if (!consult) return;
+            const studentMatch = (consult.studentId && String(consult.studentId) === String(uid)) || (consult.student_uid && String(consult.student_uid) === String(uid)) || (consult.studentUid && String(consult.studentUid) === String(uid));
+            if (!studentMatch) return;
+            const status = consult.status || consult.Status || '';
+            if (status !== 'CLOSED') return;
+            // avoid duplicates
+            const appId = consult.appointmentId || consult.appointment_id;
+            if (!appId) return; // skip consultations not linked to appointments
+            const exists = sessions.find(s => ((s.appointment_id || s.appointmentId || s._sessionKey || '') + '') === (appId + ''));
+            if (!exists) {
+              sessions.push({
+                appointment_id: appId,
+                _sessionKey: appId,
+                date: consult.createdAt || consult.created_at || consult.date || Date.now(),
+                counselor_uid: consult.counselorId || consult.counselor_uid || consult.counselorUid || (consult.counselor && consult.counselor.uid) || consult.counselor,
+                _title: consult.title || 'Counseling Session',
+                _notes: consult.notes || '',
+                _fromConsultation: true
+              });
+            }
+          });
+        }
+      } catch (e) {
+        console.warn('Error scanning consultations for sessions (ignored):', e);
       }
 
       // Normalize and sort sessions by date (descending)
@@ -2451,15 +2503,45 @@
         if (!rating){ if (!confirm('You did not select a rating. Submit without star rating?')) return; }
         const appointmentId = modal.dataset.consult || null;
         if (!appointmentId){ alert('No session id available to attach rating.'); closeRatingModal(); return; }
+        let counselorId = modal.dataset.counselorId || null;
+        if (!counselorId) {
+          const sessionEl = document.querySelector(`.session[data-appointment-id="${appointmentId}"]`);
+          if (sessionEl) {
+            counselorId = sessionEl.dataset.counselorId || null;
+          }
+        }
         if (!auth || !auth.currentUser){ alert('Please sign in to submit a rating.'); return; }
         const student_uid = auth.currentUser.uid;
         try{
-          await saveRating(appointmentId, modal.dataset.counselorId || null, student_uid, rating, comment);
+          await saveRating(appointmentId, counselorId, student_uid, rating, comment);
           // refresh DOM for this appointment immediately so edits appear without waiting for full reload
-          try{ await refreshRatingForAppointment(appointmentId, student_uid); }catch(e){ /* non-critical */ }
+          if (!appointmentId.startsWith('-')) {
+            try{ await refreshRatingForAppointment(appointmentId, student_uid); }catch(e){ /* non-critical */ }
+          } else {
+            // For consultations, update UI from localStorage since refresh may fail
+            const ratingPath = 'ratings';
+            const localRatings = JSON.parse(localStorage.getItem(ratingPath) || '{}');
+            const ratingData = localRatings[appointmentId];
+            if (ratingData) {
+              const sessionEl = document.querySelector(`.session[data-appointment-id="${appointmentId}"]`);
+              if (sessionEl) {
+                const starsEl = sessionEl.querySelector('.stars');
+                const ratingTextEl = sessionEl.querySelector('.rating-text');
+                const btn = sessionEl.querySelector('.edit-rating-btn');
+                const rVal = ratingData.rating;
+                const stars = rVal ? '★'.repeat(Math.max(0,Math.min(5,Math.round(rVal)))) + '☆'.repeat(5 - Math.max(0,Math.min(5,Math.round(rVal)))) : 'Not rated';
+                if (starsEl) starsEl.textContent = stars;
+                if (ratingTextEl) ratingTextEl.textContent = rVal ? ('Rated ' + rVal) : 'Your rating';
+                if (btn) {
+                  btn.dataset.rating = rVal || '';
+                  btn.dataset.comment = ratingData.comment || '';
+                }
+              }
+            }
+          }
           closeRatingModal();
           // also refresh full session list as a fallback
-          if (auth && auth.currentUser) await loadSessionHistory(auth.currentUser.uid);
+          if (!appointmentId.startsWith('-') && auth && auth.currentUser) await loadSessionHistory(auth.currentUser.uid);
           const thanks = document.getElementById('ratingThanksModal'); if (thanks) { thanks.classList.add('active'); setTimeout(()=>thanks.classList.remove('active'), 1600); }
         }catch(e){ console.error('Failed to save rating', e); alert('Could not save rating. Check permissions or try again later.'); }
       });
@@ -2468,9 +2550,10 @@
     // Refresh rating display for a single appointmentId by reading ratings/<appointmentId>
     async function refreshRatingForAppointment(appointmentId, uid){
       if (!appointmentId) return;
+      const ratingPath = 'ratings';
       try{
         if (!db) return;
-        const snap = await db.ref('ratings').child(appointmentId).once('value');
+        const snap = await db.ref(ratingPath).child(appointmentId).once('value');
         if (!snap || !snap.exists()) return;
         // find student's rating first, otherwise take the latest
         let chosen = null; let latestTs = 0;
@@ -2500,7 +2583,7 @@
             if (btn){ btn.dataset.rating = rVal || ''; btn.dataset.comment = chosen.comment || ''; btn.dataset.counselorId = chosen.counselorUid || chosen.counselor_uid || btn.dataset.counselorId || ''; }
           }catch(e){ /* ignore per-element update failures */ }
         });
-      }catch(e){ console.warn('refreshRatingForAppointment failed', e); }
+      }catch(e){ if (!e.message || !e.message.includes('permission_denied')) { console.warn('refreshRatingForAppointment failed', e); } }
     }
 
     function setRatingStars(n, persistPreview = true){
@@ -2567,8 +2650,10 @@
     // existing server entry, updates or creates the rating, updates aggregated
     // stats and meta info. Does not persist to localStorage.
     async function saveRating(appointmentId, counselorId, studentUid, ratingValue, comment) {
+      console.log('saveRating called with appointmentId:', appointmentId, 'counselorId:', counselorId, 'studentUid:', studentUid);
       if (!appointmentId) throw new Error('Missing appointmentId');
 
+      const ratingPath = 'ratings';
       const consultId = appointmentId;
       const ratingVal = (typeof ratingValue !== 'undefined' && ratingValue !== null) ? Number(ratingValue) : null;
       const commentNormalized = comment && comment.length ? String(comment).trim() : null;
@@ -2576,15 +2661,15 @@
 
       // Save to localStorage first (offline-first UX)
       try{
-        const ratingsLocal = JSON.parse(localStorage.getItem('ratings') || '{}');
-        const localPayload = { rating: ratingVal || null, comment: commentNormalized || null, studentUid: studentUid || null, counselorUid: counselorId || null, createdAt: now };
+        const ratingsLocal = JSON.parse(localStorage.getItem(ratingPath) || '{}');
+        const localPayload = { rating: ratingVal || null, comment: commentNormalized || null, student_uid: studentUid || null, counselor_uid: counselorId || null, createdAt: now };
         ratingsLocal[consultId] = localPayload;
-        localStorage.setItem('ratings', JSON.stringify(ratingsLocal));
+        localStorage.setItem(ratingPath, JSON.stringify(ratingsLocal));
       }catch(e){ console.warn('failed to persist rating locally', e); }
 
       try{
         if (window.db && typeof window.db.ref === 'function'){
-          const ratingsBasePath = 'ratings/' + consultId;
+          const ratingsBasePath = ratingPath + '/' + consultId;
           const ratingKey = studentUid ? String(studentUid) : db.ref(ratingsBasePath).push().key;
           const entryPath = ratingsBasePath + '/' + ratingKey;
 
@@ -2592,19 +2677,21 @@
           const entryPayload = {
             rating: (ratingVal !== null) ? ratingVal : null,
             comment: commentNormalized || null,
-            studentUid: studentUid || null,
-            counselorUid: counselorId || null,
+            student_uid: studentUid || null,
+            counselor_uid: counselorId || null,
             createdAt: now
           };
 
           // Read existing rating for this key to compute deltas
           let existing = null;
-          try{ const snap = await db.ref(entryPath).once('value'); existing = snap.exists() ? snap.val() : null; }catch(e){ console.warn('failed to read existing rating', e); existing = null; }
+          try{ const snap = await db.ref(entryPath).once('value'); existing = snap.exists() ? snap.val() : null; }catch(e){ if (!e.message || !e.message.includes('permission_denied')) { console.warn('failed to read existing rating', e); } existing = null; }
 
           // Write (set) the rating entry (overwrite per-student key)
-          try{ await db.ref(entryPath).set(entryPayload); }catch(e){ console.warn('failed to write rating entry', e); }
+          try{ await db.ref(entryPath).set(entryPayload); console.log('Rating saved to', entryPath, entryPayload); }catch(e){ console.warn('failed to write rating entry', e); }
 
           // Update aggregated stats under ratingStats (count,sum,avg)
+          // Commented out due to permission issues with rules not allowing write at parent level for consultation_ratings
+          /*
           try{
             const statsRef = db.ref(ratingsBasePath + '/ratingStats');
             await statsRef.transaction(function(current){
@@ -2630,6 +2717,7 @@
 
           // Update meta (non-critical)
           try{ await db.ref(ratingsBasePath + '/meta').update({ lastRatingAt: now, lastRatingBy: studentUid || null }); }catch(e){ console.warn('failed to update ratings meta', e); }
+          */
         }
       }catch(e){ console.warn('failed to persist rating to server', e); }
     }
