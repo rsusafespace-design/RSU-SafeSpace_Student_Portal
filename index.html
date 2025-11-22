@@ -3110,7 +3110,7 @@ async function loadDateExceptionsAndHolidays(relevantCounselors) {
           time: slot.time,
           mode: mode,
           concern: concern,
-          status: 'Awaiting ORS', // provisional until the student completes the ORS
+          status: 'Pending', // provisional until the student completes the ORS
           ors_required: true,
           ors_submitted: false,
           created_at: Date.now(),
@@ -3487,6 +3487,7 @@ async function loadUpcomingAppointments(studentUid) {
       ${pastIndicator}
       <small><i class="fas fa-calendar"></i> ${formattedDate} at ${safeTimeDisplay}</small><br>
       <span class="status-badge status-${statusClass}">${appointment.status || 'Pending'}</span>
+      ${appointment.rescheduled_from_date ? `<br><small style="color:#666;"><i class="fas fa-exchange-alt"></i> Rescheduled to ${formattedDate} at ${safeTimeDisplay} from ${new Date(appointment.rescheduled_from_date).toLocaleDateString()} at ${appointment.rescheduled_from_time}</small>` : ''}
       <small><i class="fas fa-laptop"></i> Mode: ${appointment.mode || 'Not specified'}</small>
     </div>
     ${actions}
@@ -3850,8 +3851,7 @@ async function submitORS(appointmentId) {
         const updateObj = {
           ors_submitted: true,
           ors_saved_at: Date.now(),
-          ors_key: savedKey,
-          status: 'Pending' // now officially pending confirmation/processing
+          ors_key: savedKey
         };
         try {
           await db.ref(`appointments_by_student/${studentUid}/${apptId}`).update(updateObj);
@@ -4581,29 +4581,24 @@ function rescheduleAppointment(appointmentKey) {
             await db.ref('appointments_by_student/' + auth.currentUser.uid + '/' + appointmentKey).update({
               date: sel.dateStr,
               time: sel.time,
-              status: 'Rescheduled'
+              ...(appointment.rescheduled_from_date ? {} : { rescheduled_from_date: appointment.date, rescheduled_from_time: appointment.time, rescheduled_at: Date.now() })
             });
             await db.ref('appointments_by_counselor/' + appointment.counselor_uid + '/' + appointmentKey).update({
               date: sel.dateStr,
               time: sel.time,
-              status: 'Rescheduled'
+              ...(appointment.rescheduled_from_date ? {} : { rescheduled_from_date: appointment.date, rescheduled_from_time: appointment.time, rescheduled_at: Date.now() })
             });
 
-            // 2. Mark slot as booked in counselor's availability
-            const bookedSlotData = {
+            // 2. Handle booked slots: remove old and add new
+            // Free up the old slot
+            await db.ref(`availabilities/${appointment.counselor_uid}/bookedSlots/${appointment.date}/${appointmentKey}`).remove();
+            // Book the new slot
+            await db.ref(`availabilities/${appointment.counselor_uid}/bookedSlots/${sel.dateStr}/${appointmentKey}`).set({
               time: sel.time,
-              appointment_id: appointmentKey,
-              student_uid: auth.currentUser.uid,
-              student_name: studentData ? `${studentData.first_name || 'Unknown'} ${studentData.last_name || ''}`.trim() : '',
-              booked_at: Date.now(),
-              booking_timestamp: new Date().toISOString()
-            };
-            const counselor = allCounselors.find(c => c.key === appointment.counselor_key);
-            if (counselor && counselor.uid) {
-              await db.ref(`availabilities/${counselor.uid}/bookedSlots/${sel.dateStr}`).push(bookedSlotData);
-            }
+              student_uid: auth.currentUser.uid
+            });
 
-            // 3. Remove slot from local availableSlotsByDate
+            // 3. Update local availableSlotsByDate: remove new slot (mark as booked)
             if (availableSlotsByDate[sel.dateStr]) {
               availableSlotsByDate[sel.dateStr] = availableSlotsByDate[sel.dateStr].filter(
                 s => !(s.counselor.key === counselor.key && s.time === sel.time)
@@ -4613,7 +4608,7 @@ function rescheduleAppointment(appointmentKey) {
               }
             }
 
-            // 4. Re-render calendar to reflect changes
+            // 4. Re-render calendar to reflect changes (will free up old slot based on updated appointments)
             renderCalendar();
 
             showActionCard(`<strong>Appointment Rescheduled!</strong><br>New date: <b>${new Date(sel.dateStr).toLocaleDateString()}</b> at <b>${sel.time}</b>`);
