@@ -8,7 +8,7 @@
   <style>
     /* ===== Sidebar (admin-like style) ===== */
 
-    /* Ensure consistent root typography with appointments.html */
+    /* Ensure consistent root typography with index.html */
     html {
       font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
       font-size: 16px;
@@ -208,7 +208,7 @@
   .portal-title { display:flex; flex-direction:column; line-height:1.2; margin-left:0; }
   .portal-title strong span.safespace { display:none; margin-right:0.3rem; }
   .portal-title small { font-size:0.75rem; opacity:0.9; }
-  /* Explicit topbar title sizing to match appointments.html */
+  /* Explicit topbar title sizing to match index.html */
   .topbar .portal-title strong { font-size:16px; font-weight:700; }
   .topbar .portal-title small { font-size:0.75rem; color: rgba(255,255,255,0.9); }
 
@@ -295,7 +295,7 @@
     transition: width 0.3s ease;
   }
     
-  /* Match appointments.html: use the sidebar logo sizing and prefer the inline image
+  /* Match index.html: use the sidebar logo sizing and prefer the inline image
      Note: use the same image-rendering hint that appointments uses for crisper pixels */
   .sidebar .brand .logo {
     /* desktop: compact container so the sidebar brand fits the topbar */
@@ -781,7 +781,7 @@
 
     .page-title::after { display: none; }
 
-    /* Slide-in animation used by appointments.html (matches mobile animation) */
+    /* Slide-in animation used by index.html (matches mobile animation) */
     @keyframes slideInLeft {
       from { opacity: 0; transform: translateX(-30px); }
       to   { opacity: 1; transform: translateX(0); }
@@ -1199,7 +1199,7 @@
       }
     }
 
-    /* Footer mobile styling to mirror appointments.html */
+    /* Footer mobile styling to mirror index.html */
     @media (max-width: 768px) {
       .footer { padding: 8px 0 !important; margin-left: 0 !important; max-width: 100% !important; box-sizing: border-box; }
       .footer p { max-width: 600px !important; width: 94% !important; margin: 0 auto !important; font-size: 0.85rem !important; color: var(--text-light, #718096) !important; text-align: center; }
@@ -1429,7 +1429,7 @@
       font-size: 0.75rem;
       margin-top: auto;
     }
-    /* Topbar (admin-like appearance) - copied from appointments.html for exact match */
+    /* Topbar (admin-like appearance) - copied from index.html for exact match */
     .topbar {
       position: fixed;
       top: 0;
@@ -2027,7 +2027,7 @@
   </style>
   <style id="mobile-footer-visible">
     @media (max-width: 768px) {
-      /* Match appointments.html: ensure footer text is slightly smaller on mobile */
+      /* Match index.html: ensure footer text is slightly smaller on mobile */
       .content-footer > div { font-size: 0.75rem !important; color: var(--text-light) !important; }
       /* Make bottom navigation use the same topbar green on mobile for visual parity */
       .bottom-nav { background: #1e8e3e !important; }
@@ -2038,13 +2038,13 @@
   </style>
 </head>
 <body>
-  <!-- Sidebar from appointments.html -->
+  <!-- Sidebar from index.html -->
   <div class="sidebar" id="sidebar">
     <div class="brand">
       <div class="logo"><img src="safespace.png" alt="SafeSpace logo"></div>
       <span>SafeSpace</span>
     </div>
-    <a href="appointments.html" data-emoji="📅"><span>Appointments</span></a> 
+    <a href="index.html" data-emoji="📅"><span>Appointments</span></a> 
     <a href="history.html" data-emoji="📋"><span>History</span></a>
     <a href="assessments.html" class="active"data-emoji="📝"><span>Assessments</span></a>
     <a href="resources.html" data-emoji="📚"><span>Resources</span></a>
@@ -2052,7 +2052,7 @@
     <a href="settings.html" data-emoji="⚙️"><span>Settings</span></a>
   </div>
 
-  <!-- Topbar from appointments.html -->
+  <!-- Topbar from index.html -->
   <div class="topbar" id="topbar">
     <div class="topbar-left">
       <div class="hamburger">
@@ -2210,7 +2210,7 @@
   <p style="color:#666;font-size:0.9rem;margin-top:8px">Content adapted for educational use and inspired by public-domain/open resources including <a href="https://openpsychometrics.org/" target="_blank">OpenPsychometrics</a>, <a href="https://www.mindful.org/" target="_blank">Mindful.org</a>, and <a href="https://www.smilingmind.com.au/" target="_blank">Smiling Mind</a>.</p>
     </div>
 
-    <!-- Desktop/content footer (matches appointments.html layout) -->
+    <!-- Desktop/content footer (matches index.html layout) -->
     <div class="content-footer">
       <div>
         © 2025 RSU SafeSpace | Student Support Management System
@@ -2223,9 +2223,9 @@
     </div>
   </div>
 
-  <!-- Bottom Navigation from appointments.html -->
+  <!-- Bottom Navigation from index.html -->
   <div class="bottom-nav">
-    <a href="appointments.html"><span class="bn-emoji">📅</span><span class="bn-label">Appointments</span></a>
+    <a href="index.html"><span class="bn-emoji">📅</span><span class="bn-label">Appointments</span></a>
     <a href="history.html"><span class="bn-emoji">📋</span><span class="bn-label">History</span></a>
     <a href="assessments.html" class="active"><span class="bn-emoji">📝</span><span class="bn-label">Assessments</span></a>
     <a href="resources.html"><span class="bn-emoji">📚</span><span class="bn-label">Resources</span></a>
@@ -2418,7 +2418,7 @@
     // Navigation
     function goToSection(sectionId) {
       if (sectionId === 'appointments') {
-        window.location.href = 'appointments.html';
+        window.location.href = 'index.html';
       } else if (sectionId === 'history') {
         window.location.href = 'history.html';
       } else if (sectionId === 'assessments') {
@@ -3913,3 +3913,4 @@
   </script>
 </body>
 </html>
+
