@@ -2135,6 +2135,9 @@
     window.auth = window.auth || (window.firebase ? firebase.auth() : null);
     window.db = window.db || (window.firebase && firebase.database ? firebase.database() : null);
 
+    // Global variable for student appointments listener
+    let studentAppointmentsRef = null;
+
     // Auth state listener: load data when user is signed in
     if (window.auth && window.auth.onAuthStateChanged) {
       window.auth.onAuthStateChanged(function(user) {
@@ -3267,6 +3270,7 @@ async function loadDateExceptionsAndHolidays(relevantCounselors) {
           counselorsSnap.forEach(function(child) {
             const counselor = child.val();
             counselor.key = child.key;
+            counselor.uid = counselor.uid || counselor.id || child.key; // Ensure uid is set || counselor.id || counselor.user_id || counselor.user_uid || counselor.firebase_uid || counselor.auth_uid || counselor.userId || counselor.firebaseId || counselor.counselor_id || child.key; // Ensure uid is set
             allCounselors.push(counselor);
           });
           console.log('Counselors loaded:', allCounselors);
@@ -3315,14 +3319,21 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Enhanced function to load and filter appointments into tabs
 async function loadUpcomingAppointments(studentUid) {
-  try {
-    const appointmentsSnap = await db.ref('appointments_by_student/' + studentUid).once('value');
-  const now = new Date();
-  // Use local date strings to avoid timezone/UTC shifts that make dates appear off by one day
-  const todayStr = toLocalISODate(now);
-  const tomorrow = new Date(now);
-  tomorrow.setDate(now.getDate() + 1);
-  const tomorrowStr = toLocalISODate(tomorrow);
+  // Unsubscribe previous listener if exists
+  if (studentAppointmentsRef) {
+    studentAppointmentsRef.off();
+  }
+
+  // Set up real-time listener
+  studentAppointmentsRef = db.ref('appointments_by_student/' + studentUid);
+  studentAppointmentsRef.on('value', async (snapshot) => {
+    try {
+      const now = new Date();
+    // Use local date strings to avoid timezone/UTC shifts that make dates appear off by one day
+    const todayStr = toLocalISODate(now);
+    const tomorrow = new Date(now);
+    tomorrow.setDate(now.getDate() + 1);
+    const tomorrowStr = toLocalISODate(tomorrow);
 
     // Clear all tab contents
     ['pending','today','tomorrow','upcoming','past'].forEach(tab => {
@@ -3330,9 +3341,9 @@ async function loadUpcomingAppointments(studentUid) {
       if (el) el.innerHTML = '';
     });
 
-    if (appointmentsSnap.exists()) {
+    if (snapshot.exists()) {
       const appointments = [];
-      appointmentsSnap.forEach(function(child) {
+      snapshot.forEach(function(child) {
         const appointment = child.val();
         appointment.key = child.key;
         appointments.push(appointment);
@@ -3349,10 +3360,10 @@ async function loadUpcomingAppointments(studentUid) {
         const dt = parseLocalDateTime(dateStr, startTime);
         return isNaN(dt.getTime()) ? new Date(0) : dt;
       }
-  appointments.sort((a, b) => safeStartDateTime(a) - safeStartDateTime(b));
+      appointments.sort((a, b) => safeStartDateTime(a) - safeStartDateTime(b));
 
-  // If any appointment is a referral (prefer explicit flag or presence of referral fields),
-  studentHasReferral = appointments.some(a => (a.referred === true || a.referred_from_name || a.referred_to_name));
+      // If any appointment is a referral (prefer explicit flag or presence of referral fields),
+      studentHasReferral = appointments.some(a => (a.referred === true || a.referred_from_name || a.referred_to_name));
 
       // Categorize appointments
       const tabs = {
@@ -3546,13 +3557,14 @@ async function loadUpcomingAppointments(studentUid) {
         if (el) el.innerHTML = '<p style="color:#666; text-align:center; padding:2rem;">No appointments found</p>';
       });
     }
-  } catch (error) {
-    console.error('Error loading appointments:', error);
-    ['pending','today','tomorrow','upcoming','past'].forEach(tab => {
-      const el = document.getElementById('tab-' + tab);
-      if (el) el.innerHTML = '<p style="color:#dc3545; text-align:center; padding:2rem;">Error loading appointments</p>';
-    });
-  }
+    } catch (error) {
+      console.error('Error loading appointments:', error);
+      ['pending','today','tomorrow','upcoming','past'].forEach(tab => {
+        const el = document.getElementById('tab-' + tab);
+        if (el) el.innerHTML = '<p style="color:#dc3545; text-align:center; padding:2rem;">Error loading appointments</p>';
+      });
+    }
+  });
 }
 
 // Get counselor description based on their role
@@ -4582,20 +4594,31 @@ function rescheduleAppointment(appointmentKey) {
             const updateData = {
               date: sel.dateStr,
               time: sel.time,
-              ...(appointment.rescheduled_from_date ? {} : { rescheduled_from_date: appointment.date, rescheduled_from_time: appointment.time, rescheduled_at: Date.now() }),
-              ...(appointment.status === 'confirmed' ? { status: 'pending' } : {})
+              status: 'Pending',
+              ...(appointment.rescheduled_from_date ? {} : { rescheduled_from_date: appointment.date, rescheduled_from_time: appointment.time, rescheduled_at: Date.now() })
             };
-            await db.ref('appointments_by_student/' + auth.currentUser.uid + '/' + appointmentKey).update(updateData);
-            await db.ref('appointments_by_counselor/' + appointment.counselor_uid + '/' + appointmentKey).update(updateData);
+            try {
+              await db.ref('appointments_by_student/' + auth.currentUser.uid + '/' + appointmentKey).update(updateData);
+              await db.ref('appointments_by_counselor/' + counselor.uid + '/' + appointmentKey).update(updateData);
+            } catch (error) {
+              console.error('Error updating appointments:', error);
+              showActionCard(`<strong>Error</strong><br>Failed to update appointment. Please try again.`);
+              return;
+            }
 
             // 2. Handle booked slots: remove old and add new
-            // Free up the old slot
-            await db.ref(`availabilities/${appointment.counselor_uid}/bookedSlots/${appointment.date}/${appointmentKey}`).remove();
-            // Book the new slot
-            await db.ref(`availabilities/${appointment.counselor_uid}/bookedSlots/${sel.dateStr}/${appointmentKey}`).set({
-              time: sel.time,
-              student_uid: auth.currentUser.uid
-            });
+            try {
+              // Free up the old slot
+              await db.ref(`availabilities/${counselor.uid}/bookedSlots/${appointment.date}/${appointmentKey}`).remove();
+              // Book the new slot
+              await db.ref(`availabilities/${counselor.uid}/bookedSlots/${sel.dateStr}/${appointmentKey}`).set({
+                time: sel.time,
+                student_uid: auth.currentUser.uid
+              });
+            } catch (error) {
+              console.error('Error updating availabilities:', error);
+              // Continue, as appointment update is more important
+            }
 
             // 3. Update local availableSlotsByDate: remove new slot (mark as booked)
             if (availableSlotsByDate[sel.dateStr]) {
