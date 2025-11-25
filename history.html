@@ -907,6 +907,134 @@
       display: block;
     }
 
+    .counselor-group {
+      margin-bottom: 32px;
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .counselor-header {
+      background: var(--primary-light);
+      padding: 16px;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    }
+
+    .counselor-header .counselor-name {
+      font-weight: 600;
+      font-size: 1.1rem;
+      color: var(--text);
+    }
+
+    .counselor-header .counselor-specialization {
+      font-size: 0.9rem;
+      color: var(--text-light);
+      margin-top: 4px;
+    }
+
+    .counselor-header .session-count {
+      font-size: 0.85rem;
+      color: var(--primary);
+      margin-top: 4px;
+      font-weight: 500;
+    }
+
+    .sessions-list {
+      background: white;
+    }
+
+    .sessions-list .session {
+      border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+      padding: 16px;
+      position: relative;
+      transition: background 0.2s;
+    }
+
+    .sessions-list .session:hover {
+      background: rgba(0, 0, 0, 0.02);
+    }
+
+    .sessions-list .session:last-child {
+      border-bottom: none;
+    }
+
+    .sessions-list .session:first-child {
+      padding-top: 16px;
+    }
+
+    .sessions-list .session-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 8px;
+    }
+
+    .sessions-list .session-title {
+      font-weight: 600;
+      color: var(--text);
+      font-size: 1rem;
+    }
+
+    .sessions-list .session-date {
+      font-size: 0.85rem;
+      color: var(--text-light);
+      margin-bottom: 4px;
+    }
+
+    .sessions-list .session-rating {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .sessions-list .stars {
+      color: #ffc107;
+      font-size: 0.9rem;
+    }
+
+    .sessions-list .rating-text {
+      font-size: 0.8rem;
+      color: var(--text-light);
+    }
+
+    .sessions-list .session-actions {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+    }
+
+    .sessions-list .view-notes-btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: var(--radius-sm);
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .sessions-list .view-notes-btn:hover {
+      background: var(--primary-dark);
+    }
+
+    .sessions-list .notes {
+      display: none;
+      margin-top: 12px;
+      background: #f8f9fa;
+      padding: 12px;
+      border-radius: var(--radius-sm);
+      font-size: 0.9rem;
+      color: #555;
+      border-left: 3px solid var(--primary);
+      line-height: 1.5;
+    }
+
+    .sessions-list .notes.show {
+      display: block;
+    }
+
     /* Progress Milestones */
     .milestones-container {
       margin-top: 24px;
@@ -2357,55 +2485,77 @@
         container.innerHTML = '<div class="card"><div style="padding:20px;text-align:center;color:var(--text-light)">No session history found.</div></div>';
         return;
       }
-      const html = sessions.map(s => {
-        const dateRaw = s.date || s._displayDate || s.saved_at || s.createdAt || '';
-        const formattedDate = formatDisplayDate(dateRaw);
-        const cUid = s.counselor_uid || s.counselorUid || s.counselor || '';
-        const counselorInfo = (counselorsMap[cUid] || {});
-        // prefer counselorInfo, then session-stored names, then a friendly fallback
-        const counselorName = (counselorInfo.name) || (s.counselor_name || s.counselorName) || 'Counselor';
-        // FIX: Add fallbacks for specialization from the session object (s) if the profile lookup fails
-        const counselorSpecialization = counselorInfo.specialization || s.counselor_specialization || s.counselorSpecialization || '';
-        // Prefer rating by appointmentId when available; otherwise fall back to counselor-keyed map
-        let ratingObj = null;
-        const appointmentId = (s.appointment_id || s.appointmentId || s._sessionKey || '') + '';
-        if (ratingsMap) {
-          if (ratingsMap.byAppointment && appointmentId && ratingsMap.byAppointment[appointmentId]) ratingObj = ratingsMap.byAppointment[appointmentId];
-          else if (ratingsMap.byCounselor && ratingsMap.byCounselor[cUid]) ratingObj = ratingsMap.byCounselor[cUid];
-          else if (ratingsMap[cUid]) ratingObj = ratingsMap[cUid]; // backward-compat fallback
-        }
-        const ratingStars = ratingObj ? starsFromRating(ratingObj.rating) : 'Not rated';
-        const notes = s._notes || '';
-        // Use session numbering when available; otherwise fall back to present title
-        const sessionNumber = s._sessionNumber || null;
-        const titleText = sessionNumber ? ('Session ' + sessionNumber) : (s._title || 'Counseling Session');
-        const safeTitle = (titleText || '').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-        const safeCounselor = (counselorName || '').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-        const safeDate = (formattedDate || '').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-        const safeNotes = (notes || '').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-        // appointment id used to scope ratings
-        const safeAppointmentId = (appointmentId || '').replace(/"/g, '&quot;');
-        return `
-          <div class="session" data-appointment-id="${safeAppointmentId}" data-counselor-id="${cUid}">
-            <div class="session-header">
-              <div>
-                <div class="session-title">${safeTitle}</div>
-                <div class="session-date">${safeDate}</div>
-                <div class="session-counselor"><div class="counselor-name">${safeCounselor}</div><div class="counselor-specialization">${(counselorSpecialization||'').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div></div>
+
+      // Group sessions by counselor
+      const groups = {};
+      sessions.forEach(s => {
+        const cUid = s.counselor_uid || s.counselorUid || s.counselor || '_unknown';
+        if (!groups[cUid]) groups[cUid] = [];
+        groups[cUid].push(s);
+      });
+
+      const html = Object.keys(groups).map(cUid => {
+        const groupSessions = groups[cUid];
+        const counselorInfo = counselorsMap[cUid] || {};
+        const counselorName = counselorInfo.name || groupSessions[0].counselor_name || groupSessions[0].counselorName || 'Counselor';
+        const counselorSpecialization = counselorInfo.specialization || groupSessions[0].counselor_specialization || groupSessions[0].counselorSpecialization || '';
+
+        const sessionsHtml = groupSessions.map(s => {
+          const dateRaw = s.date || s._displayDate || s.saved_at || s.createdAt || '';
+          const formattedDate = formatDisplayDate(dateRaw);
+          // Prefer rating by appointmentId when available; otherwise fall back to counselor-keyed map
+          let ratingObj = null;
+          const appointmentId = (s.appointment_id || s.appointmentId || s._sessionKey || '') + '';
+          if (ratingsMap) {
+            if (ratingsMap.byAppointment && appointmentId && ratingsMap.byAppointment[appointmentId]) ratingObj = ratingsMap.byAppointment[appointmentId];
+            else if (ratingsMap.byCounselor && ratingsMap.byCounselor[cUid]) ratingObj = ratingsMap.byCounselor[cUid];
+            else if (ratingsMap[cUid]) ratingObj = ratingsMap[cUid]; // backward-compat fallback
+          }
+          const ratingStars = ratingObj ? starsFromRating(ratingObj.rating) : 'Not rated';
+          const notes = s._notes || '';
+          // Use session numbering when available; otherwise fall back to present title
+          const sessionNumber = s._sessionNumber || null;
+          const titleText = sessionNumber ? ('Session ' + sessionNumber) : (s._title || 'Counseling Session');
+          const safeTitle = (titleText || '').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+          const safeDate = (formattedDate || '').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+          const safeNotes = (notes || '').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+          // appointment id used to scope ratings
+          const safeAppointmentId = (appointmentId || '').replace(/"/g, '&quot;');
+          return `
+            <div class="session" data-appointment-id="${safeAppointmentId}" data-counselor-id="${cUid}">
+              <div class="session-header">
+                <div>
+                  <div class="session-title">${safeTitle}</div>
+                  <div class="session-date">${safeDate}</div>
+                </div>
               </div>
+                <div class="session-rating">
+                <div class="stars">${ratingStars}</div>
+                <span class="rating-text">${ratingObj ? ('Rated ' + ratingObj.rating) : 'Your rating'}</span>
+                <button class="view-notes-btn edit-rating-btn" type="button" data-appointment-id="${safeAppointmentId}" data-counselor-id="${cUid}" data-rating="${ratingObj ? ratingObj.rating : ''}" data-comment="${ratingObj ? (ratingObj.comment || '') : ''}">Edit Rating</button>
+              </div>
+              <div class="session-actions">
+                <button class="view-notes-btn" onclick="toggleNotes(event, this)">${notes ? 'View Notes' : 'No Notes'}</button>
+              </div>
+              <div class="notes">${safeNotes}</div>
             </div>
-              <div class="session-rating">
-              <div class="stars">${ratingStars}</div>
-              <span class="rating-text">${ratingObj ? ('Rated ' + ratingObj.rating) : 'Your rating'}</span>
-              <button class="view-notes-btn edit-rating-btn" type="button" data-appointment-id="${safeAppointmentId}" data-counselor-id="${cUid}" data-rating="${ratingObj ? ratingObj.rating : ''}" data-comment="${ratingObj ? (ratingObj.comment || '') : ''}">Edit Rating</button>
+          `;
+        }).join('\n');
+
+        return `
+          <div class="counselor-group">
+            <div class="counselor-header">
+              <div class="counselor-name">${counselorName.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
+              <div class="counselor-specialization">${(counselorSpecialization||'').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
+              <div class="session-count">${groupSessions.length} session${groupSessions.length > 1 ? 's' : ''}</div>
             </div>
-            <div class="session-actions">
-              <button class="view-notes-btn" onclick="toggleNotes(event, this)">${notes ? 'View Notes' : 'No Notes'}</button>
+            <div class="sessions-list">
+              ${sessionsHtml}
             </div>
-            <div class="notes">${safeNotes}</div>
           </div>
         `;
       }).join('\n');
+
       container.innerHTML = html;
       // attach handlers to Edit Rating buttons
       attachRatingHandlers();
