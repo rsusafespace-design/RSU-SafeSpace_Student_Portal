@@ -2794,8 +2794,22 @@
                       // found matching consultation
                       try{ name = c.counselorName || c.counselor_name || name; }catch(e){}
                       room = room || resolveRoomFromConsultation(c) || null;
-                      // attach to this consultation immediately
-                      try{ attachChatListener(k); activeConsultationId = k; }catch(e){}
+                      // get counselor id
+                      const counselorId = c.counselorId || c.counselor_uid || (c.counselor && c.counselor.uid) || null;
+                      if (counselorId) {
+                        // select the counselor as if clicked in the list
+                        activeCounselorUid = counselorId;
+                        attachCounselorListener(counselorId, name);
+                        // highlight the conv-item after a delay to ensure it's rendered
+                        setTimeout(() => {
+                          const el = document.querySelector(`.conv-item[data-counselor-id="${counselorId}"]`);
+                          if (el) {
+                            document.querySelectorAll('.conv-item').forEach(n => n.classList.remove('active'));
+                            el.classList.add('active');
+                            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                          }
+                        }, 500);
+                      }
                       break;
                     }
                   }
@@ -2831,18 +2845,35 @@
               // small delay so the conversation list has time to render
               setTimeout(async ()=>{
                 try{
-                  // attach listener and show conversation UI
-                  try{ attachChatListener(consultParam); activeConsultationId = consultParam; }catch(e){}
-                  try{ showConversationUI(); }catch(e){}
-                  // highlight and scroll the conversation item into view
-                  try{
-                    const el = document.querySelector(`.conv-item[data-id="${consultParam}"]`);
-                    if (el){ el.classList.add('active'); el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
-                  }catch(e){}
+                  // fetch consultation data to get counselor
+                  const snap = await db.ref('consultations/' + consultParam).once('value');
+                  const data = snap.val() || {};
+                  const counselorId = data.counselorId || data.counselor_uid || (data.counselor && data.counselor.uid) || null;
+                  const counselorName = data.counselorName || data.counselor_name || 'Counselor';
+                  if (counselorId) {
+                    // select the counselor as if clicked in the list
+                    activeCounselorUid = counselorId;
+                    attachCounselorListener(counselorId, counselorName);
+                    // highlight the conv-item
+                    const el = document.querySelector(`.conv-item[data-counselor-id="${counselorId}"]`);
+                    if (el) {
+                      document.querySelectorAll('.conv-item').forEach(n => n.classList.remove('active'));
+                      el.classList.add('active');
+                      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                  } else {
+                    // fallback to specific consultation if no counselor
+                    try{ attachChatListener(consultParam); activeConsultationId = consultParam; }catch(e){}
+                    try{ showConversationUI(); }catch(e){}
+                    try{
+                      const el = document.querySelector(`.conv-item[data-id="${consultParam}"]`);
+                      if (el){ el.classList.add('active'); el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+                    }catch(e){}
+                  }
                   // Show rating modal after video ends, if not already prompted
                   try{
                     if (!localStorage.getItem('rating_prompted_' + consultParam)){
-                      setTimeout(()=>{ try{ showRatingModal(consultParam); }catch(e){ console.warn('showRatingModal error', e); } }, 1000);
+                      setTimeout(()=>{ try{ showRatingModal(consultParam); }catch(e){ console.warn('showRatingModal error', e); } }, 2000);
                       localStorage.setItem('rating_prompted_' + consultParam, '1');
                     }
                   }catch(e){}
@@ -3619,5 +3650,4 @@
   </div>
 </body>
 </html>
-
 
