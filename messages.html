@@ -2142,7 +2142,6 @@
     `;
   decline.addEventListener('click', ()=>{ 
       try{ modal.remove(); }catch(e){}
-      try{ stopIncomingAlerts(); }catch(e){}
       try{ clearActiveRoomStatus('student_decline'); }catch(e){}
     });
     const declineLabel = document.createElement('div');
@@ -2166,7 +2165,6 @@
       const r = modal.dataset.room || _registeredRoom;
       const consult = modal.dataset.consult || null;
       try{ modal.remove(); }catch(e){}
-      try{ stopIncomingAlerts(); }catch(e){}
 
       // If we have a consult id, behave like the user clicked that conversation first
       if (consult){
@@ -2211,11 +2209,10 @@
 
     modal.appendChild(panel);
     document.body.appendChild(modal);
+    // bring the window to front so the modal is visible
+    try{ window.focus(); }catch(e){}
     // focus accept button for quick keyboard action
     try{ accept.focus(); }catch(e){}
-
-    // also show a browser notification and play ringtone/title flash so user sees it when on another tab
-    try{ showBrowserNotification(fromName, room); startIncomingAlerts(fromName); }catch(e){ /* ignore */ }
   }
 
     // Time / Date helpers
@@ -2329,9 +2326,6 @@
       // start ringtone if user previously interacted (some browsers block autoplay)
       try{ startRingtone(); }catch(e){}
     }
-
-    function stopIncomingAlerts(){ stopTitleFlash(); stopRingtone(); }
-
     // Image attachment helpers
     function clearPendingImagePreview(){
       try{
@@ -2940,7 +2934,7 @@
               // if an incoming modal is showing, remove it and stop alerts
               try{
                 const existingModal = document.getElementById('student-incoming-call-full');
-                if (existingModal){ existingModal.remove(); try{ stopIncomingAlerts(); }catch(e){} }
+                if (existingModal){ existingModal.remove(); }
               }catch(e){}
             }
           }catch(e){ console.warn('roomStatus handling failed', e); }
@@ -2997,7 +2991,7 @@
         // clear existing
         avatarEl.innerHTML = '';
         // try multiple candidate fields for profile image (cover keys used in admin panel)
-        const photo = (profile && (profile.photo_url || profile.photo || profile.avatar || profile.photoUrl || profile.image)) || '';
+        const photo = (profile && (profile.photo_url || profile.photo || profile.avatar || profile.image)) || '';
         console.log('fetchAndSetCounselorProfile: resolved profile for', counselorUid, Object.keys(profile||{}), 'photo=', photo);
         if (profile && photo) {
           const img = document.createElement('img');
@@ -3071,7 +3065,7 @@
           avatarEl.innerHTML = '';
           avatarEl.style.background = '#f1f5f9';
           avatarEl.style.color = '#064e3b';
-          const photo = p && (p.photo_url || p.photo || p.photoUrl || p.image) ? (p.photo_url || p.photo || p.photoUrl || p.image) : null;
+          const photo = p && (p.photo_url || p.photo || p.image) ? (p.photo_url || p.photo || p.image) : null;
           if (photo){
             const img = document.createElement('img');
             img.src = photo;
