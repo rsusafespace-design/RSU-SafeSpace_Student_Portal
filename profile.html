@@ -137,7 +137,8 @@ c\<!DOCTYPE html>
       /* Ensure sidebar truly hidden and content uses full viewport width */
       .sidebar{display:none !important; transform:none !important; width:0 !important;}
       .topbar{left:0 !important; right:0 !important;}
-      .content { padding: 0.75rem !important; margin-left:0 !important; max-width:100% !important; padding-left:0 !important; padding-right:0 !important; }
+      .content { padding: 0.75rem !important; margin-left:0 !important; max-width:100% !important; padding-left:0 !important; padding-right:0 !important; padding-bottom: 90px !important; }
+      .content { padding-bottom: 100px !important; }
       section.bg-white { padding: 1rem !important; }
       section h3.text-xl { font-size: 1.125rem; }
       .edit-btn { padding: 0.25rem 0.5rem; font-size: 0.875rem; }
@@ -268,9 +269,16 @@ c\<!DOCTYPE html>
   <!-- status box removed -->
     <section class="bg-white mt-0 p-6 rounded-xl shadow-md">
   <div class="flex justify-between items-center mb-4">
-    <h3 class="text-xl font-semibold text-green-700">INDIVIDUAL INVENTORY</h3>
+    <h3 class="text-xl font-semibold text-green-700 flex items-center gap-2">
+      <button onclick="toggleSection('section1')" class="text-green-700 hover:text-green-800">
+        <i class="fas fa-chevron-down" id="icon-section1"></i>
+      </button>
+      INDIVIDUAL INVENTORY
+    </h3>
     <button class="edit-btn bg-green-700 text-white px-3 py-1 rounded hover:bg-green-800">Edit</button>
   </div>
+
+  <div id="content-section1">
 
   <!-- Data Privacy Statement -->
   <div class="border border-gray-300 p-3 mb-6 text-sm text-gray-700 rounded">
@@ -310,7 +318,7 @@ c\<!DOCTYPE html>
       <div class="flex border border-gray-400 form-row">
         <!-- Course (flex wider) -->
         <div class="flex items-center border-r border-gray-400" style="flex:2;">
-          <label class="w-28 bg-gray-100 border-r border-gray-400 px-2 py-2 font-semibold text-sm label-nowrap">Course:</label>
+          <label class="w-28 bg-gray-100 border-r border-gray-400 px-2 py-2 font-semibold text-sm label-nowrap">Course/Program:</label>
           <input id="field_course" 
             type="text" 
             placeholder="e.g., BS in Computer Science" 
@@ -402,15 +410,23 @@ c\<!DOCTYPE html>
   <span id="photoPlaceholder" class="text-gray-500">1x1 Photo</span>
 </div>
   </div>
+</div>
 </section>
 
 
    <!-- Section 1: Background Information -->
 <section class="bg-white mt-8 p-6 rounded-xl shadow-md">
   <div class="flex justify-between items-center mb-4">
-    <h3 class="text-xl font-semibold text-green-700">Background Information</h3>
+    <h3 class="text-xl font-semibold text-green-700 flex items-center gap-2">
+      <button onclick="toggleSection('section2')" class="text-green-700 hover:text-green-800">
+        <i class="fas fa-chevron-right" id="icon-section2"></i>
+      </button>
+      Background Information
+    </h3>
     <button class="edit-btn bg-green-700 text-white px-3 py-1 rounded hover:bg-green-800">Edit</button>
   </div>
+
+  <div id="content-section2" style="display: none;">
 
   <!-- Present Address & FB Messenger -->
   <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -534,15 +550,23 @@ c\<!DOCTYPE html>
       </div>
     </div>
   </div>
+</div>
 </section>
 
 
     <!-- Section 2: Family Background -->
    <section class="bg-white mt-8 p-6 rounded-xl shadow-md">
   <div class="flex justify-between items-center mb-4">
-    <h3 class="text-xl font-semibold text-green-700">Family Background</h3>
+    <h3 class="text-xl font-semibold text-green-700 flex items-center gap-2">
+      <button onclick="toggleSection('section3')" class="text-green-700 hover:text-green-800">
+        <i class="fas fa-chevron-right" id="icon-section3"></i>
+      </button>
+      Family Background
+    </h3>
     <button class="edit-btn bg-green-700 text-white px-3 py-1 rounded hover:bg-green-800">Edit</button>
   </div>
+
+  <div id="content-section3" style="display: none;">
 
   <!-- Parents Info -->
    <div class="grid grid-cols-1 gap-2 text-gray-700">
@@ -598,7 +622,6 @@ c\<!DOCTYPE html>
       </div>
     </div>
     </div>
-  </div>
 
  <!-- Additional Family Info -->
 <!-- Additional Family Info -->
@@ -767,12 +790,20 @@ c\<!DOCTYPE html>
   <div class="flex items-center gap-2"><input type="radio" name="familyIncome" value="At least ₱219,140 and up" disabled class="accent-green-700"><label>At least ₱219,140 and up</label></div>
     </div>
   </div>
+</div>
 </section>
 <section class="bg-white mt-8 p-6 rounded-xl shadow-md">
   <div class="flex justify-between items-center mb-4">
-    <h3 class="text-xl font-semibold text-green-700">Medical Background</h3>
+    <h3 class="text-xl font-semibold text-green-700 flex items-center gap-2">
+      <button onclick="toggleSection('section4')" class="text-green-700 hover:text-green-800">
+        <i class="fas fa-chevron-right" id="icon-section4"></i>
+      </button>
+      Medical Background
+    </h3>
     <button class="edit-btn bg-green-700 text-white px-3 py-1 rounded hover:bg-green-800">Edit</button>
   </div>
+
+  <div id="content-section4" style="display: none;">
 
   <!-- Therapy / Counseling -->
  <div class="mb-4 flex items-center gap-4">
@@ -826,14 +857,23 @@ c\<!DOCTYPE html>
     <label class="font-semibold w-60">Current Medications:</label>
     <input id="field_current_medications" type="text" value="" disabled placeholder="List current medications (if any)" class="flex-1 bg-gray-100 p-2 rounded border">
   </div>
+</div>
+</div>
 </section>
 
     <!-- Section 3: Educational Background -->
     <section class="bg-white mt-8 p-6 rounded-xl shadow-md">
       <div class="flex justify-between items-center mb-4">
-        <h3 class="text-xl font-semibold text-green-700">Educational Background</h3>
+        <h3 class="text-xl font-semibold text-green-700 flex items-center gap-2">
+          <button onclick="toggleSection('section5')" class="text-green-700 hover:text-green-800">
+            <i class="fas fa-chevron-right" id="icon-section5"></i>
+          </button>
+          Educational Background
+        </h3>
         <button class="edit-btn bg-green-700 text-white px-3 py-1 rounded hover:bg-green-800">Edit</button>
       </div>
+
+      <div id="content-section5" style="display: none;">
       <div class="overflow-x-auto">
         <table class="min-w-full border text-gray-700 text-sm">
           <thead class="bg-green-50 text-green-700">
@@ -866,15 +906,23 @@ c\<!DOCTYPE html>
           </tbody>
         </table>
       </div>
+</div>
     </section>
 
     <!-- Section 4: Employment History -->
 <!-- V. Employment History -->
 <section class="bg-white mt-8 p-6 rounded-xl shadow-md">
   <div class="flex justify-between items-center mb-4">
-        <h3 class="text-xl font-semibold text-green-700">Employment History</h3>
+        <h3 class="text-xl font-semibold text-green-700 flex items-center gap-2">
+          <button onclick="toggleSection('section6')" class="text-green-700 hover:text-green-800">
+            <i class="fas fa-chevron-right" id="icon-section6"></i>
+          </button>
+          Employment History
+        </h3>
         <button class="edit-btn bg-green-700 text-white px-3 py-1 rounded hover:bg-green-800">Edit</button>
-      </div><!-- Work Experience Yes/No -->
+      </div>
+
+  <div id="content-section6" style="display: none;"><!-- Work Experience Yes/No -->
   <div class="flex items-center gap-4 mb-4">
     <label class="font-semibold w-64">Do you have a work experience?</label>
     <label class="flex items-center gap-1">
@@ -958,9 +1006,15 @@ c\<!DOCTYPE html>
 <!-- VI. Other Relevant Information -->
 <section class="bg-white mt-8 p-6 rounded-xl shadow-md">
   <div class="flex justify-between items-center mb-4">
-        <h3 class="text-xl font-semibold text-green-700">Other Relevant Information</h3>
+        <h3 class="text-xl font-semibold text-green-700 flex items-center gap-2">
+          <button onclick="toggleSection('section7')" class="text-green-700 hover:text-green-800">
+            <i class="fas fa-chevron-right" id="icon-section7"></i>
+          </button>
+          Other Relevant Information
+        </h3>
         <button class="edit-btn bg-green-700 text-white px-3 py-1 rounded hover:bg-green-800">Edit</button>
       </div><!-- Scholarship Grant -->
+  <div id="content-section7" style="display: none;">
   <div class="flex items-center gap-4 mb-4">
     <label class="font-semibold w-64">Are you enjoying any scholarship grant/s?</label>
     <label class="flex items-center gap-1">
@@ -991,6 +1045,8 @@ c\<!DOCTYPE html>
       <input id="field_interest_others" type="text" placeholder="__________________________" disabled class="flex-1 bg-gray-100 p-2 rounded border">
     </div>
   </div>
+</div>
+</div>
 </section>
 
 
@@ -998,9 +1054,16 @@ c\<!DOCTYPE html>
   <!-- Student Profilling: import from Complete Profile (fields not already in Inventory) -->
   <section class="bg-white mt-8 p-6 rounded-xl shadow-md" id="studentProfilingSection">
     <div class="flex justify-between items-center mb-4">
-      <h3 class="text-xl font-semibold text-green-700">Student Profilling</h3>
+      <h3 class="text-xl font-semibold text-green-700 flex items-center gap-2">
+        <button onclick="toggleSection('section8')" class="text-green-700 hover:text-green-800">
+          <i class="fas fa-chevron-right" id="icon-section8"></i>
+        </button>
+        Student Profilling
+      </h3>
       <button class="edit-btn bg-green-700 text-white px-3 py-1 rounded hover:bg-green-800">Edit</button>
     </div>
+
+    <div id="content-section8" style="display: none;">
 
     <div class="grid grid-cols-1 gap-4 text-gray-700">
       <div>
@@ -1042,6 +1105,8 @@ c\<!DOCTYPE html>
         <input id="field_help_people" type="text" disabled placeholder="e.g. Parents, Friends" class="bg-gray-100 p-2 rounded w-full border">
       </div>
     </div>
+</div>
+</div>
   </section>
 
   </main>
@@ -1115,7 +1180,7 @@ c\<!DOCTYPE html>
             try {
               const result = await saveSection(section);
               if (result && result.success) {
-                try { showInfoModal('Changes saved for record: ' + (currentStudentKey || '(unknown)')); } catch(e){ showInfoModal('Changes saved!'); }
+                try { showInfoModal('Changes saved!'); } catch(e){ showInfoModal('Changes saved!'); }
               } else {
                 inputs.forEach(i => { if (!(i.classList && i.classList.contains('protected'))) i.disabled = false; });
                 btn.textContent = 'Save';
@@ -4354,10 +4419,23 @@ c\<!DOCTYPE html>
     function closeActionCard() {
       document.getElementById('actionCard').style.display = 'none';
     }
+
+    // Toggle section visibility
+    function toggleSection(sectionId) {
+      const content = document.getElementById('content-' + sectionId);
+      const icon = document.getElementById('icon-' + sectionId);
+      if (content.style.display === 'none') {
+        content.style.display = 'block';
+        icon.className = 'fas fa-chevron-down';
+      } else {
+        content.style.display = 'none';
+        icon.className = 'fas fa-chevron-right';
+      }
+    }
   </script>
   <style>
     #content, .content, main { min-height: auto !important; }
-  .content { padding-bottom: 0 !important; }
+  .content { padding-bottom: 90px !important; }
     #actionCard, .sidebar-overlay, .cropModal { display: none !important; }
   </style>
   <!-- Mobile bottom navigation: use emoji menu, same as index.html -->
