@@ -2353,7 +2353,7 @@ async function loadDateExceptionsAndHolidays(relevantCounselors) {
 
     // Action Card
     function showActionCard(contentHtml) {
-      document.getElementById('actionCardContent').innerHTML = contentHtml;
+      document.getElementById('actionCardContent').innerHTML = `<div style="text-align: center;">${contentHtml}</div>`;
       document.getElementById('actionCard').style.display = 'flex';
     }
     function closeActionCard() {
@@ -3791,7 +3791,7 @@ function closeORSModal() {
         const appt = window._currentORSAppointmentData || {};
         const dateText = appt.date ? (new Date(String(appt.date)).toLocaleDateString() + (appt.time ? ' at ' + appt.time : '')) : '';
         const savedMsg = window._orsSavedFlag ? '<br><br>Your ORS responses have been saved.' : '<br><br>You skipped the ORS.';
-        showActionCard(`<strong>Booking submitted!</strong><br>Your session is booked for:<br><b>${dateText}</b>${savedMsg}`);
+        showActionCard(`<strong>Booking submitted!</strong><br>Your session is booked for:<br><b>${dateText}</b>`);
       }
     } catch (e) {
       console.warn('Failed to show booking confirmation after ORS', e);
@@ -4291,7 +4291,8 @@ function viewAppointmentDetails(appointmentKey) {
           <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
             <strong>📅 Date & Time:</strong><br>
             ${formattedDate}<br>
-            ${appointment.time}<br><br>
+            ${appointment.time}<br>
+            ${appointment.rescheduled_from_date ? `<small style="color:#666;"><i class="fas fa-exchange-alt"></i> Rescheduled from ${new Date(appointment.rescheduled_from_date).toLocaleDateString()} at ${appointment.rescheduled_from_time}</small>` : ''}<br><br>
             
             <strong>👨‍⚕️ Counselor/Advocate:</strong><br>
             ${counselorName} <button aria-label="Counselor info" onclick="openCounselorInfoByKey('${counselor ? counselor.key : ''}')" style="border:none;background:transparent;color:#00723f;cursor:pointer;margin-left:8px;font-size:1rem;vertical-align:middle;"><i class="fas fa-info-circle"></i></button><br><br>
@@ -4578,16 +4579,14 @@ function rescheduleAppointment(appointmentKey) {
             if (!sel) return;
 
             // 1. Update appointment in Firebase (student and counselor nodes)
-            await db.ref('appointments_by_student/' + auth.currentUser.uid + '/' + appointmentKey).update({
+            const updateData = {
               date: sel.dateStr,
               time: sel.time,
-              ...(appointment.rescheduled_from_date ? {} : { rescheduled_from_date: appointment.date, rescheduled_from_time: appointment.time, rescheduled_at: Date.now() })
-            });
-            await db.ref('appointments_by_counselor/' + appointment.counselor_uid + '/' + appointmentKey).update({
-              date: sel.dateStr,
-              time: sel.time,
-              ...(appointment.rescheduled_from_date ? {} : { rescheduled_from_date: appointment.date, rescheduled_from_time: appointment.time, rescheduled_at: Date.now() })
-            });
+              ...(appointment.rescheduled_from_date ? {} : { rescheduled_from_date: appointment.date, rescheduled_from_time: appointment.time, rescheduled_at: Date.now() }),
+              ...(appointment.status === 'confirmed' ? { status: 'pending' } : {})
+            };
+            await db.ref('appointments_by_student/' + auth.currentUser.uid + '/' + appointmentKey).update(updateData);
+            await db.ref('appointments_by_counselor/' + appointment.counselor_uid + '/' + appointmentKey).update(updateData);
 
             // 2. Handle booked slots: remove old and add new
             // Free up the old slot
