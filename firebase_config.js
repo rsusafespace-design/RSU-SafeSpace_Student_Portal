@@ -4,7 +4,6 @@
 (function() {
   // Firebase config for rsu-safespace (used by verification pages)
   // NOTE: keep this file out of public repos if these keys are sensitive for your workflow.
-  
   var firebaseConfig = {
     apiKey: "AIzaSyD4eMHzsieWnIH6nHLgBl1PDTiIETeVmnA",
     authDomain: "rsu-safespace.firebaseapp.com",
@@ -79,7 +78,7 @@
                 }
 
                 // Helper: show an on-page incoming-call modal when messages.html's modal isn't available
-                function showSiteIncomingCall(caller, roomId, consultId){
+                function showSiteIncomingCall(caller, roomId, consultId, photo){
                   try{
                     // If the current page has a messages-specific helper, prefer it
                     if (window.showIncomingCall && typeof window.showIncomingCall === 'function'){
@@ -94,12 +93,13 @@
                     // Create modal HTML (minimal inline styles so it works across pages)
                     const id = 'site-incoming-call-full-' + String(consultId).replace(/[^a-z0-9_-]/ig,'');
                     if (document.getElementById(id)) return;
+                    const photoHtml = photo ? `<img src="${escapeHtml(photo)}" alt="Counselor" style="width:120px;height:120px;border-radius:999px;object-fit:cover;margin:0 auto 18px;box-shadow:0 8px 18px rgba(0,0,0,0.12);">` : `<div style="width:120px;height:120px;border-radius:999px;background:#fff;margin:0 auto 18px;box-shadow:0 8px 18px rgba(0,0,0,0.12);"></div>`;
                     const html = `
                       <div id="${id}" style="position:fixed;inset:0;background:linear-gradient(180deg, rgba(0,0,0,0.55), rgba(0,0,0,0.6));z-index:99999;display:flex;align-items:center;justify-content:center;">
                         <div style="width:100%;max-width:760px;height:500px;border-radius:12px;overflow:hidden;box-shadow:0 14px 40px rgba(2,6,23,0.6);display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#b3f0d7,#70d7a8);position:relative;">
                           <div style="position:absolute;top:18px;right:18px;color:rgba(255,255,255,0.85);font-size:14px;">Incoming call</div>
                           <div style="text-align:center;max-width:560px;margin:auto;padding:36px;">
-                            <div style="width:120px;height:120px;border-radius:999px;background:#fff;margin:0 auto 18px;box-shadow:0 8px 18px rgba(0,0,0,0.12);"></div>
+                            ${photoHtml}
                             <div style="font-size:28px;color:#ffffff;font-weight:800;text-shadow:0 2px 6px rgba(0,0,0,0.15);">${escapeHtml(caller || 'Counselor')}</div>
                             <div style="color:rgba(255,255,255,0.95);margin-top:6px;margin-bottom:26px;">Video call</div>
 
@@ -212,7 +212,7 @@
                 }catch(e){ console.warn('global notification failed', e); }
 
                 // Then ensure the in-page modal appears (either by delegating to messages.html's helper or injecting one here)
-                try{ showSiteIncomingCall(c.counselorName || 'Counselor', room, k); }catch(e){ console.warn('showSiteIncomingCall error', e); }
+                try{ showSiteIncomingCall(c.counselorName || 'Counselor', room, k, (c.photo_url || c.photoUrl || (c.counselor && c.counselor.photo_url))); }catch(e){ console.warn('showSiteIncomingCall error', e); }
               }
 
                 // Expose the site helper so pages (like messages.html) can delegate to it
@@ -235,7 +235,4 @@
   }
 
 })();
-
-
-
 
