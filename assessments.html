@@ -2247,6 +2247,10 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
   <script src="firebase_config.js"></script>
   <script>
+    enforceAuthRedirect();
+  </script>
+  
+  <script>
     // Use firebase_config.js to centralize Firebase initialization.
     // `firebase_config.js` exposes `window.db` (Realtime Database) and ensures firebase is initialized.
     const auth = window.firebase && window.firebase.auth ? window.firebase.auth() : (firebase ? firebase.auth() : null);
@@ -3913,4 +3917,5 @@
   </script>
 </body>
 </html>
+
 
