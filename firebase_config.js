@@ -40,6 +40,7 @@
       if (window.firebase && firebase.auth && firebase.database) {
         firebase.auth().onAuthStateChanged(function(user) {
           if (!user) {
+            console.log('[AuthRedirect] No user signed in, redirecting to signin.html');
             window.location.replace('signin.html');
             return;
           }
@@ -47,15 +48,18 @@
           var uid = user.uid;
           firebase.database().ref('users/' + uid + '/role').once('value').then(function(snapshot) {
             var role = snapshot.val();
+            console.log('[AuthRedirect] User role:', role);
             if (role !== 'Student') {
+              console.log('[AuthRedirect] Role is not Student, redirecting to signin.html');
               window.location.replace('signin.html');
             }
-          }).catch(function() {
+          }).catch(function(error) {
+            console.log('[AuthRedirect] Error fetching role:', error);
             window.location.replace('signin.html');
           });
         });
       } else {
-        // If Firebase isn't loaded, redirect immediately as a fallback
+        console.log('[AuthRedirect] Firebase not loaded, redirecting to signin.html');
         window.location.replace('signin.html');
       }
     };
