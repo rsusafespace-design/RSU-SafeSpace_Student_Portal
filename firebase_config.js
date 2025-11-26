@@ -44,13 +44,24 @@
             window.location.replace('signin.html');
             return;
           }
-          // Check role in database
+          // Check role in database from students ref
           var uid = user.uid;
-          firebase.database().ref('users/' + uid + '/role').once('value').then(function(snapshot) {
-            var role = snapshot.val();
-            console.log('[AuthRedirect] User role:', role);
-            if (role !== 'Student') {
-              console.log('[AuthRedirect] Role is not Student, redirecting to signin.html');
+          firebase.database().ref('students').orderByChild('uid').equalTo(uid).once('value').then(function(snapshot) {
+            if (snapshot.exists()) {
+              let role = null;
+              snapshot.forEach(function(child) {
+                const data = child.val();
+                if (data.role) {
+                  role = data.role;
+                }
+              });
+              console.log('[AuthRedirect] User role:', role);
+              if (role && role.toLowerCase() !== 'student') {
+                console.log('[AuthRedirect] Role is not Student, redirecting to signin.html');
+                window.location.replace('signin.html');
+              }
+            } else {
+              console.log('[AuthRedirect] Student data not found, redirecting to signin.html');
               window.location.replace('signin.html');
             }
           }).catch(function(error) {
