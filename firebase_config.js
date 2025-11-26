@@ -35,6 +35,30 @@
     // notification when a counselor sets roomStatus === 1. This runs on any page that
     // includes firebase_config.js (index.html, messages.html, etc.) so the
     // student will receive notifications even when the chat page isn't open.
+    // Reusable authentication enforcement function
+    window.enforceAuthRedirect = function() {
+      if (window.firebase && firebase.auth && firebase.database) {
+        firebase.auth().onAuthStateChanged(function(user) {
+          if (!user) {
+            window.location.replace('signin.html');
+            return;
+          }
+          // Check role in database
+          var uid = user.uid;
+          firebase.database().ref('users/' + uid + '/role').once('value').then(function(snapshot) {
+            var role = snapshot.val();
+            if (role !== 'Student') {
+              window.location.replace('signin.html');
+            }
+          }).catch(function() {
+            window.location.replace('signin.html');
+          });
+        });
+      } else {
+        // If Firebase isn't loaded, redirect immediately as a fallback
+        window.location.replace('signin.html');
+      }
+    };
     try{
       if (window.firebase && firebase.auth && window.db){
         const _notified = {}; // consultId -> boolean
@@ -42,30 +66,6 @@
           // clear previous listener if any
           if (window._globalConsultListenerRef){ try{ window._globalConsultListenerRef.off(); }catch(e){} window._globalConsultListenerRef = null; }
           if (!user) return;
-      // Reusable authentication enforcement function
-      window.enforceAuthRedirect = function() {
-          if (window.firebase && firebase.auth && firebase.database) {
-            firebase.auth().onAuthStateChanged(function(user) {
-              if (!user) {
-                window.location.replace('signin.html');
-                return;
-              }
-              // Check role in database
-              var uid = user.uid;
-              firebase.database().ref('users/' + uid + '/role').once('value').then(function(snapshot) {
-                var role = snapshot.val();
-                if (role !== 'Student') {
-                  window.location.replace('signin.html');
-                }
-              }).catch(function() {
-                window.location.replace('signin.html');
-              });
-            });
-          } else {
-            // If Firebase isn't loaded, redirect immediately as a fallback
-            window.location.replace('signin.html');
-          }
-        };
           const uid = user.uid;
           // Listen to consultations root and filter client-side (keeps compatibility with many data shapes)
           const ref = window.db.ref('consultations');
