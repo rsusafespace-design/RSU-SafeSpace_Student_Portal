@@ -1839,6 +1839,10 @@ c\<!DOCTYPE html>
 <script src="https://cdn.jsdelivr.net/npm/otplib@12.0.1/otplib-browser.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
 <script src="firebase_config.js"></script>
+  <script>
+    enforceAuthRedirect();
+  </script>
+  
 <script>
   // Use shared firebase_config.js which sets window.auth/window.db/window.storage
   // Provide safe fallbacks in case the shared file didn't load for some reason.
@@ -4456,3 +4460,4 @@ c\<!DOCTYPE html>
 </body>
 
 </html>
+
