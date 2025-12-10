@@ -196,6 +196,27 @@
     .topbar.shrink { left: 80px; }
 
   .topbar-left { display:flex; align-items:center; gap:0.15rem; }
+    .topbar-right { display:flex; align-items:center; gap:1rem; position:relative; padding-right:12px; }
+  @media (max-width: 520px) {
+    .topbar-right { padding-right:10px; gap:0.6rem; }
+    .notif-wrapper { margin-right:4px; }
+    .notif-badge { right:2px; bottom:6px; }
+  }
+  /* Make notif dropdown a centered narrow panel on small screens (mobile) */
+  @media (max-width: 520px) {
+    .notif-dropdown {
+      position: fixed !important;
+      top: 64px !important;
+      right: 12px !important;
+      width: 260px !important;
+      max-height: calc(100vh - 120px) !important;
+      overflow-y: auto !important;
+      border-radius: 8px !important;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.14) !important;
+      z-index: 3000 !important;
+    }
+    .notif-dropdown .notif-list { max-height: calc(100vh - 180px) !important; }
+  }
     .hamburger {
       font-size: 1.05rem;
       cursor: pointer;
@@ -236,11 +257,18 @@
     /* Profile + Notifications */
     .profile { width:38px; height:38px; border-radius:50%; background:#004c27;
       display:flex; align-items:center; justify-content:center; font-weight:bold; cursor:pointer; }
+    .icon-btn { background:transparent; border:0; color:#fff; font-size:20px; cursor:pointer; padding:6px; }
     .notif-wrapper { position:relative; cursor:pointer; font-size:1.3rem; color:white; }
     .notif-badge {
-      position:absolute; bottom:0; right:0;
-      width:10px; height:10px; background:red;
-      border-radius:50%; border:2px solid #1e8e3e;
+      position:absolute;
+      right:4px;
+      bottom:8px;
+      width:8px;
+      height:8px;
+      background: #ef4444;
+      border-radius:50%;
+      border:2px solid var(--green);
+      box-sizing: content-box;
     }
     .notif-badge.hidden { display:none; }
 
@@ -296,7 +324,7 @@
   }
     
   /* Match index.html: use the sidebar logo sizing and prefer the inline image
-     Note: use the same image-rendering hint that appointments uses for crisper pixels */
+     Note: use the same image-rendering hint that index uses for crisper pixels */
   .sidebar .brand .logo {
     /* desktop: compact container so the sidebar brand fits the topbar */
     background: transparent;
@@ -1746,9 +1774,15 @@
       display:flex; align-items:center; justify-content:center; font-weight:bold; cursor:pointer; }
     .notif-wrapper { position:relative; cursor:pointer; font-size:1.3rem; color:white; }
     .notif-badge {
-      position:absolute; bottom:0; right:0;
-      width:10px; height:10px; background:red;
-      border-radius:50%; border:2px solid #1e8e3e;
+      position:absolute;
+      right:4px;
+      bottom:8px;
+      width:8px;
+      height:8px;
+      background: #ef4444;
+      border-radius:50%;
+      border:2px solid var(--green);
+      box-sizing: content-box;
     }
     .notif-badge.hidden { display:none; }
 
@@ -2064,17 +2098,15 @@
         <small></small>
       </div>
     </div>
-    <div style="display:flex; align-items:center; gap:1rem; position:relative;">
+    <div class="topbar-right">
       <div class="notif-wrapper" onclick="toggleNotif()">
         <span class="icon-btn">🔔</span>
-        <div class="notif-badge" style="position:absolute;right:4px;bottom:8px;width:8px;height:8px;background:#ef4444;border-radius:50%;border:2px solid var(--green)"></div>
+        <div class="notif-badge hidden"></div>
       </div>
       <div id="notifDropdown" class="notif-dropdown">
         <div class="notif-header">Notifications</div>
         <div class="notif-list">
-          <div class="notif-item" onclick="goToSection('appointments')">🔔 New counseling slots available</div>
-          <div class="notif-item" onclick="goToSection('messages')">📩 You have a new message from your counselor</div>
-          <div class="notif-item" onclick="goToSection('assessments')">⚠ Reminder: Complete your assessment</div>
+          <div id="no-notifs" class="notif-item" style="text-align: center; color: #666;">No new notifications</div>
         </div>
       </div>
       <div class="profile" onclick="window.location.href='profile.html'"></div>
@@ -2134,7 +2166,7 @@
     <div class="grid">
       <!-- Left Column -->
       <div>
-        <div class="card test-result-card">
+        <div class="card test-result-card" id="psychological-results">
           <h3>
             <i class="fas fa-chart-line"></i>
             Annual Psychological Testing
@@ -2143,22 +2175,7 @@
             </button>
           </h3>
           <div id="testResultContent" class="test-result-content">
-            <div class="result-item">
-              <strong>Status:</strong> <span class="status-badge">Good Mental Health</span>
-            </div>
-            <div class="result-item">
-              <strong>Score:</strong> <span class="score-display">85 / 100</span>
-            </div>
-            <div class="result-item">
-              <strong>Assessment Date:</strong> December 15, 2023
-            </div>
-            <div class="result-item">
-              <strong>Summary:</strong> You are maintaining healthy mental wellness. Continue monthly check-ins and keep up your positive habits.
-            </div>
-            <a href="#" class="view-full-btn">
-              <i class="fas fa-external-link-alt"></i>
-              View Full Assessment
-            </a>
+            <p>No psychological test results available yet.</p>
           </div>
           <div id="testResultHidden" class="test-result-hidden">
             <i class="fas fa-lock" style="font-size: 2rem; margin-bottom: 15px; opacity: 0.5;"></i>
@@ -2245,11 +2262,20 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
   <script src="firebase_config.js"></script>
+  <script src="notification.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', function() {
     enforceAuthRedirect();
-  });
+    // Scroll to hash if present
+    if (window.location.hash) {
+      const element = document.getElementById(window.location.hash.substring(1));
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+  }); 
   </script>
   
   <script>
@@ -2257,6 +2283,66 @@
     // `firebase_config.js` exposes `window.db` (Realtime Database) and ensures firebase is initialized.
     const auth = window.firebase && window.firebase.auth ? window.firebase.auth() : (firebase ? firebase.auth() : null);
     const db = window.db || (window.firebase && window.firebase.database ? window.firebase.database() : null);
+    const storage = firebase.storage();
+
+    // Function to load psych tests
+    async function loadPsychTests() {
+      if (!window.currentStudentKey || !db) return;
+      try {
+        const snap = await db.ref('psych_tests/' + window.currentStudentKey).once('value');
+        if (snap.exists()) {
+          const tests = [];
+          snap.forEach(child => {
+            const data = child.val();
+            tests.push({ key: child.key, ...data });
+          });
+          // Sort by uploadDate descending
+          tests.sort((a, b) => new Date(b.uploadDate) - new Date(a.uploadDate));
+          // Take the latest
+          const latest = tests[0];
+          if (latest && latest.files && latest.files.length > 0) {
+            const file = latest.files[0]; // assume first file
+            const fileName = file.name || '';
+            const isImage = /\.(jpg|jpeg|png|gif)$/i.test(fileName);
+            const isPDF = /\.pdf$/i.test(fileName);
+            let fileDisplay = '';
+            if (isImage) {
+              fileDisplay = `<div style="position:relative;"><img src="${file.url}" alt="Assessment Image" style="max-width:100%; height:auto; border-radius:8px; margin-top:10px; cursor:pointer;" onclick="toggleDownload(this, '${file.url}', '${fileName}')"><a href="${file.url}" download style="display:none; position:absolute; top:10px; right:10px; background:#10b981; color:white; padding:5px 10px; border-radius:5px; text-decoration:none;" id="downloadBtn">Download</a></div>`;
+            } else if (isPDF) {
+              fileDisplay = `<div style="position:relative;"><iframe src="${file.url}" style="width:100%; height:400px; border:1px solid #ddd; margin-top:10px;" scrolling="auto" onclick="toggleDownload(this, '${file.url}', '${fileName}')"></iframe><a href="${file.url}" download style="display:none; position:absolute; top:10px; right:10px; background:#10b981; color:white; padding:5px 10px; border-radius:5px; text-decoration:none;" id="downloadBtn">Download</a></div>`;
+            }
+            // Update the testResultContent
+            const content = document.getElementById('testResultContent');
+            content.innerHTML = `
+              <div class="result-item">
+                <strong>Status:</strong> <span class="status-badge">Completed</span>
+              </div>
+              <div class="result-item">
+                <strong>Test Type:</strong> ${latest.testType || 'N/A'}
+              </div>
+              <div class="result-item">
+                <strong>Assessment Date:</strong> ${latest.testDate ? new Date(latest.testDate).toLocaleDateString() : 'N/A'}
+              </div>
+              <div class="result-item">
+                <strong>Notes:</strong> ${latest.testNotes || 'N/A'}
+              </div>
+              ${fileDisplay}
+            `;
+          }
+        }
+      } catch (e) {
+        console.warn('Failed to load psych tests', e);
+      }
+    }
+
+    // Function to toggle download button
+    function toggleDownload(element, url, fileName) {
+      const container = element.parentElement;
+      const downloadBtn = container.querySelector('#downloadBtn');
+      if (downloadBtn) {
+        downloadBtn.style.display = downloadBtn.style.display === 'none' ? 'block' : 'none';
+      }
+    }
 
     if (!auth || !db) {
       console.warn('Firebase auth or db not initialized yet. Ensure firebase SDKs and firebase_config.js are loaded.');
@@ -2285,13 +2371,29 @@
                   // Update student ID in topbar and expose it for easy retrieval
                   const topbarStudentId = document.querySelector('.portal-title small');
                   if (topbarStudentId) {
-                    const sid = data.student_id || 'N/A';
+                    // Helper to resolve student ID
+                    const resolveStudentId = (src) => {
+                      if (!src) return '';
+                      const keys = ['student_id','studentId','id','stid'];
+                      for (const k of keys) {
+                        if (src[k] !== undefined && src[k] !== null) return src[k];
+                      }
+                      return '';
+                    };
+                    const sid = resolveStudentId(data) || child.key || 'N/A';
                     topbarStudentId.textContent = "ID: " + sid;
                     // expose a JS variable and a data-* attribute so other scripts can read it
-                    try { window.currentStudentId = data.student_id || null; } catch (e) { /* ignore */ }
-                    try { document.documentElement.dataset.studentId = data.student_id || ''; } catch (e) { /* ignore */ }
+                    try { window.currentStudentId = resolveStudentId(data) || child.key || null; } catch (e) { /* ignore */ }
+                    try { window.currentStudentKey = child.key; } catch (e) { /* ignore */ }
+                    try { document.documentElement.dataset.studentId = resolveStudentId(data) || child.key || ''; } catch (e) { /* ignore */ }
                   }
+
+                  // Load notification settings
+                  const notifSettings = data.notificationSettings || { appointment: true, message: true };
+                  window.notificationSettings = notifSettings;
                 });
+                // Load psych tests after getting key
+                loadPsychTests();
                 return; // done
               }
             }
@@ -2405,12 +2507,20 @@
     // --- END: NEW ADMIN SYNC SIDEBAR SCRIPT ---
 
     // Notification toggle
-    function toggleNotif() {
-      const dropdown = document.getElementById("notifDropdown");
-      const badge = document.querySelector(".notif-badge");
-      dropdown.classList.toggle("active");
-      if (dropdown.classList.contains("active")) { badge.classList.add("hidden"); }
-    }
+    window.toggleNotif = function() {
+      const dropdown = document.getElementById('notifDropdown');
+      if (dropdown) {
+        dropdown.classList.toggle('active');
+        if (dropdown.classList.contains('active')) {
+          // Opening: hide badge
+          const badge = document.querySelector('.notif-badge');
+          if (badge) badge.classList.add('hidden');
+        } else {
+          // Closing: show badge if has notifications
+          NotificationUtils.updateBadgeVisibility();
+        }
+      }
+    };
 
     // Close notification dropdown when clicking outside
     document.addEventListener("click", function(e){
@@ -3527,6 +3637,12 @@
         console.warn('Failed to save mood to DB', e);
         return alert('Could not save mood to the server. Please check your connection.');
       }
+      
+      // Clear the mood reminder notification since mood was logged
+      if (window.NotificationUtils && window.NotificationUtils.clearMoodReminder) {
+        window.NotificationUtils.clearMoodReminder();
+      }
+      
       // update UI graphs
       await drawMoodMini();
     }
@@ -3919,6 +4035,3 @@
   </script>
 </body>
 </html>
-
-
-
