@@ -50,6 +50,20 @@
 
         try {
             api = new JitsiMeetExternalAPI(domain, options);
+            // Listen for participant events to detect counselor presence
+            api.addEventListener('participantJoined', function(participant) {
+                // Send message to parent window (messages.html) about counselor presence
+                // Assume counselor is any participant not the current user
+                window.parent.postMessage({ type: 'counselorPresence', active: true, room: roomName }, '*');
+            });
+            api.addEventListener('participantLeft', function(participant) {
+                // Check if any other participants remain (besides self)
+                setTimeout(() => {
+                    const participants = api.getParticipantsInfo();
+                    const hasCounselor = participants.some(p => p.displayName !== studentName && p.displayName !== 'Student Name');
+                    window.parent.postMessage({ type: 'counselorPresence', active: hasCounselor, room: roomName }, '*');
+                }, 100); // Small delay to ensure state update
+            });
             // When the conference is left (user hangs up or connection ends), redirect back
             // to the messages page so the student can continue the conversation and rate the session.
             api.addEventListener('videoConferenceLeft', function(){
