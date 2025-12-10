@@ -223,12 +223,14 @@
   <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
   <script src="firebase_config.js"></script>
   
   <script>
     // Initialize Firebase with SafeSpace credentials
-    // Use shared firebase_config.js which sets window.auth
+    // Use shared firebase_config.js which sets window.auth and window.db
     const auth = window.auth || (window.firebase ? firebase.auth() : null);
+    const db = window.db || (window.firebase ? firebase.database() : null);
 
     document.getElementById('forgotForm').addEventListener('submit', async function(e) {
       e.preventDefault();
@@ -245,6 +247,19 @@
       btn.innerHTML = '';
 
       try {
+        // Check if the email is registered in the database (check both 'email' and 'email_address')
+        let snap = await db.ref('students').orderByChild('email').equalTo(email).once('value');
+        if (!snap.exists()) {
+          snap = await db.ref('students').orderByChild('email_address').equalTo(email).once('value');
+        }
+        if (!snap.exists()) {
+          alert('This email is not registered with SafeSpace.');
+          btn.classList.remove('loading');
+          btn.innerHTML = 'Send Reset Link';
+          return;
+        }
+
+        // If registered, send the reset email
         await auth.sendPasswordResetEmail(email);
         alert('A password reset link has been sent to your email.');
         btn.classList.remove('loading');
@@ -267,6 +282,4 @@
     });
   </script>
 </body>
-
 </html>
-
