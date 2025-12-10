@@ -467,6 +467,109 @@
   .thanks-modal-box h4{ margin:0 0 6px 0; font-size:18px; }
   .thanks-modal-box p{ margin:6px 0 0 0; color:#4b5563 }
 
+  /* Image Modal Styles */
+  .image-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 4000;
+    cursor: pointer;
+  }
+  .image-modal-content {
+    position: relative;
+    /* Make the modal card narrower and taller (portrait style) so it looks like the pasted screenshot */
+    width: 420px;
+    max-width: 92vw;
+    max-height: 92vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: default;
+    border-radius: 12px;
+    overflow: hidden;
+    /* give a subtle white card behind image to match screenshot and ensure buttons contrast */
+    background: rgba(255,255,255,0.98);
+    box-shadow: 0 30px 60px rgba(2,6,23,0.45);
+    transform: translateY(0);
+    /* reserve space at bottom for buttons so they never get hidden */
+    padding: 16px 16px 72px 16px;
+  }
+  .image-modal-content img {
+    border-radius: 12px;
+    display: block;
+    /* allow portrait images to grow to available height while landscape images remain constrained */
+    width: auto;
+    max-width: 100%;
+    /* reduce max-height so buttons (in reserved padding area) remain visible */
+    max-height: 60vh;
+    object-fit: contain;
+    box-shadow: 0 18px 40px rgba(2,6,23,0.25);
+    background: #fff;
+    margin: 0 auto;
+  }
+  .image-modal-buttons {
+    display: flex;
+    gap: 12px;
+    /* Buttons are inside the card and centered below the image */
+    position: static;
+    margin-top: 12px;
+    justify-content: center;
+    width: 100%;
+  }
+  .image-modal-btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+  }
+  /* Download button styled white with subtle border like the screenshot */
+  .download-btn {
+    background: #ffffff;
+    color: #111;
+    border: 1px solid rgba(0,0,0,0.08);
+    padding: 10px 18px;
+    border-radius: 8px;
+    box-shadow: 0 6px 18px rgba(2,6,23,0.12);
+  }
+  .download-btn:hover { filter:brightness(0.98); }
+
+  /* Close button small dark pill */
+  .close-btn {
+    background: #111111;
+    color: #fff;
+    border-radius: 8px;
+    padding: 10px 14px;
+    box-shadow: 0 6px 18px rgba(2,6,23,0.18);
+  }
+  .close-btn:hover { opacity:0.95; }
+
+  /* Mobile responsive adjustments for image modal */
+  @media (max-width: 768px) {
+    .image-modal-content {
+      width: 92vw;
+      max-width: 92vw;
+      max-height: 90vh;
+      border-radius: 10px;
+      padding: 12px 12px 72px 12px;
+    }
+    .image-modal-btn {
+      padding: 8px 14px;
+      font-size: 13px;
+    }
+  }
+
     /* Chat-specific styles (preserve message UI from original file) */
     .date-separator { display:flex;align-items:center;gap:12px;margin:12px 0;color:#6b7280;font-size:13px;justify-content:center; }
     .date-separator::before, .date-separator::after { content:''; flex:1; height:1px; background:#eef2f6; display:inline-block }
@@ -495,6 +598,76 @@
   /* Ensure action icons are above other UI layers and are clickable/accessibile */
   .chat-actions { position: relative; z-index: 1100; }
   .chat-actions i { position: relative; z-index: 1101; pointer-events: auto; }
+
+    /* Notification styles */
+    .notif-container {
+      position: relative;
+    }
+    .notif-btn {
+      background: transparent;
+      border: none;
+      color: #fff;
+      font-size: 18px;
+      padding: 8px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .notif-btn:hover {
+      background: rgba(255,255,255,0.1);
+    }
+    .notif-badge {
+      position:absolute; bottom:0; right:0;
+      width:10px; height:10px; background:red;
+      border-radius:50%; border:2px solid #00723f;
+    }
+    .notif-dropdown {
+      display: none;
+      position: absolute;
+      top: 100%;
+      right: 0;
+      width: 320px;
+      max-height: 400px;
+      overflow-y: auto;
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      z-index: 1000;
+    }
+    .notif-header {
+      padding: 12px 16px;
+      border-bottom: 1px solid #e5e7eb;
+      font-weight: 600;
+      color: #374151;
+    }
+    .notif-list {
+      padding: 0;
+    }
+    .notif-item {
+      padding: 12px 16px;
+      border-bottom: 1px solid #f3f4f6;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .notif-item:hover {
+      background: #f9fafb;
+    }
+    .notif-item.unread {
+      background: #fef3c7;
+    }
+    .notif-item.unread:hover {
+      background: #fde68a;
+    }
+    .notif-message {
+      font-size: 14px;
+      color: #374151;
+      margin-bottom: 4px;
+    }
+    .notif-time {
+      font-size: 12px;
+      color: #6b7280;
+    }
 
     @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
 
@@ -526,7 +699,7 @@
 
     .chat-input-bar .icon-btn-inline:disabled i { color: #999; }
 
-    .chat-input { flex: 1; padding: 0.9rem 1.1rem; border-radius: 999px; border: 1px solid #e6eef7; font-size: 1rem; outline: none; background: #fbfdff; min-width: 0; }
+    .chat-input { flex: 1; padding: 0.9rem 1.1rem; border-radius: 8px; border: 1px solid #e6eef7; font-size: 1rem; outline: none; background: #fbfdff; min-width: 0; resize: none; overflow: auto; max-height: 120px; }
     .chat-input:focus { border-color: #9ae6b4; box-shadow: 0 4px 14px rgba(16,185,129,0.06); }
 
     /* send button styled as circular green button (right-most) */
@@ -618,7 +791,7 @@
          so fixed input doesn't overlap the latest messages */
       body.mobile-chat-open #messagesContainer {
         padding: 12px !important;
-        padding-bottom: 110px !important; /* room for fixed input */
+        padding-bottom: 80px !important; /* room for fixed input */
         margin: 0 !important;
         width: 100% !important;
         box-sizing: border-box;
@@ -628,7 +801,7 @@
       /* Fix the input bar to the bottom of the viewport when a conversation is opened */
       body.mobile-chat-open .chat-input-bar {
         position: fixed !important;
-        bottom: 0 !important;
+        bottom: 64px !important;
         left: 0 !important;
         right: 0 !important;
         padding: 10px 12px !important;
@@ -1353,14 +1526,12 @@
     <div style="display:flex; align-items:center; gap:1rem; position:relative;">
       <div class="notif-wrapper" onclick="toggleNotif()">
         <span class="icon-btn">🔔</span>
-        <div class="notif-badge" style="position:absolute;right:4px;bottom:8px;width:8px;height:8px;background:#ef4444;border-radius:50%;border:2px solid var(--green)"></div>
+        <div class="notif-badge hidden" style="position:absolute;right:4px;bottom:8px;width:8px;height:8px;background:#ef4444;border-radius:50%;border:2px solid var(--green)"></div>
       </div>
       <div id="notifDropdown" class="notif-dropdown">
         <div class="notif-header">Notifications</div>
         <div class="notif-list">
-          <div class="notif-item" onclick="goToSection('appointments')">🔔 New counseling slots available</div>
-          <div class="notif-item" onclick="goToSection('messages')">📩 You have a new message from your counselor</div>
-          <div class="notif-item" onclick="goToSection('assessments')">⚠ Reminder: Complete your assessment</div>
+          <div id="no-notifs" class="notif-item" style="text-align: center; color: #666;">No new notifications</div>
         </div>
       </div>
       <div class="profile" onclick="window.location.href='profile.html'"></div>
@@ -1418,7 +1589,7 @@
             <img id="attachmentPreviewImg" src="" alt="attachment" style="width:100%;height:100%;object-fit:cover;display:block;border-radius:12px;" />
             <button id="attachmentRemove" title="Remove attachment" aria-label="Remove attachment" style="position:absolute;top:-12px;right:-12px;width:44px;height:44px;border-radius:999px;border:none;background:#fff;box-shadow:0 8px 20px rgba(2,6,23,0.12);display:none;align-items:center;justify-content:center;font-size:20px;color:#0f172a;">✕</button>
           </div>
-          <input id="messageInput" type="text" class="chat-input" placeholder="Type your message..." style="padding:0.9rem 1rem;font-size:1rem;border-radius:8px;" />
+          <textarea id="messageInput" class="chat-input" placeholder="Type your message..." rows="1" style="padding:0.9rem 1rem;font-size:1rem;border-radius:8px;resize:none;"></textarea>
           <button id="sendMessageBtn" class="chat-send-btn"><i class="fas fa-paper-plane"></i></button>
         </div>
       </div>
@@ -1537,12 +1708,28 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js"></script>
 <script src="firebase_config.js"></script>
-  <script>
+<script src="notification.js"></script>
+<script>
+  // Load notification settings if user is logged in
+  firebase.auth().onAuthStateChanged(function(user) {
+    if (user) {
+      firebase.database().ref('students').child(user.uid).child('notificationSettings').once('value').then(function(snapshot) {
+        if (snapshot.exists()) {
+          window.notificationSettings = snapshot.val();
+        }
+      }).catch(function(err) {
+        console.warn('Failed to load notification settings', err);
+      });
+    }
+  });
+</script>
+<script>
     document.addEventListener('DOMContentLoaded', function() {
     enforceAuthRedirect();
   });
-  </script>
+</script>
   
   <script>
     // Use shared firebase_config provided globals
@@ -1560,12 +1747,20 @@
     }
 
     // Notification toggle
-    function toggleNotif() {
-      const dropdown = document.getElementById("notifDropdown");
-      const badge = document.querySelector(".notif-badge");
-      dropdown.classList.toggle("active");
-      if (dropdown.classList.contains("active")) { badge.classList.add("hidden"); }
-    }
+    window.toggleNotif = function() {
+      const dropdown = document.getElementById('notifDropdown');
+      if (dropdown) {
+        dropdown.classList.toggle('active');
+        if (dropdown.classList.contains('active')) {
+          // Opening: hide badge
+          const badge = document.querySelector('.notif-badge');
+          if (badge) badge.classList.add('hidden');
+        } else {
+          // Closing: show badge if has notifications
+          NotificationUtils.updateBadgeVisibility();
+        }
+      }
+    };
     
     document.addEventListener("click", function(e){
       const dropdown = document.getElementById("notifDropdown");
@@ -1622,12 +1817,6 @@
         setRatingStars(0);
         const commentEl = document.getElementById('ratingComment'); if (commentEl) commentEl.value = '';
         const labelEl = document.getElementById('ratingLabel'); if (labelEl) labelEl.textContent = 'Not rated yet';
-        // prefill from localStorage if already saved
-        try{
-          const ratings = JSON.parse(localStorage.getItem('ratings') || '{}');
-          const existing = ratings[consultId];
-          if (existing){ setRatingStars(existing.rating || 0); if (commentEl) commentEl.value = existing.comment || ''; }
-        }catch(e){}
         // focus first star for accessibility
         try{ const firstStar = document.querySelector('#ratingStars .star'); if (firstStar) firstStar.focus(); }catch(e){}
       }catch(e){ console.warn('showRatingModal failed', e); }
@@ -1722,15 +1911,6 @@
 
         const payload = { consultationId: consultId, rating: rating || null, comment: comment || null, studentUid: currentUserChat ? currentUserChat.uid : null, counselorUid: activeCounselorUid || null, createdAt: Date.now() };
 
-        // save locally (quick, offline-first) but avoid storing redundant consultationId inside the entry
-        try{
-          const ratings = JSON.parse(localStorage.getItem('ratings') || '{}');
-          const localPayload = Object.assign({}, payload);
-          try{ delete localPayload.consultationId; }catch(e){}
-          ratings[consultId] = localPayload;
-          localStorage.setItem('ratings', JSON.stringify(ratings));
-        }catch(e){ console.warn('failed to persist rating locally', e); }
-
         // write rating to Firebase Realtime Database under the top-level ratings table
         try{
           if (window.db && typeof window.db.ref === 'function'){
@@ -1754,49 +1934,23 @@
             // DEBUG: log what we'll write so you can inspect in console if needed
             try{ console.debug('Writing rating entry to', entryPath, entryPayload); }catch(e){}
 
-            // read existing rating (if any) for this key so we can update aggregates correctly
-            let existingRating = null;
-            try{
-              const snap = await db.ref(entryPath).once('value');
-              existingRating = snap.exists() ? snap.val() : null;
-            }catch(e){ console.warn('failed to read existing rating', e); existingRating = null; }
-
             // write or overwrite the rating entry under ratings/<consultId>/<ratingKey>
             try{
               await db.ref(entryPath).set(entryPayload);
-            }catch(e){ console.warn('failed to write rating entry', e); }
+              console.log('Successfully saved rating to Firebase');
+            }catch(e){
+              console.warn('Failed to save rating to Firebase (continuing with local save):', e);
+              // Continue execution - local save already happened
+            }
 
-            // update aggregated stats under ratings/<consultId>/ratingStats
-            try{
-              const statsRef = db.ref(ratingsBasePath + '/ratingStats');
-              await statsRef.transaction(function(current){
-                const r = Number(payload.rating || 0);
-                if (!current || typeof current !== 'object'){
-                  // no stats yet
-                  return { count: 1, sum: r, avg: r };
-                }
-                const prev = existingRating && typeof existingRating.rating !== 'undefined' ? Number(existingRating.rating) : null;
-                if (prev === null){
-                  // new rating
-                  const count = (current.count || 0) + 1;
-                  const sum = (current.sum || 0) + r;
-                  return { count: count, sum: sum, avg: (count > 0 ? (sum / count) : 0) };
-                } else {
-                  // update existing rating: adjust sum, keep count
-                  const count = (current.count || 0) || 1;
-                  const sum = (current.sum || 0) - prev + r;
-                  return { count: count, sum: sum, avg: (count > 0 ? (sum / count) : 0) };
-                }
-              });
-            }catch(e){ console.warn('ratingStats transaction failed', e); }
-
-            // store lastRating metadata under ratings/<consultId>/meta (non-critical)
-            try{
-              await db.ref(ratingsBasePath + '/meta').update({ lastRatingAt: payload.createdAt || Date.now(), lastRatingBy: payload.studentUid || null });
-            }catch(e){ console.warn('failed to update ratings meta', e); }
+            // Note: ratingStats and meta updates are handled server-side or by counselors only
+            // Students should not update aggregated statistics or metadata to avoid permission issues
+          } else {
+            console.warn('Firebase database not available, rating saved locally only');
           }
         }catch(e){
-          console.warn('failed to push rating to ratings node', e);
+          console.warn('Failed to process rating for Firebase (continuing with local save):', e);
+          // Continue execution - local save already happened
         }
 
   closeRatingModal();
@@ -1930,6 +2084,8 @@
   let currentCounselorProfile = null;
   // Image attachment state for chat
   let _pendingImage = null; // { dataUrl, fileName, mime }
+  let lastMessageCount = 0;
+  let lastNotifiedTimestamp = 0;
   // guard to prevent duplicate sends and indicate send-in-progress
   let _isSending = false;
 
@@ -2027,9 +2183,37 @@
         let msg = null; try{ msg = JSON.parse(ev.data); }catch(e){ return; }
         if (!msg || !msg.type) return;
         if (msg.type === 'calling'){
-          if (!msg.room || (msg.room && msg.room === _registeredRoom)){
-            showIncomingCall(msg.from || 'Counselor', msg.room || _registeredRoom, null);
-          }
+          activeCall = true;
+          // counselor is calling, button will be enabled via roomStatus listener
+        }
+        if (msg.type === 'counselor_joined'){
+          counselorPresence = true;
+          // Update video button state in real-time
+          try {
+            if (activeConsultationId) {
+              db.ref('consultations/' + activeConsultationId).once('value').then(snap => {
+                const data = snap.val() || {};
+                const room = resolveRoomFromConsultation(data);
+                const enabled = Boolean(room) && (Number(data.roomStatus) === 1 || activeCall || counselorPresence);
+                updateVideoButtonState(enabled, room);
+              });
+            }
+          } catch (e) { console.warn('Failed to update button on counselor joined', e); }
+        }
+        if (msg.type === 'counselor_left'){
+          counselorPresence = false;
+          activeCall = false; // Reset when counselor leaves
+          // Update video button state in real-time
+          try {
+            if (activeConsultationId) {
+              db.ref('consultations/' + activeConsultationId).once('value').then(snap => {
+                const data = snap.val() || {};
+                const room = resolveRoomFromConsultation(data);
+                const enabled = Boolean(room) && (Number(data.roomStatus) === 1 || activeCall || counselorPresence);
+                updateVideoButtonState(enabled, room);
+              });
+            }
+          } catch (e) { console.warn('Failed to update button on counselor left', e); }
         }
       });
 
@@ -2044,7 +2228,7 @@
   }
 
   // Incoming call UI for student
-  function showIncomingCall(fromName, room, consultId){
+  function showIncomingCall(fromName, room, consultId, photo_url, counselorId){
     // full-screen incoming-call modal (mobile-friendly)
     const existing = document.getElementById('student-incoming-call-full');
     if (existing) { existing.querySelector('.caller-name').textContent = fromName; existing.dataset.room = room || ''; return; }
@@ -2079,6 +2263,47 @@
           while (avatar.firstChild) avatar.removeChild(avatar.firstChild);
           avatar.appendChild(cloned);
         }catch(e){}
+      }
+      // If no image from counselorAvatar and no photo_url, fetch from profile
+      if (!avatar.querySelector('img') && !photo_url && counselorId) {
+        (async () => {
+          try {
+            let p = null;
+            const directSnap = await db.ref('counselors/' + counselorId).once('value');
+            if (directSnap.exists()) {
+              p = directSnap.val();
+            } else {
+              const snap = await db.ref('counselors').orderByChild('uid').equalTo(counselorId).once('value');
+              const v = snap.val();
+              if (v) p = v[Object.keys(v)[0]];
+            }
+            if (p && (p.photo_url || p.photo)) {
+              avatar.innerHTML = '';
+              const img = document.createElement('img');
+              img.src = p.photo_url || p.photo;
+              img.alt = fromName || 'Counselor';
+              img.style.width = '100%';
+              img.style.height = '100%';
+              img.style.objectFit = 'cover';
+              img.style.borderRadius = '50%';
+              avatar.appendChild(img);
+            }
+          } catch (e) {
+            console.warn('Failed to fetch counselor photo for incoming call', e);
+          }
+        })();
+      }
+      // If no image from counselorAvatar, use provided photo_url
+      if (!avatar.querySelector('img') && photo_url) {
+        avatar.textContent = '';
+        const img = document.createElement('img');
+        img.src = photo_url;
+        img.alt = fromName || 'Counselor';
+        img.style.width = '100%';
+        img.style.height = '100%';
+        img.style.objectFit = 'cover';
+        img.style.borderRadius = '50%';
+        avatar.appendChild(img);
       }
     // avatar
     const avatarWrap = document.createElement('div');
@@ -2388,9 +2613,13 @@
 
         if (!consultId) return;
         // best-effort update; do not block UI on failures
-        const payload = { roomStatus: 0 };
+        const payload = {};
         // optional audit fields when available
         try{ if (clearedBy) payload.clearedBy = String(clearedBy); payload.clearedAt = Date.now(); }catch(e){}
+        // Only set roomStatus=0 if not student decline (to allow re-joining if counselor restarts)
+        if (clearedBy !== 'student_decline') {
+          payload.roomStatus = 0;
+        }
         db.ref('consultations/' + consultId).update(payload).catch(()=>{});
         // Ensure the conversation is opened/attached so the UI matches clicking the conversation
         try{
@@ -2408,12 +2637,9 @@
           if (consultId && clearedBy && endEvents.indexOf(String(clearedBy)) !== -1){
             // avoid showing the prompt multiple times for the same consultation
             try{
-              if (!localStorage.getItem('rating_prompted_' + consultId)){
-                  // small delay so any UI teardown finishes first
-                  try{ console.debug('Prompting rating for consultId=', consultId, 'clearedBy=', clearedBy); }catch(e){}
-                  setTimeout(()=>{ try{ showRatingModal(consultId); }catch(e){ console.warn('showRatingModal error', e); } }, 700);
-                  localStorage.setItem('rating_prompted_' + consultId, '1');
-                }
+                // small delay so any UI teardown finishes first
+                try{ console.debug('Prompting rating for consultId=', consultId, 'clearedBy=', clearedBy); }catch(e){}
+                setTimeout(()=>{ try{ showRatingModal(consultId); }catch(e){ console.warn('showRatingModal error', e); } }, 700);
             }catch(e){}
           }
         }catch(e){}
@@ -2540,7 +2766,7 @@
           let contentHtml = '';
           if (m.imageData || m.imageURL){
             const src = m.imageData || m.imageURL;
-            contentHtml += `<div><img src="${src}" style="max-width:320px;max-height:320px;border-radius:10px;display:block;margin-bottom:8px;" alt="image"/></div>`;
+            contentHtml += `<div><img src="${src}" style="max-width:100px;max-height:100px;border-radius:10px;display:block;margin-bottom:8px;cursor:pointer;" alt="image" data-image-src="${src}"/></div>`;
           }
           contentHtml += `<div style="font-size:14px;color:#111">${m.text||m.message||''}</div>`;
           // add title attribute for full timestamp on hover
@@ -2553,10 +2779,86 @@
           wrapper.style.justifyContent = isOwn ? 'flex-end' : 'flex-start';
           wrapper.appendChild(bubble);
           container.appendChild(wrapper);
+
+          // Attach click handlers to images in this message
+          const images = bubble.querySelectorAll('img[data-image-src]');
+          images.forEach(img => {
+            img.onclick = function() {
+              openImageModal(this.getAttribute('data-image-src'));
+            };
+          });
         }
       });
+      // Removed notification triggering from renderChatMessages - notifications are handled by real-time monitoring in notification.js
+      lastMessageCount = msgs.length;
+      // Update lastNotifiedTimestamp to the latest message timestamp to avoid notifying on load
+      if (msgs.length > 0) {
+        const maxTs = Math.max(...msgs.map(m => m.timestamp || 0));
+        if (maxTs > lastNotifiedTimestamp) lastNotifiedTimestamp = maxTs;
+      }
       setTimeout(() => container.scrollTop = container.scrollHeight, 0);
     }
+
+    // Image Modal Functionality
+    function openImageModal(imageSrc) {
+      const modal = document.getElementById('imageModal');
+      const modalImage = document.getElementById('modalImage');
+      const downloadBtn = document.getElementById('downloadImageBtn');
+      const closeBtn = document.getElementById('closeImageModalBtn');
+
+      modalImage.src = imageSrc;
+      modal.style.display = 'flex';
+
+      // Download functionality
+      downloadBtn.onclick = function() {
+        const link = document.createElement('a');
+        link.href = imageSrc;
+        link.download = 'chat-image-' + Date.now() + '.png';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      };
+
+      // Close functionality
+      closeBtn.onclick = function() {
+        modal.style.display = 'none';
+      };
+
+      // Close when clicking outside the image
+      modal.onclick = function(event) {
+        if (event.target === modal) {
+          modal.style.display = 'none';
+        }
+      };
+
+      // Close on Escape key
+      document.addEventListener('keydown', function closeOnEscape(e) {
+        if (e.key === 'Escape') {
+          modal.style.display = 'none';
+          document.removeEventListener('keydown', closeOnEscape);
+        }
+      });
+    }
+
+    // Make images clickable after messages are rendered
+    function attachImageClickHandlers() {
+      const messageImages = document.querySelectorAll('#messagesContainer img[alt="image"]');
+      messageImages.forEach(img => {
+        img.style.cursor = 'pointer';
+        img.onclick = function() {
+          openImageModal(this.src);
+        };
+      });
+    }
+
+    // Override renderChatMessages to attach image handlers after rendering
+    const originalRenderChatMessages = renderChatMessages;
+    renderChatMessages = function(msgs) {
+      originalRenderChatMessages(msgs);
+      // Attach click handlers to images after a short delay to ensure DOM is updated
+      setTimeout(attachImageClickHandlers, 100);
+    };
+
       // ---------------- Video call (student-side) helpers -----------------
   let jitsiApi = null;
   // observer used to detect Jitsi DOM removal or prejoin-close clicks
@@ -2705,6 +3007,10 @@
           if (activeConsultationId){
             const snap = await db.ref('consultations/' + activeConsultationId).once('value');
             const data = snap.val() || {};
+            if (Number(data.roomStatus) !== 1) {
+              alert('The video call is not active yet. Please wait for the counselor to start it.');
+              return;
+            }
             const candidates = [data.videoRoom, data.jitsiRoom, data.room, data.video_room, data.video_url, data.meetRoom, data.meetingUrl, data.meeting_link];
             let room = candidates.find(Boolean);
             if (!room && data.meta) room = data.meta.room || data.meta.videoRoom;
@@ -2720,7 +3026,7 @@
       }
 
       // Update the header video button state (enabled when a counselor-provided room exists
-      // and either roomStatus is undefined (legacy) or explicitly active (roomStatus === 1)).
+      // and either roomStatus is undefined (legacy) or explicitly active (roomStatu09s === 1)).
       function updateVideoButtonState(enabled, room){
         try{
           const btn = document.getElementById('videoCallBtn');
@@ -2764,9 +3070,9 @@
           if (vbtn){
             vbtn.addEventListener('click', function(){
               try{
-                // If disabled, show a friendly modal explaining why they can't start a call
+                // If disabled, alert to wait
                 if (vbtn.getAttribute('aria-disabled') === 'true'){
-                  try{ openDisabledVideoModal(); }catch(e){ }
+                  alert('Please wait for the counselor to start the video call.');
                   return;
                 }
                 // delegate to openVideoCall which will attempt to open the room for the active consultation
@@ -2775,6 +3081,25 @@
             });
           }
         }catch(e){}
+        // Listen for messages from video.html about counselor presence
+        let counselorPresence = false;
+        let activeCall = false; // Flag to keep icon enabled after 'calling' until 'counselor_left'
+        window.addEventListener('message', function(event) {
+          if (event.data && event.data.type === 'counselorPresence') {
+            counselorPresence = event.data.active;
+            // Update video button state in real-time
+            try {
+              if (activeConsultationId) {
+                db.ref('consultations/' + activeConsultationId).once('value').then(snap => {
+                  const data = snap.val() || {};
+                  const room = resolveRoomFromConsultation(data);
+                  const enabled = Boolean(room) && (Number(data.roomStatus) === 1 || activeCall || counselorPresence);
+                  updateVideoButtonState(enabled, room);
+                });
+              }
+            } catch (e) { console.warn('Failed to update button on presence change', e); }
+          }
+        });
           // If page was opened with a room/consult param (e.g. from a notification),
           // automatically show the incoming-call modal so the user sees the UI
           // similar to the screenshot and can Answer/Decline.
@@ -2834,8 +3159,7 @@
               }
 
               if (room){
-                // small delay to let the page finish rendering
-                setTimeout(()=>{ try{ showIncomingCall(name, room, consultParam || appointmentParam); }catch(e){} }, 250);
+                // button will be enabled via listener if counselor is in call
               }
             }catch(e){ console.warn('auto incoming handler failed', e); }
           })();
@@ -2877,10 +3201,7 @@
                   }
                   // Show rating modal after video ends, if not already prompted
                   try{
-                    if (!localStorage.getItem('rating_prompted_' + consultParam)){
-                      setTimeout(()=>{ try{ showRatingModal(consultParam); }catch(e){ console.warn('showRatingModal error', e); } }, 2000);
-                      localStorage.setItem('rating_prompted_' + consultParam, '1');
-                    }
+                    setTimeout(()=>{ try{ showRatingModal(consultParam); }catch(e){ console.warn('showRatingModal error', e); } }, 2000);
                   }catch(e){}
                 }catch(e){ console.warn('auto-open conversation after video end failed', e); }
               }, 350);
@@ -2958,12 +3279,10 @@
             // ensure student websocket is registered for this room so 'calling' events are received
             try{ setupWebSocketForRoom(room); }catch(e){}
           }
-          // If counselor explicitly set roomStatus === 1, treat as an incoming call and show overlay
+          // If counselor explicitly set roomStatus === 1, button will be enabled real-time
           try{
               if (s && Number(s.roomStatus) === 1 && room && room !== _lastPromptedRoom){
               _lastPromptedRoom = room;
-              // show incoming-call overlay immediately (uses counselor name if available)
-              try{ showIncomingCall(s.counselorName || s.from || 'Counselor', room, id); }catch(e){}
             } else if (s && (s.roomStatus === 0 || s.roomStatus === '0')){
               // clear prompt guard so future calls can re-prompt
               if (_lastPromptedRoom && _lastPromptedRoom === room) _lastPromptedRoom = null;
@@ -2986,9 +3305,9 @@
               }, 300);
             }
           }
-          // Update video button: enabled only when a room exists and is active (or no explicit roomStatus)
+          // Update video button: enabled only when roomStatus === 1 or activeCall or counselorPresence is true
           try{
-            const enabled = Boolean(room) && (s.roomStatus === undefined || s.roomStatus === null || Number(s.roomStatus) === 1);
+            const enabled = Boolean(room) && (Number(s.roomStatus) === 1 || activeCall || counselorPresence);
             updateVideoButtonState(enabled, room);
           }catch(e){ }
         }catch(e){ console.warn('video room detection failed', e); }
@@ -3167,6 +3486,7 @@
       const input = document.getElementById('messageInput');
       const text = input.value.trim();
       if (!text) return;
+      input.value = ''; // clear immediately
       // send to the currently active consultation for the selected counselor (most recent session)
       if (!activeConsultationId) { alert('No open session for this counselor. Please select or join a session.'); return; }
   const ref = db.ref('consultations/' + activeConsultationId);
@@ -3175,7 +3495,6 @@
       const msgs = s.messages || [];
       msgs.push({ senderId: currentUserChat.uid, senderName: currentUserChat.displayName || currentUserChat.email, text: text, timestamp: Date.now() });
       await ref.update({ messages: msgs });
-      input.value = '';
     }
 
     document.addEventListener('DOMContentLoaded', function(){
@@ -3261,7 +3580,11 @@
           // Send on Enter: delegate to the send button so image/text logic is centralized
           try{
             const inputEl2 = document.getElementById('messageInput');
-            if (inputEl2){ inputEl2.addEventListener('keydown', function(ev){ if (ev.key === 'Enter'){ ev.preventDefault(); sendBtn.click(); } }); }
+            if (inputEl2){ 
+              inputEl2.addEventListener('keydown', function(ev){ if (ev.key === 'Enter' && !ev.shiftKey){ ev.preventDefault(); sendBtn.click(); } });
+              // Auto-resize textarea
+              inputEl2.addEventListener('input', function() { this.style.height = 'auto'; this.style.height = Math.min(this.scrollHeight, 120) + 'px'; });
+            }
           }catch(e){}
         }
 
@@ -3297,7 +3620,21 @@
                 // Update student ID in topbar
                 const topbarStudentId = document.querySelector('.portal-title small');
                 if (topbarStudentId) {
-                  topbarStudentId.textContent = "ID: " + (data.student_id || 'N/A');
+                  // Helper to resolve student ID
+                  const resolveStudentId = (src) => {
+                    if (!src) return '';
+                    const keys = ['student_id','studentId','id','stid'];
+                    for (const k of keys) {
+                      if (src[k] !== undefined && src[k] !== null) return src[k];
+                    }
+                    return '';
+                  };
+                  const sid = resolveStudentId(data) || child.key || 'N/A';
+                  topbarStudentId.textContent = "ID: " + sid;
+                  // expose a JS variable and a data-* attribute so other scripts can read it
+                  try { window.currentStudentId = resolveStudentId(data) || child.key || null; } catch (e) { /* ignore */ }
+                  try { window.currentStudentKey = child.key; } catch (e) { /* ignore */ }
+                  try { document.documentElement.dataset.studentId = resolveStudentId(data) || child.key || ''; } catch (e) { /* ignore */ }
                 }
               });
             }
@@ -3396,14 +3733,21 @@
           // try to find a photo from any session
           (async ()=>{
             let usedPhoto = null;
+            let counselorName = g.name; // default
             for (let s of g.sessions){ if (s.data.counselorPhoto) { usedPhoto = s.data.counselorPhoto; break; } }
-            if (!usedPhoto && gid && !String(gid).startsWith('__no_counselor__')){
+            if (gid && !String(gid).startsWith('__no_counselor__')){
               const res = await getCounselorPhoto(gid);
               if (res && res.photo) usedPhoto = res.photo;
+              if (res && res.profile) {
+                const p = res.profile;
+                counselorName = p.first_name ? (p.first_name + (p.last_name ? ' ' + p.last_name : '')) : (p.name || p.username || p.email || g.name);
+              }
             }
             avatarHolder.innerHTML = '';
-            if (usedPhoto){ const img = document.createElement('img'); img.src = usedPhoto; img.alt = g.name; img.style.width='52px'; img.style.height='52px'; img.style.objectFit='cover'; img.style.borderRadius='50%'; img.onerror=()=>{ avatarHolder.textContent = (g.name||'C').split(' ').map(s=>s[0]).slice(0,2).join('').toUpperCase(); }; avatarHolder.appendChild(img); }
-            else { const initials = document.createElement('div'); initials.className='initials'; initials.textContent = (g.name||'C').split(' ').map(s=>s[0]).slice(0,2).join('').toUpperCase(); initials.style.display='flex'; initials.style.alignItems='center'; initials.style.justifyContent='center'; initials.style.width='100%'; initials.style.height='100%'; initials.style.fontWeight='700'; initials.style.color='#064e3b'; avatarHolder.appendChild(initials); }
+            if (usedPhoto){ const img = document.createElement('img'); img.src = usedPhoto; img.alt = counselorName; img.style.width='52px'; img.style.height='52px'; img.style.objectFit='cover'; img.style.borderRadius='50%'; img.onerror=()=>{ avatarHolder.textContent = (counselorName||'C').split(' ').map(s=>s[0]).slice(0,2).join('').toUpperCase(); }; avatarHolder.appendChild(img); }
+            else { const initials = document.createElement('div'); initials.className='initials'; initials.textContent = (counselorName||'C').split(' ').map(s=>s[0]).slice(0,2).join('').toUpperCase(); initials.style.display='flex'; initials.style.alignItems='center'; initials.style.justifyContent='center'; initials.style.width='100%'; initials.style.height='100%'; initials.style.fontWeight='700'; initials.style.color='#064e3b'; avatarHolder.appendChild(initials); }
+            // Update title with proper name
+            title.textContent = counselorName;
           })();
 
           const content = document.createElement('div'); content.style.flex='1'; content.style.minWidth='0'; content.style.paddingTop='2px';
@@ -3518,9 +3862,8 @@
                     if (join) openJitsiEmbedded(room);
                   }, 300);
                 } else if (Number(latest.roomStatus) === 1){
-                  // show incoming-call overlay immediately
+                  // counselor in call, button will be enabled real-time
                   _lastPromptedRoom = room;
-                  try{ showIncomingCall(latest.counselorName || latest.from || 'Counselor', room, sessions[sessions.length-1] && sessions[sessions.length-1].id); }catch(e){}
                 } else {
                   // roomStatus explicitly 0: do not prompt
                 }
@@ -3535,9 +3878,9 @@
             }
             // also ensure WS registration for latest counselor session room
             if (room) try{ setupWebSocketForRoom(room); }catch(e){}
-            // update header video button (enable only when a room exists and is active)
+            // update header video button (enable only when roomStatus === 1)
             try{
-              const enabledLatest = Boolean(room) && (latest.roomStatus === undefined || latest.roomStatus === null || Number(latest.roomStatus) === 1);
+              const enabledLatest = Boolean(room) && Number(latest.roomStatus) === 1;
               updateVideoButtonState(enabledLatest, room);
             }catch(e){}
           }
@@ -3633,12 +3976,20 @@
         let contentHtml = '';
         if (m.imageData || m.imageURL){
           const src = m.imageData || m.imageURL;
-          contentHtml += `<div><img src="${src}" style="max-width:320px;max-height:320px;border-radius:10px;display:block;margin-bottom:8px;" alt="image"/></div>`;
+          contentHtml += `<div><img src="${src}" style="max-width:250px;max-height:250px;border-radius:10px;display:block;margin-bottom:8px;cursor:pointer;" alt="image" data-image-src="${src}"/></div>`;
         }
         contentHtml += `<div style="font-size:14px;color:#111">${m.text||m.message||''}</div>`;
         bubble.innerHTML = `${labelHtml}${contentHtml}<div style="font-size:11px;color:#666;margin-top:6px;text-align:right" title="${tsFull}">${ts}</div>`;
         const wrapper = document.createElement('div'); wrapper.style.display='flex'; wrapper.style.width='100%'; wrapper.style.justifyContent = isOwn ? 'flex-end' : 'flex-start'; wrapper.appendChild(bubble);
         container.appendChild(wrapper);
+
+        // Attach click handlers to images in this message
+        const images = bubble.querySelectorAll('img[data-image-src]');
+        images.forEach(img => {
+          img.onclick = function() {
+            openImageModal(this.getAttribute('data-image-src'));
+          };
+        });
       });
       setTimeout(() => container.scrollTop = container.scrollHeight, 0);
     }
@@ -3653,8 +4004,21 @@
       </div>
     </div>
   </div>
+
+  <!-- Image Modal for viewing chat images -->
+  <div id="imageModal" class="image-modal-overlay" style="display:none;">
+    <div class="image-modal-content">
+      <img id="modalImage" src="" alt="Chat Image" style="max-width:100%; object-fit:contain;" />
+      <div class="image-modal-buttons">
+        <button id="downloadImageBtn" class="image-modal-btn download-btn">
+          <i class="fas fa-download"></i> Download
+        </button>
+        <button id="closeImageModalBtn" class="image-modal-btn close-btn">
+          <i class="fas fa-times"></i> Close
+        </button>
+      </div>
+    </div>
+  </div>
 </body>
 </html>
-
-
 
