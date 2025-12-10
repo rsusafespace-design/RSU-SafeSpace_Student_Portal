@@ -1922,14 +1922,12 @@
     <div style="display:flex; align-items:center; gap:1rem; position:relative;">
       <div class="notif-wrapper" onclick="toggleNotif()">
         <span class="icon-btn">🔔</span>
-        <div class="notif-badge" style="position:absolute;right:4px;bottom:8px;width:8px;height:8px;background:#ef4444;border-radius:50%;border:2px solid var(--green)"></div>
+        <div class="notif-badge hidden" style="position:absolute;right:4px;bottom:8px;width:8px;height:8px;background:#ef4444;border-radius:50%;border:2px solid var(--green)"></div>
       </div>
       <div id="notifDropdown" class="notif-dropdown">
         <div class="notif-header">Notifications</div>
         <div class="notif-list">
-          <div class="notif-item" onclick="goToSection('appointments')">🔔 New counseling slots available</div>
-          <div class="notif-item" onclick="goToSection('messages')">📩 You have a new message from your counselor</div>
-          <div class="notif-item" onclick="goToSection('assessments')">⚠ Reminder: Complete your assessment</div>
+          <div id="no-notifs" class="notif-item" style="text-align: center; color: #666;">No new notifications</div>
         </div>
       </div>
       <div class="profile" onclick="window.location.href='profile.html'"></div>
@@ -2119,21 +2117,13 @@
     </div>
   </div>
 
-  <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
   <script src="firebase_config.js"></script>
-  <script>
-    document.addEventListener('DOMContentLoaded', function() {
-    enforceAuthRedirect();
-  });
-  </script>
-
-  <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
+  <script src="notification.js"></script>
   <script>
     // Ensure `auth` and `db` variables exist and listen for auth state changes.
     // Many pages in this project expect `auth` and `db` to be available globally.
@@ -2171,6 +2161,8 @@
     let studentData = null;
     let allCounselors = [];
     let availableSlotsByDate = {};
+    let previousAvailableSlotsByDate = {}; // Store previous state to detect new slots
+    let isFirstLoad = true; // Flag to prevent notification on first load
     // If the student has at least one 'referred' appointment, allow booking more broadly within same campus
     let studentHasReferral = false;
 let calendarEl = null;
@@ -2199,6 +2191,7 @@ function parseLocalDateTime(dateStr, timeStr) {
     return new Date(year, month, day, hour, minute, 0, 0);
   } catch (e) { return new Date(0); }
 }
+window.parseLocalDateTime = parseLocalDateTime;
 
 // --- BEGIN: Holiday and Exception Logic ---
 let dateExceptions = {};
@@ -2317,12 +2310,39 @@ async function loadDateExceptionsAndHolidays(relevantCounselors) {
     });
 
     // Notification toggle
-    function toggleNotif() {
-      const dropdown = document.getElementById("notifDropdown");
-      const badge = document.querySelector(".notif-badge");
-      dropdown.classList.toggle("active");
-      if (dropdown.classList.contains("active")) { badge.classList.add("hidden"); }
-    }
+    window.toggleNotif = function() {
+      console.log('toggleNotif called');
+      const dropdown = document.getElementById('notifDropdown');
+      if (dropdown) {
+        dropdown.classList.toggle('active');
+        console.log('Dropdown active:', dropdown.classList.contains('active'));
+        console.log('Dropdown display style:', dropdown.style.display);
+        console.log('Dropdown computed display:', window.getComputedStyle(dropdown).display);
+        
+        // Log current list content
+        const list = document.querySelector('.notif-list');
+        if (list) {
+          console.log('Notif list children count:', list.children.length);
+          console.log('Notif list HTML:', list.innerHTML.substring(0, 300));
+        }
+        
+        if (dropdown.classList.contains('active')) {
+          // Opening: hide badge
+          const badge = document.querySelector('.notif-badge');
+          if (badge) badge.classList.add('hidden');
+        } else {
+          // Closing: show badge if has notifications
+          if (window.NotificationUtils && window.NotificationUtils.updateBadgeVisibility) {
+            window.NotificationUtils.updateBadgeVisibility();
+            console.log('updateBadgeVisibility called');
+          } else {
+            console.log('NotificationUtils not available');
+          }
+        }
+      } else {
+        console.log('notifDropdown not found');
+      }
+    };
     document.addEventListener("click", function(e){
       const dropdown = document.getElementById("notifDropdown");
       const notifBtn = document.querySelector(".notif-wrapper");
@@ -2381,8 +2401,8 @@ async function loadDateExceptionsAndHolidays(relevantCounselors) {
             window.location.href = 'resources.html';
             return; 
           } else if (label.includes('result')) {
-            // Navigate directly to assessments (no action card)
-            window.location.href = 'assessments.html';
+            // Navigate directly to assessments results section
+            window.location.href = 'assessments.html#psychological-results';
             return;
           } else if (label.includes('book')) {
             // Navigate/scroll to the calendar on this page (no action card)
@@ -2577,9 +2597,82 @@ async function loadDateExceptionsAndHolidays(relevantCounselors) {
       Object.entries(availableSlotsByDate).forEach(([date, slots]) => {
         console.log(`${date}: ${slots.length} slots`);
       });
-      
+
+      // Check for new slots and show notification
+      checkForNewSlots();
+
       renderCalendar();
     }
+
+    // Function to check for new available slots and show notification
+    function checkForNewSlots() {
+      console.log('🔍 checkForNewSlots called');
+      console.log('isFirstLoad:', isFirstLoad);
+      console.log('Current availableSlotsByDate keys:', Object.keys(availableSlotsByDate));
+      console.log('Previous availableSlotsByDate keys:', Object.keys(previousAvailableSlotsByDate));
+
+      if (isFirstLoad) {
+        console.log('First load - skipping notification');
+        isFirstLoad = false;
+        // Update previous state without notification
+        previousAvailableSlotsByDate = JSON.parse(JSON.stringify(availableSlotsByDate));
+        return;
+      }
+
+      let hasNewSlots = false;
+      const newSlotsCount = { total: 0 };
+
+      // Compare current slots with previous
+      Object.keys(availableSlotsByDate).forEach(date => {
+        const currentSlots = availableSlotsByDate[date] || [];
+        const previousSlots = previousAvailableSlotsByDate[date] || [];
+        
+        console.log(`Checking ${date}: current=${currentSlots.length}, previous=${previousSlots.length}`);
+        
+        // Count new slots for this date
+        const newSlotsForDate = currentSlots.filter(slot => {
+          const slotCounselorId = slot.counselor?.uid || slot.counselor?.key || 'unknown';
+          const isNew = !previousSlots.some(prevSlot => {
+            const prevCounselorId = prevSlot.counselor?.uid || prevSlot.counselor?.key || 'unknown';
+            const match = prevSlot.time === slot.time && prevCounselorId === slotCounselorId;
+            if (!match && prevSlot.time === slot.time) {
+              console.log(`Time match but counselor mismatch: prev=${prevCounselorId}, current=${slotCounselorId}`);
+            }
+            return match;
+          });
+          if (isNew) {
+            console.log(`New slot found: ${slot.time} for counselor ${slotCounselorId}`);
+          }
+          return isNew;
+        });
+
+        if (newSlotsForDate.length > 0) {
+          hasNewSlots = true;
+          newSlotsCount.total += newSlotsForDate.length;
+          console.log(`🆕 New slots found for ${date}: ${newSlotsForDate.length} slots`);
+        }
+      });
+
+      console.log('Total new slots:', newSlotsCount.total);
+
+      // Show notification if new slots found
+      if (hasNewSlots && window.NotificationUtils && window.NotificationUtils.showSlotsNotification) {
+        console.log('Showing slot notification');
+        window.NotificationUtils.showSlotsNotification(`New counseling slots are now available! ${newSlotsCount.total} new slots found.`);
+      } else if (hasNewSlots) {
+        console.log('New slots found but NotificationUtils not available');
+      }
+
+      // Update previous state
+      previousAvailableSlotsByDate = JSON.parse(JSON.stringify(availableSlotsByDate));
+      console.log('Updated previous state');
+    }
+
+    // Make function globally available for real-time notifications
+    window.loadAllAvailabilities = loadAllAvailabilities;
+    
+    // Make checkForNewSlots available for testing
+    window.checkForNewSlots = checkForNewSlots;
 
     // Render calendar with all available dates
     function renderCalendar() {
@@ -3241,12 +3334,26 @@ async function loadDateExceptionsAndHolidays(relevantCounselors) {
               mobile: studentData.mobile || '',
               phone: studentData.phone || ''
             });
-            // Update topbar small text with student ID (if present) and profile avatar
-            try {
-              const topbarStudentId = document.querySelector('.portal-title small');
-              if (topbarStudentId) {
-                topbarStudentId.textContent = "ID: " + (studentData.student_id || studentData.student_id_number || 'N/A');
-              }
+              // Update topbar small text with student ID (if present) and profile avatar
+              try {
+                const topbarStudentId = document.querySelector('.portal-title small');
+                if (topbarStudentId) {
+                  // Helper to resolve student ID
+                  const resolveStudentId = (src) => {
+                    if (!src) return '';
+                    const keys = ['student_id','studentId','id','stid'];
+                    for (const k of keys) {
+                      if (src[k] !== undefined && src[k] !== null) return src[k];
+                    }
+                    return '';
+                  };
+                  const sid = resolveStudentId(studentData) || studentData.key || 'N/A';
+                  topbarStudentId.textContent = "ID: " + sid;
+                  // expose a JS variable and a data-* attribute so other scripts can read it
+                  try { window.currentStudentId = resolveStudentId(studentData) || studentData.key || null; } catch (e) { /* ignore */ }
+                  try { window.currentStudentKey = studentData.key; } catch (e) { /* ignore */ }
+                  try { document.documentElement.dataset.studentId = resolveStudentId(studentData) || studentData.key || ''; } catch (e) { /* ignore */ }
+                }
 
               const topbarProfile = document.querySelector('.profile');
               if (topbarProfile) {
@@ -3262,6 +3369,49 @@ async function loadDateExceptionsAndHolidays(relevantCounselors) {
             } catch (e) {
               console.warn('Failed to update topbar info', e);
             }
+            // Load notification settings
+            const notifSettings = studentData.notificationSettings || { appointment: true, message: true };
+            window.notificationSettings = notifSettings;
+            // Load in-app notifications from student_notif
+            firebase.database().ref('student_notif').child(studentData.uid).once('value').then(function(notifSnapshot) {
+              const notifData = notifSnapshot.val();
+              if (notifData && notifData.inAppNotifications) {
+                window.inAppNotifications = notifData.inAppNotifications;
+                // Render existing notifications to the dropdown
+                const list = document.querySelector('.notif-list');
+                const noNotifs = document.getElementById('no-notifs');
+                if (list && noNotifs) {
+                  window.inAppNotifications.forEach(notif => {
+                    const item = document.createElement('div');
+                    item.className = 'notif-item';
+                    item.textContent = notif.message;
+                    item.dataset.id = notif.id;
+                    item.onclick = function() {
+                      item.remove();
+                      // Remove from inAppNotifications and update database
+                      if (window.inAppNotifications) {
+                        window.inAppNotifications = window.inAppNotifications.filter(n => n.id != notif.id);
+                        const updatedSettings = { ...window.notificationSettings, inAppNotifications: window.inAppNotifications };
+                        firebase.database().ref('student_notif').child(studentData.uid).set(updatedSettings);
+                      }
+                      if (window.NotificationUtils && window.NotificationUtils.updateBadgeVisibility) {
+                        window.NotificationUtils.updateBadgeVisibility();
+                      }
+                    };
+                    list.appendChild(item);
+                  });
+                }
+                // Update badge
+                if (window.NotificationUtils && window.NotificationUtils.updateBadgeVisibility) {
+                  window.NotificationUtils.updateBadgeVisibility();
+                }
+              } else {
+                window.inAppNotifications = [];
+              }
+            }).catch(function(error) {
+              console.warn('Failed to load in-app notifications', error);
+              window.inAppNotifications = [];
+            });
           });
         } else {
           console.error('Student data not found');
@@ -3280,12 +3430,21 @@ async function loadDateExceptionsAndHolidays(relevantCounselors) {
           });
           console.log('Counselors loaded:', allCounselors);
         }
+        window.allCounselors = allCounselors; // Make globally available for notifications
 
         // Load student's existing appointments
         await loadUpcomingAppointments(user.uid);
 
         // Load availability data - ONLY CALL ONCE HERE
         await loadAllAvailabilities();
+
+        // Initialize real-time notifications
+        if (window.NotificationUtils && window.NotificationUtils.initializeRealtimeNotifications) {
+          const counselorUids = allCounselors.map(c => c.uid).filter(uid => uid);
+          console.log('Initializing real-time notifications for student:', user.uid);
+          console.log('Counselor UIDs:', counselorUids);
+          window.NotificationUtils.initializeRealtimeNotifications(user.uid, counselorUids);
+        }
 
       } catch (error) {
         console.error('Error loading data:', error);
@@ -3518,15 +3677,27 @@ async function loadUpcomingAppointments(studentUid) {
         if (isToday && !isPast) {
           tabs.today.push(html);
           setTimeout(() => attachSessionStartedListener(appointment.key), 0);
+          if (window.NotificationUtils && window.NotificationUtils.setupAppointmentReminders) {
+            window.NotificationUtils.setupAppointmentReminders(appointment, counselorName);
+          }
         } else if (status === 'pending' && !isPast) {
           tabs.pending.push(html);
           setTimeout(() => attachSessionStartedListener(appointment.key), 0);
+          if (window.NotificationUtils && window.NotificationUtils.setupAppointmentReminders) {
+            window.NotificationUtils.setupAppointmentReminders(appointment, counselorName);
+          }
         } else if (isTomorrow) {
           tabs.tomorrow.push(html);
           setTimeout(() => attachSessionStartedListener(appointment.key), 0);
+          if (window.NotificationUtils && window.NotificationUtils.setupAppointmentReminders) {
+            window.NotificationUtils.setupAppointmentReminders(appointment, counselorName);
+          }
         } else if (isUpcoming) {
           tabs.upcoming.push(html);
           setTimeout(() => attachSessionStartedListener(appointment.key), 0);
+          if (window.NotificationUtils && window.NotificationUtils.setupAppointmentReminders) {
+            window.NotificationUtils.setupAppointmentReminders(appointment, counselorName);
+          }
         } else {
           tabs.past.push(html);
         }
@@ -3618,7 +3789,20 @@ function attachSessionStartedListener(appointmentKey) {
   aptRef.on('value', snapshot => {
     const data = snapshot.val();
     const started = data && data.session_started === true;
+    const ongoing = data && String(data.status || '').toLowerCase() === 'ongoing';
     setStartButtonState(btn, started, data);
+
+    // Show notification if session started or became ongoing
+    if ((started || ongoing) && window.NotificationUtils && window.NotificationUtils.showSessionStartNotification) {
+      // Check if we already showed this notification to avoid duplicates
+      if (!btn._sessionStartNotified) {
+        window.NotificationUtils.showSessionStartNotification(data);
+        btn._sessionStartNotified = true;
+      }
+    } else {
+      // Reset the flag if session is no longer ongoing
+      btn._sessionStartNotified = false;
+    }
 
     // Always attach a click handler (we rely on class-based disabled state so clicks still fire)
     btn.onclick = function(e) {
@@ -5169,10 +5353,14 @@ window.openCounselorPhoto = function(url) {
         btn.addEventListener('button:loaded', function(){ clearTimeout(to); setButtonLoading(btn,false); }, { once: true });
       }, false);
     })();
-  </script>
+    // Cleanup real-time listeners on page unload
+  window.addEventListener('beforeunload', function() {
+    if (window.NotificationUtils && window.NotificationUtils.cleanupRealtimeNotifications) {
+      window.NotificationUtils.cleanupRealtimeNotifications();
+    }
+  });
+</script>
 </body>
 </html>
-
-
 
 
