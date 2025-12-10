@@ -30,6 +30,34 @@
       window.db = firebase.database();
     }
 
+    // Initialize Firebase Messaging if available
+    if (window.firebase && firebase.messaging) {
+      const messaging = firebase.messaging();
+      
+      // Register service worker for background messages
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/firebase-messaging-sw.js')
+          .then((registration) => {
+            console.log('Service Worker registered for FCM');
+          })
+          .catch((err) => {
+            console.log('Service Worker registration failed', err);
+          });
+      }
+
+      // Handle foreground messages
+      messaging.onMessage((payload) => {
+        console.log('Foreground FCM message received:', payload);
+        // Use existing notification system
+        if (window.NotificationUtils && window.NotificationUtils.showNotification) {
+          window.NotificationUtils.showNotification(
+            payload.notification?.title || 'SafeSpace',
+            payload.notification?.body || 'New notification'
+          );
+        }
+      });
+    }
+
     // Lightweight global incoming-call notifier
     // Listens for consultations belonging to the signed-in student and shows a browser
     // notification when a counselor sets roomStatus === 1. This runs on any page that
@@ -51,7 +79,7 @@
               let role = null;
               snapshot.forEach(function(child) {
                 const data = child.val();
-                if (data.role) {
+                if (data.role) { 
                   role = data.role;
                 }
               });
@@ -77,11 +105,40 @@
     try{
       if (window.firebase && firebase.auth && window.db){
         const _notified = {}; // consultId -> boolean
+        const _lastNotifiedTime = {}; // consultId -> timestamp
         firebase.auth().onAuthStateChanged(user => {
           // clear previous listener if any
           if (window._globalConsultListenerRef){ try{ window._globalConsultListenerRef.off(); }catch(e){} window._globalConsultListenerRef = null; }
           if (!user) return;
           const uid = user.uid;
+          // Load notification settings
+          firebase.database().ref('student_notif').child(uid).once('value').then(function(notifSnap) {
+            const data = notifSnap.val() || { appointment: true, message: true, call: true };
+            window.notificationSettings = data;
+            window.inAppNotifications = data.inAppNotifications || [];
+            
+            // Display stored notifications in the DOM
+            if (window.NotificationUtils && window.NotificationUtils.displayStoredNotifications) {
+              window.NotificationUtils.displayStoredNotifications();
+            }
+          });
+          // Get and store FCM token
+          if (firebase.messaging) {
+            const messaging = firebase.messaging();
+            messaging.getToken({ 
+              vapidKey: 'BKxQyMq5pQ8wXcQkGjJcGjJcGjJcGjJcGjJcGjJcGjJcGjJcGjJcGjJcGjJcGjJcGjJcGjJcGjJcGjJcGjJcGjJcGjJc' // Replace with your actual VAPID key
+            }).then((currentToken) => {
+              if (currentToken) {
+                // Store token in database for server-side sending
+                firebase.database().ref('student_fcm_tokens').child(uid).set(currentToken);
+                console.log('FCM token stored for user');
+              } else {
+                console.log('No FCM registration token available.');
+              }
+            }).catch((err) => {
+              console.log('An error occurred while retrieving FCM token:', err);
+            });
+          }
           // Listen to consultations root and filter client-side (keeps compatibility with many data shapes)
           const ref = window.db.ref('consultations');
           window._globalConsultListenerRef = ref;
@@ -110,6 +167,14 @@
 
               // Show notification when status transitions to 1
               if (status === 1 && !_notified[k]){
+                // Additional check: don't show notification if we showed one for this consultation in the last 30 seconds
+                const now = Date.now();
+                if (_lastNotifiedTime[k] && (now - _lastNotifiedTime[k]) < 30000) {
+                  console.log('Skipping duplicate notification for consultation', k, 'too soon since last notification');
+                  return;
+                }
+                console.log('Showing incoming call notification for consultation:', k, 'counselor:', c.counselorName, 'status:', status);
+                _lastNotifiedTime[k] = now;
                 _notified[k] = true;
                 // request permission early when needed
                 if (typeof Notification !== 'undefined' && Notification.permission === 'default'){
@@ -117,7 +182,7 @@
                 }
 
                 // Helper: show an on-page incoming-call modal when messages.html's modal isn't available
-                function showSiteIncomingCall(caller, roomId, consultId, photo){
+                function showSiteIncomingCall(caller, roomId, consultId, photo, counselorId){
                   try{
                     // If the current page has a messages-specific helper, prefer it
                     if (window.showIncomingCall && typeof window.showIncomingCall === 'function'){
@@ -129,10 +194,57 @@
                     if (window._siteIncomingShown[consultId]) return;
                     window._siteIncomingShown[consultId] = true;
 
+                    // Fetch photo if not provided
+                    let photo_url = photo;
+                    if (!photo_url && counselorId && window.db) {
+                      (async () => {
+                        try {
+                          let p = null;
+                          const directSnap = await window.db.ref('counselors/' + counselorId).once('value');
+                          if (directSnap.exists()) {
+                            p = directSnap.val();
+                          } else {
+                            const snap = await window.db.ref('counselors').orderByChild('uid').equalTo(counselorId).once('value');
+                            const v = snap.val();
+                            if (v) p = v[Object.keys(v)[0]];
+                          }
+                          if (p && (p.photo_url || p.photo)) {
+                            photo_url = p.photo_url || p.photo;
+                            // Update the modal if it's already shown
+                            const modal = document.getElementById('site-incoming-call-full-' + String(consultId).replace(/[^a-z0-9_-]/ig,''));
+                            if (modal) {
+                              let img = modal.querySelector('img');
+                              if (!img) {
+                                // Replace the placeholder div with img
+                                const avatarDiv = modal.querySelector('div[style*="width:120px"]');
+                                if (avatarDiv && !avatarDiv.querySelector('img')) {
+                                  avatarDiv.innerHTML = '';
+                                  img = document.createElement('img');
+                                  img.src = photo_url;
+                                  img.alt = "Counselor";
+                                  img.style.width = '120px';
+                                  img.style.height = '120px';
+                                  img.style.borderRadius = '999px';
+                                  img.style.objectFit = 'cover';
+                                  img.style.margin = '0 auto 18px';
+                                  img.style.boxShadow = '0 8px 18px rgba(0,0,0,0.12)';
+                                  avatarDiv.appendChild(img);
+                                }
+                              } else if (img.src !== photo_url) {
+                                img.src = photo_url;
+                              }
+                            }
+                          }
+                        } catch (e) {
+                          console.warn('Failed to fetch counselor photo for site incoming call', e);
+                        }
+                      })();
+                    }
+
                     // Create modal HTML (minimal inline styles so it works across pages)
                     const id = 'site-incoming-call-full-' + String(consultId).replace(/[^a-z0-9_-]/ig,'');
                     if (document.getElementById(id)) return;
-                    const photoHtml = photo ? `<img src="${escapeHtml(photo)}" alt="Counselor" style="width:120px;height:120px;border-radius:999px;object-fit:cover;margin:0 auto 18px;box-shadow:0 8px 18px rgba(0,0,0,0.12);">` : `<div style="width:120px;height:120px;border-radius:999px;background:#fff;margin:0 auto 18px;box-shadow:0 8px 18px rgba(0,0,0,0.12);"></div>`;
+                    const photoHtml = photo_url ? `<img src="${escapeHtml(photo_url)}" alt="Counselor" style="width:120px;height:120px;border-radius:999px;object-fit:cover;margin:0 auto 18px;box-shadow:0 8px 18px rgba(0,0,0,0.12);">` : `<div style="width:120px;height:120px;border-radius:999px;background:#fff;margin:0 auto 18px;box-shadow:0 8px 18px rgba(0,0,0,0.12);"></div>`;
                     const html = `
                       <div id="${id}" style="position:fixed;inset:0;background:linear-gradient(180deg, rgba(0,0,0,0.55), rgba(0,0,0,0.6));z-index:99999;display:flex;align-items:center;justify-content:center;">
                         <div style="width:100%;max-width:760px;height:500px;border-radius:12px;overflow:hidden;box-shadow:0 14px 40px rgba(2,6,23,0.6);display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#b3f0d7,#70d7a8);position:relative;">
@@ -168,6 +280,10 @@
                     // answer -> navigate directly to the video room page
                     document.getElementById(id + '_answer').addEventListener('click', function(){
                       stopSiteRingtone(); stopFlashTitle();
+                      // Clear the in-app notification for this consultation
+                      if (window.NotificationUtils && window.NotificationUtils.clearNotificationsByConsultId) {
+                        window.NotificationUtils.clearNotificationsByConsultId(consultId);
+                      }
                       try{
                         // prefer opening the dedicated full-screen video page which auto-initializes Jitsi
                         const consultParam = encodeURIComponent(consultId || '');
@@ -191,6 +307,10 @@
                       }catch(e){ console.warn('decline clear failed', e); }
                       const el = document.getElementById(id); if (el) el.remove();
                       try{ delete window._siteIncomingShown[consultId]; }catch(e){}
+                      // Clear the in-app notification for this consultation
+                      if (window.NotificationUtils && window.NotificationUtils.clearNotificationsByConsultId) {
+                        window.NotificationUtils.clearNotificationsByConsultId(consultId);
+                      }
                     });
 
                     // remove modal if user navigates away
@@ -241,17 +361,29 @@
 
                 // First show browser notification (if allowed)
                 try{
+                  // Check notification settings
+                  let allowNotif = true;
+                  if (window.notificationSettings && window.notificationSettings.call === false) {
+                    allowNotif = false;
+                  }
+                  if (!allowNotif) return;
+
                   if (typeof Notification !== 'undefined' && Notification.permission === 'granted'){
                     const title = (c.counselorName || 'Counselor') + ' — Video call';
                     const body = (c.counselorName ? c.counselorName + ' is calling you' : 'Incoming video call');
-                    const n = new Notification(title, { body, tag: k, renotify: true });
+                    const n = new Notification(title, { body, tag: 'incoming-call-' + k, renotify: false });
                     n.onclick = function(){ try{ window.focus(); const consultParam = encodeURIComponent(k); const roomParam = room ? ('&room=' + encodeURIComponent(room)) : ''; window.location.href = 'messages.html?consult=' + consultParam + roomParam; }catch(e){} try{ this.close(); }catch(e){} };
                     setTimeout(()=>{ try{ n.close(); }catch(e){} }, 12000);
+                  }
+                  // Add to in-app notification bell
+                  if (window.showInAppNotification) {
+                    const notifMessage = `Incoming video call from ${c.counselorName || 'counselor'}`;
+                    window.showInAppNotification(notifMessage, () => { window.location.href = 'messages.html?consult=' + encodeURIComponent(k); }, k);
                   }
                 }catch(e){ console.warn('global notification failed', e); }
 
                 // Then ensure the in-page modal appears (either by delegating to messages.html's helper or injecting one here)
-                try{ showSiteIncomingCall(c.counselorName || 'Counselor', room, k, (c.photo_url || c.photoUrl || (c.counselor && c.counselor.photo_url))); }catch(e){ console.warn('showSiteIncomingCall error', e); }
+                try{ showSiteIncomingCall(c.counselorName || 'Counselor', room, k, (c.photo_url || (c.counselor && c.counselor.photo_url)), c.counselorId); }catch(e){ console.warn('showSiteIncomingCall error', e); }
               }
 
                 // Expose the site helper so pages (like messages.html) can delegate to it
@@ -259,7 +391,22 @@
 
               // Clear notified flag when status goes back to 0
               if (status === 0 && _notified[k]){
+                console.log('Clearing incoming call notification for consultation:', k, 'status changed to 0');
                 delete _notified[k];
+                delete _lastNotifiedTime[k];
+                // Also clear the in-app notification for this consultation
+                if (window.NotificationUtils && window.NotificationUtils.clearNotificationsByConsultId) {
+                  window.NotificationUtils.clearNotificationsByConsultId(k);
+                }
+              }
+            });
+
+            // Clear notification flags for consultations that no longer exist
+            Object.keys(_notified).forEach(notifiedKey => {
+              if (!all[notifiedKey]) {
+                console.log('Clearing notification for deleted consultation:', notifiedKey);
+                delete _notified[notifiedKey];
+                delete _lastNotifiedTime[notifiedKey];
               }
             });
           });
