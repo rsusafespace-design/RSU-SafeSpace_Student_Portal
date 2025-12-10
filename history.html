@@ -1986,6 +1986,77 @@
       /* make sure bottom-nav sits above content but not hide it visually */
       .bottom-nav { z-index: 2000 !important; }
     }
+
+    /* Notification styles */
+    .notif-container {
+      position: relative;
+    }
+    .notif-btn {
+      background: transparent;
+      border: none;
+      color: #fff;
+      font-size: 18px;
+      padding: 8px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .notif-btn:hover {
+      background: rgba(255,255,255,0.1);
+    }
+    .notif-badge {
+      position:absolute; bottom:0; right:0;
+      width:10px; height:10px; background:red;
+      border-radius:50%; border:2px solid #00723f;
+    }
+    .notif-dropdown {
+      display: none;
+      position: absolute;
+      top: 100%;
+      right: 0;
+      width: 320px;
+      max-height: 400px;
+      overflow-y: auto;
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      z-index: 1000;
+    }
+    .notif-header {
+      padding: 12px 16px;
+      border-bottom: 1px solid #e5e7eb;
+      font-weight: 600;
+      color: #ffffff;
+      background: #00723f;
+    }
+    .notif-list {
+      padding: 0;
+    }
+    .notif-item {
+      padding: 12px 16px;
+      border-bottom: 1px solid #f3f4f6;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .notif-item:hover {
+      background: #f9fafb;
+    }
+    .notif-item.unread {
+      background: #fef3c7;
+    }
+    .notif-item.unread:hover {
+      background: #fde68a;
+    }
+    .notif-message {
+      font-size: 14px;
+      color: #374151;
+      margin-bottom: 4px;
+    }
+    .notif-time {
+      font-size: 12px;
+      color: #6b7280;
+    }
   </style>
 </head>
 <body>
@@ -2023,9 +2094,7 @@
       <div id="notifDropdown" class="notif-dropdown">
         <div class="notif-header">Notifications</div>
         <div class="notif-list">
-          <div class="notif-item" onclick="goToSection('appointments')">🔔 New counseling slots available</div>
-          <div class="notif-item" onclick="goToSection('messages')">📩 You have a new message from your counselor</div>
-          <div class="notif-item" onclick="goToSection('assessments')">⚠ Reminder: Complete your assessment</div>
+          <div id="no-notifs" class="notif-item" style="text-align: center; color: #666;">No new notifications</div>
         </div>
       </div>
       <div class="profile" onclick="window.location.href='profile.html'"></div>
@@ -2144,6 +2213,7 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
   <script src="firebase_config.js"></script>
+  <script src="notification.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', function() {
     enforceAuthRedirect();
@@ -2170,11 +2240,22 @@
         snap.forEach(child => {
           const r = child.val();
           if (!r) return;
+
+          // Validate rating data
+          const rating = r.rating;
+          if (typeof rating !== 'number' || rating < 1 || rating > 5) {
+            console.warn(`Invalid rating value ${rating} for appointment ${appointmentId}, skipping`);
+            return;
+          }
+
           // normalize student id field (many possible names)
           const studentField = r.student_uid || r.studentUid || r.student || r.student_id || null;
           if (studentField && String(studentField) !== String(uid)) return; // rating belongs to another student
           const cUid = r.counselorUid || r.counselor_uid || r.counselor || 'unknown';
           const created = r.createdAt || r.created_at || r.updatedAt || r.updated_at || 0;
+
+          console.log(`Processing valid rating ${rating} for appointment ${appointmentId}`);
+
           // update by-counselor map
           if (!byCounselor[cUid] || (created > (byCounselor[cUid].createdAt || 0))) {
             byCounselor[cUid] = { rating: r.rating, comment: r.comment || '', createdAt: created };
@@ -2197,21 +2278,8 @@
           const snap = await db.ref(ratingPath).child(appointmentId).once('value');
           if (snap && snap.exists()) processAppointmentRatings(snap, appointmentId);
         } catch (e) {
-          // If permission denied for this appointment's ratings, ignore and continue
-          if (!e.message || !e.message.includes('permission_denied')) {
-            console.warn('Error reading ratings for appointment (ignored):', appointmentId, e);
-          } else {
-            // Fallback to localStorage if permission denied
-            const localRatings = JSON.parse(localStorage.getItem(ratingPath) || '{}');
-            const localData = localRatings[appointmentId];
-            if (localData) {
-              byAppointment[appointmentId] = {
-                rating: localData.rating,
-                comment: localData.comment || '',
-                createdAt: localData.createdAt || Date.now()
-              };
-            }
-          }
+          // If permission denied or other error reading ratings for this appointment, log and continue
+          console.warn('Error reading ratings for appointment (ignored):', appointmentId, e);
         }
       }
 
@@ -2247,6 +2315,7 @@
       }
       */
 
+      console.log('fetchRatingsForSessions: Found ratings - byAppointment:', Object.keys(byAppointment), 'byCounselor:', Object.keys(byCounselor));
       return { byCounselor, byAppointment };
     }
 
@@ -2469,13 +2538,115 @@
         s._title = s.presenting_problem || s.Session_summary || s.action_taken || s._title || 'Counseling Session';
         s._notes = s.Session_summary || s.observations || s.remarks || s.notes || '';
       });
-      sessions.sort((a,b) => {
+
+      // Remove duplicates based on multiple criteria
+      const uniqueSessions = [];
+      const seenKeys = new Set();
+      let duplicatesRemoved = 0;
+
+      // Helper function to normalize dates for comparison
+      const normalizeDate = (dateStr) => {
+        if (!dateStr) return '';
+        try {
+          const date = new Date(dateStr);
+          // Round to nearest minute to handle slight timestamp differences
+          return Math.floor(date.getTime() / 60000) * 60000;
+        } catch (e) {
+          return dateStr.toString().trim();
+        }
+      };
+
+      sessions.forEach(session => {
+        // Create multiple possible keys for duplicate detection
+        const appointmentId = session.appointment_id || session.appointmentId || session._sessionKey || '';
+        const counselorUid = session.counselor_uid || session.counselorUid || session.counselor || '';
+        const sessionDate = normalizeDate(session._displayDate || session.date || session.saved_at || session.createdAt || '');
+        const studentUid = session.student_uid || session.studentUid || session.student || session.student_id || session.uid || '';
+
+        // Primary key: appointment ID + counselor + normalized date
+        const primaryKey = `${appointmentId}_${counselorUid}_${sessionDate}`.toLowerCase().trim();
+
+        // Secondary key: counselor + student + date (for sessions without appointment IDs)
+        const secondaryKey = `${counselorUid}_${studentUid}_${sessionDate}`.toLowerCase().trim();
+
+        // Check for exact duplicates first
+        let isDuplicate = seenKeys.has(primaryKey) || seenKeys.has(secondaryKey);
+
+        // If no exact match, check for sessions with same appointment ID and similar timestamps (within 5 minutes)
+        if (!isDuplicate && appointmentId) {
+          const existingWithSameAppointment = uniqueSessions.find(s => {
+            const sAppointmentId = s.appointment_id || s.appointmentId || s._sessionKey || '';
+            if (sAppointmentId !== appointmentId) return false;
+
+            const sDate = normalizeDate(s._displayDate || s.date || s.saved_at || s.createdAt || '');
+            const timeDiff = Math.abs(parseInt(sessionDate) - parseInt(sDate));
+            return timeDiff < 300000; // 5 minutes
+          });
+          if (existingWithSameAppointment) {
+            isDuplicate = true;
+            duplicatesRemoved++;
+            console.debug('Duplicate detected - same appointment ID and similar timestamp:', {
+              appointmentId,
+              existingDate: existingWithSameAppointment._displayDate || existingWithSameAppointment.date,
+              newDate: session._displayDate || session.date
+            });
+          }
+        }
+
+        // If still no duplicate found, check for sessions with same counselor/student/date (for non-appointment sessions)
+        if (!isDuplicate && !appointmentId) {
+          const existingSimilar = uniqueSessions.find(s => {
+            const sCounselor = s.counselor_uid || s.counselorUid || s.counselor || '';
+            const sStudent = s.student_uid || s.studentUid || s.student || s.student_id || s.uid || '';
+            const sDate = normalizeDate(s._displayDate || s.date || s.saved_at || s.createdAt || '');
+
+            return sCounselor === counselorUid &&
+                   sStudent === studentUid &&
+                   Math.abs(parseInt(sessionDate) - parseInt(sDate)) < 300000; // 5 minutes
+          });
+          if (existingSimilar) {
+            isDuplicate = true;
+            duplicatesRemoved++;
+            console.debug('Duplicate detected - same counselor/student/date:', {
+              counselorUid,
+              studentUid,
+              sessionDate: session._displayDate || session.date
+            });
+          }
+        }
+
+        if (!isDuplicate) {
+          seenKeys.add(primaryKey);
+          if (secondaryKey !== primaryKey) seenKeys.add(secondaryKey);
+          uniqueSessions.push(session);
+        } else {
+          duplicatesRemoved++;
+          console.debug('Skipping duplicate session:', {
+            appointmentId,
+            counselorUid,
+            sessionDate: session._displayDate || session.date,
+            reason: 'duplicate key or similar session found'
+          });
+        }
+      });
+
+      console.log(`Duplicate detection: Found ${sessions.length} total sessions, removed ${duplicatesRemoved} duplicates, keeping ${uniqueSessions.length} unique sessions`);
+
+      // Filter to only include past sessions (sessions that have already happened)
+      const now = Date.now();
+      const pastSessions = uniqueSessions.filter(s => {
+        const sessionTime = s._displayDate ? new Date(s._displayDate).getTime() : (s.saved_at || s.createdAt || 0);
+        return sessionTime <= now;
+      });
+
+      pastSessions.sort((a,b) => {
         const ta = a._displayDate ? new Date(a._displayDate).getTime() : (a.saved_at || a.createdAt || 0);
         const tb = b._displayDate ? new Date(b._displayDate).getTime() : (b.saved_at || b.createdAt || 0);
         return tb - ta;
       });
 
-      return sessions;
+      console.log(`Filtered ${sessions.length} total sessions to ${uniqueSessions.length} unique sessions, then to ${pastSessions.length} past sessions`);
+      return pastSessions;
     }
 
     function starsFromRating(r) {
@@ -2510,13 +2681,43 @@
           const dateRaw = s.date || s._displayDate || s.saved_at || s.createdAt || '';
           const formattedDate = formatDisplayDate(dateRaw);
           // Prefer rating by appointmentId when available; otherwise fall back to counselor-keyed map
+          // But only use counselor-wide ratings if they're recent (within last 6 months)
           let ratingObj = null;
           const appointmentId = (s.appointment_id || s.appointmentId || s._sessionKey || '') + '';
+          const now = Date.now();
+          const sixMonthsAgo = now - (6 * 30 * 24 * 60 * 60 * 1000); // 6 months in milliseconds
+
           if (ratingsMap) {
-            if (ratingsMap.byAppointment && appointmentId && ratingsMap.byAppointment[appointmentId]) ratingObj = ratingsMap.byAppointment[appointmentId];
-            else if (ratingsMap.byCounselor && ratingsMap.byCounselor[cUid]) ratingObj = ratingsMap.byCounselor[cUid];
-            else if (ratingsMap[cUid]) ratingObj = ratingsMap[cUid]; // backward-compat fallback
+            if (ratingsMap.byAppointment && appointmentId && ratingsMap.byAppointment[appointmentId]) {
+              ratingObj = ratingsMap.byAppointment[appointmentId];
+              console.log(`Session ${appointmentId}: Found appointment-specific rating:`, ratingObj);
+            }
+            else if (ratingsMap.byCounselor && ratingsMap.byCounselor[cUid]) {
+              const counselorRating = ratingsMap.byCounselor[cUid];
+              // Only use counselor-wide rating if it's recent (within last 6 months)
+              if (counselorRating.createdAt > sixMonthsAgo) {
+                ratingObj = counselorRating;
+                console.log(`Session ${appointmentId}: Using recent counselor-wide rating:`, ratingObj);
+              } else {
+                console.log(`Session ${appointmentId}: Counselor rating too old (${new Date(counselorRating.createdAt).toLocaleDateString()}), not using`);
+              }
+            }
+            else if (ratingsMap[cUid]) {
+              const legacyRating = ratingsMap[cUid];
+              // Only use legacy counselor rating if it's recent
+              if (legacyRating.createdAt > sixMonthsAgo) {
+                ratingObj = legacyRating; // backward-compat fallback
+                console.log(`Session ${appointmentId}: Using recent legacy counselor rating:`, ratingObj);
+              } else {
+                console.log(`Session ${appointmentId}: Legacy counselor rating too old, not using`);
+              }
+            }
           }
+
+          if (!ratingObj) {
+            console.log(`Session ${appointmentId}: No rating found`);
+          }
+
           const ratingStars = ratingObj ? starsFromRating(ratingObj.rating) : 'Not rated';
           const notes = s._notes || '';
           // Use session numbering when available; otherwise fall back to present title
@@ -2673,27 +2874,6 @@
           // refresh DOM for this appointment immediately so edits appear without waiting for full reload
           if (!appointmentId.startsWith('-')) {
             try{ await refreshRatingForAppointment(appointmentId, student_uid); }catch(e){ /* non-critical */ }
-          } else {
-            // For consultations, update UI from localStorage since refresh may fail
-            const ratingPath = 'ratings';
-            const localRatings = JSON.parse(localStorage.getItem(ratingPath) || '{}');
-            const ratingData = localRatings[appointmentId];
-            if (ratingData) {
-              const sessionEl = document.querySelector(`.session[data-appointment-id="${appointmentId}"]`);
-              if (sessionEl) {
-                const starsEl = sessionEl.querySelector('.stars');
-                const ratingTextEl = sessionEl.querySelector('.rating-text');
-                const btn = sessionEl.querySelector('.edit-rating-btn');
-                const rVal = ratingData.rating;
-                const stars = rVal ? '★'.repeat(Math.max(0,Math.min(5,Math.round(rVal)))) + '☆'.repeat(5 - Math.max(0,Math.min(5,Math.round(rVal)))) : 'Not rated';
-                if (starsEl) starsEl.textContent = stars;
-                if (ratingTextEl) ratingTextEl.textContent = rVal ? ('Rated ' + rVal) : 'Your rating';
-                if (btn) {
-                  btn.dataset.rating = rVal || '';
-                  btn.dataset.comment = ratingData.comment || '';
-                }
-              }
-            }
           }
           closeRatingModal();
           // also refresh full session list as a fallback
@@ -2802,7 +2982,7 @@
       }catch(e){ console.warn('attachHalfStarHandlers failed', e); }
     }
 
-    // Save a rating under ratings/<appointmentId>. Server-only variant: reads any
+    // Save a rating under ratings/<appointmentId>. Database-only variant: reads any
     // existing server entry, updates or creates the rating, updates aggregated
     // stats and meta info. Does not persist to localStorage.
     async function saveRating(appointmentId, counselorId, studentUid, ratingValue, comment) {
@@ -2814,14 +2994,6 @@
       const ratingVal = (typeof ratingValue !== 'undefined' && ratingValue !== null) ? Number(ratingValue) : null;
       const commentNormalized = comment && comment.length ? String(comment).trim() : null;
       const now = Date.now();
-
-      // Save to localStorage first (offline-first UX)
-      try{
-        const ratingsLocal = JSON.parse(localStorage.getItem(ratingPath) || '{}');
-        const localPayload = { rating: ratingVal || null, comment: commentNormalized || null, student_uid: studentUid || null, counselor_uid: counselorId || null, createdAt: now };
-        ratingsLocal[consultId] = localPayload;
-        localStorage.setItem(ratingPath, JSON.stringify(ratingsLocal));
-      }catch(e){ console.warn('failed to persist rating locally', e); }
 
       try{
         if (window.db && typeof window.db.ref === 'function'){
@@ -2904,12 +3076,16 @@
             groups[c].push(s);
           });
           Object.keys(groups).forEach(c => {
+            console.log(`Processing counselor ${c}: ${groups[c].length} sessions`);
             groups[c].sort((a,b) => {
               const ta = a._displayDate ? new Date(a._displayDate).getTime() : (a.saved_at || a.createdAt || 0);
               const tb = b._displayDate ? new Date(b._displayDate).getTime() : (b.saved_at || b.createdAt || 0);
               return ta - tb; // ascending => earliest first
             });
-            groups[c].forEach((s, idx) => { s._sessionNumber = idx + 1; });
+            groups[c].forEach((s, idx) => {
+              s._sessionNumber = idx + 1;
+              console.log(`Session ${s._sessionNumber} for counselor ${c}: ${s.appointment_id || s._sessionKey} at ${s._displayDate}`);
+            });
           });
         } catch (e) {
           console.warn('Error computing session numbers:', e);
@@ -2950,8 +3126,26 @@
               // Update student ID in topbar
               const topbarStudentId = document.querySelector('.portal-title small');
               if (topbarStudentId) {
-                topbarStudentId.textContent = "ID: " + (data.student_id || 'N/A');
+                // Helper to resolve student ID
+                const resolveStudentId = (src) => {
+                  if (!src) return '';
+                  const keys = ['student_id','studentId','id','stid'];
+                  for (const k of keys) {
+                    if (src[k] !== undefined && src[k] !== null) return src[k];
+                  }
+                  return '';
+                };
+                const sid = resolveStudentId(data) || child.key || 'N/A';
+                topbarStudentId.textContent = "ID: " + sid;
+                // expose a JS variable and a data-* attribute so other scripts can read it
+                try { window.currentStudentId = resolveStudentId(data) || child.key || null; } catch (e) { /* ignore */ }
+                try { window.currentStudentKey = child.key; } catch (e) { /* ignore */ }
+                try { document.documentElement.dataset.studentId = resolveStudentId(data) || child.key || ''; } catch (e) { /* ignore */ }
               }
+
+              // Load notification settings
+              const notifSettings = data.notificationSettings || { appointment: true, message: true };
+              window.notificationSettings = notifSettings;
             });
           }
         }).catch(e => console.warn('student profile load error', e));
@@ -3044,12 +3238,20 @@
     // --- END: NEW ADMIN SYNC SIDEBAR SCRIPT ---
 
     // Notification toggle
-    function toggleNotif() {
-      const dropdown = document.getElementById("notifDropdown");
-      const badge = document.querySelector(".notif-badge");
-      dropdown.classList.toggle("active");
-      if (dropdown.classList.contains("active")) { badge.classList.add("hidden"); }
-    }
+    window.toggleNotif = function() {
+      const dropdown = document.getElementById('notifDropdown');
+      if (dropdown) {
+        dropdown.classList.toggle('active');
+        if (dropdown.classList.contains('active')) {
+          // Opening: hide badge
+          const badge = document.querySelector('.notif-badge');
+          if (badge) badge.classList.add('hidden');
+        } else {
+          // Closing: show badge if has notifications
+          NotificationUtils.updateBadgeVisibility();
+        }
+      }
+    };
 
     // Close notification dropdown when clicking outside
     document.addEventListener("click", function(e){
@@ -3444,5 +3646,3 @@
 </body>
 
 </html>
-
-
