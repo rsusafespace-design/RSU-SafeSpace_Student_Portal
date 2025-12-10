@@ -369,7 +369,7 @@
     <div class="container">
       <h2 class="signin-title">Welcome Back</h2>
       <p class="signin-subtitle">Sign in to continue to your student portal</p>
-      <p class="signin-subtitle">Use email for testing: rnfd915@gmail.com</p>
+      <p class="signin-subtitle">Use email for testing: rnfd915@@gmail.com</p>
       <p class="signin-subtitle">Password: 12341234</p>
 
 
@@ -417,11 +417,15 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
   <script src="firebase_config.js"></script>
-  
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+
   <script>
     // Use shared firebase_config.js which sets window.auth/window.db/window.storage
     // Fallback to firebase global if needed
     const auth = window.auth || (window.firebase ? firebase.auth() : null);
+
+    // Initialize EmailJS
+    emailjs.init('N5scCSjBoqSsD3yuk'); // Your EmailJS public key
 
     // Modal function for alerts
 function showModal(message, callback) {
@@ -440,6 +444,61 @@ function showModal(message, callback) {
   document.getElementById('modalOkBtn').onclick = function() {
     document.getElementById('alertModal').remove();
     if (callback) callback();
+  };
+}
+
+function show2FAModal() {
+  const modalHtml = `
+    <div id="twoFAModal" style="position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.35);z-index:9999;display:flex;align-items:center;justify-content:center;">
+      <div style="background:#fff;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,0.15);padding:1.5rem 2rem;min-width:320px;max-width:90vw;text-align:center;position:relative;">
+        <span style="position:absolute;top:10px;right:18px;font-size:1.3rem;cursor:pointer;" onclick="document.getElementById('twoFAModal').remove()">&times;</span>
+        <h3 style="margin-bottom:1rem;color:#00723f;">Two-Factor Authentication</h3>
+        <p style="margin-bottom:1.5rem;">Enter the 6-digit code sent to your email.</p>
+        <input type="text" id="twoFACode" placeholder="Enter code" style="width:100%;padding:0.5rem;border:1px solid #ccc;border-radius:4px;margin-bottom:1rem;text-align:center;font-size:1.2rem;" maxlength="6" />
+        <button id="verify2FABtn" style="background:#00723f;color:white;border:none;padding:0.5rem 1.5rem;border-radius:8px;cursor:pointer;width:100%;">Verify</button>
+      </div>
+    </div>
+  `;
+  document.body.insertAdjacentHTML('beforeend', modalHtml);
+  document.getElementById('verify2FABtn').onclick = async function() {
+    const code = document.getElementById('twoFACode').value.trim();
+    try {
+      const studentKey = window._mfaStudentKey;
+      if (!studentKey) {
+        showModal('Verification context missing. Please sign in again.');
+        return;
+      }
+      const codeSnap = await window.db.ref('students').child(studentKey).once('value');
+      const studentData = codeSnap.val() || {};
+      const storedCode = studentData.temp2FACode;
+      const ts = studentData.temp2FACodeTS || 0;
+      const now = Date.now();
+      const TTL = 10 * 60 * 1000; // 10 minutes
+
+      if (!storedCode) {
+        showModal('No verification code found. Please request a new code.');
+        return;
+      }
+
+      if (now - ts > TTL) {
+        // expired
+        try { await window.db.ref('students').child(studentKey).child('temp2FACode').remove(); await window.db.ref('students').child(studentKey).child('temp2FACodeTS').remove(); } catch(e){}
+        showModal('Code expired. Please request a new sign-in.');
+        return;
+      }
+
+      if (code === String(storedCode)) {
+        // Remove temp code and timestamp
+        await window.db.ref('students').child(studentKey).update({ temp2FACode: null, temp2FACodeTS: null });
+        document.getElementById('twoFAModal').remove();
+        window.location.href = 'index.html';
+      } else {
+        showModal('Invalid code. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error verifying 2FA:', error);
+      showModal('Error verifying code. Please try again.');
+    }
   };
 }
 
@@ -472,8 +531,12 @@ document.getElementById('signinForm').addEventListener('submit', async function(
     const user = auth.currentUser || (credential && credential.user);
 
     // If DB is available, verify the student's `login` field (expects 'Enable' or 'Disable')
+    let email2FA = false;
     try {
       if (window.db && user && user.uid) {
+        // locate the student's DB record (capture its key and firstname)
+        let studentKey = null;
+        let studentFirstName = '';
         const snap = await window.db.ref('students').orderByChild('uid').equalTo(user.uid).once('value');
         if (snap && snap.exists()) {
           // find first matching child and read its login flag
@@ -483,10 +546,17 @@ document.getElementById('signinForm').addEventListener('submit', async function(
             if (v.login !== undefined && loginFlag === null) {
               loginFlag = String(v.login).trim();
             }
+            if (v.email2FA === true) {
+              email2FA = true;
+            }
+            if (!studentKey) {
+              studentKey = child.key;
+              studentFirstName = v.firstname || v.name || '';
+            }
           });
 
           if (!loginFlag) {
-            // no explicit login flag found - allow sign in (or deny per policy). Here we deny for safety.
+            // no explicit login flag found - deny for safety
             await auth.signOut();
             showModal('Your account does not have a login permission set. Contact administrator.');
             submitBtn.classList.remove('loading');
@@ -506,6 +576,10 @@ document.getElementById('signinForm').addEventListener('submit', async function(
             passwordInput.value = '';
             return;
           }
+
+          // store for later MFA steps
+          window._mfaStudentKey = studentKey;
+          window._mfaStudentFirstName = studentFirstName;
           // loginFlag === 'Enable' -> proceed below to redirect
         } else {
           // Student record not found - sign out and inform user
@@ -533,10 +607,39 @@ document.getElementById('signinForm').addEventListener('submit', async function(
       return;
     }
 
-    // All checks passed — clear fields and redirect
+    // All checks passed — clear fields and check 2FA
     emailInput.value = '';
     passwordInput.value = '';
-    window.location.href = 'index.html';
+    if (email2FA) {
+      const code = Math.floor(100000 + Math.random() * 900000).toString();
+      try {
+        const studentKey = window._mfaStudentKey || null;
+        if (!studentKey) {
+          throw new Error('Student record key not found for MFA.');
+        }
+        // store code and timestamp
+        await window.db.ref('students').child(studentKey).update({ temp2FACode: code, temp2FACodeTS: Date.now() });
+
+        // send email with firstname if available
+        const firstname = window._mfaStudentFirstName || '';
+        await emailjs.send('service_psnv6pw', 'template_5lvzrqk', {
+          email: email,
+          firstname: firstname,
+          code: code
+        });
+
+        // keep the studentKey available to the verification dialog
+        window._mfaStudentKey = studentKey;
+        show2FAModal();
+      } catch (error) {
+        console.error('Error sending 2FA email:', error);
+        showModal('Failed to send 2FA code. Please try again.');
+        submitBtn.classList.remove('loading');
+        submitBtn.innerHTML = 'Sign In to Portal';
+      }
+    } else {
+      window.location.href = 'index.html';
+    }
   } catch (error) {
     showModal('Error: Incorrect Email or Password.');
     submitBtn.classList.remove('loading');
@@ -567,6 +670,5 @@ document.getElementById('signinForm').addEventListener('submit', async function(
   </script>
 </body>
 </html>
-
 
 
