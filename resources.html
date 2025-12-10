@@ -1111,6 +1111,76 @@
       font-size: 0.9rem;
       margin-top: auto;
     }
+
+    /* Notification styles */
+    .notif-container {
+      position: relative;
+    }
+    .notif-btn {
+      background: transparent;
+      border: none;
+      color: #fff;
+      font-size: 18px;
+      padding: 8px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .notif-btn:hover {
+      background: rgba(255,255,255,0.1);
+    }
+    .notif-badge {
+      position:absolute; bottom:0; right:0;
+      width:10px; height:10px; background:red;
+      border-radius:50%; border:2px solid #00723f;
+    }
+    .notif-dropdown {
+      display: none;
+      position: absolute;
+      top: 100%;
+      right: 0;
+      width: 320px;
+      max-height: 400px;
+      overflow-y: auto;
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      z-index: 1000;
+    }
+    .notif-header {
+      padding: 12px 16px;
+      border-bottom: 1px solid #e5e7eb;
+      font-weight: 600;
+      color: #374151;
+    }
+    .notif-list {
+      padding: 0;
+    }
+    .notif-item {
+      padding: 12px 16px;
+      border-bottom: 1px solid #f3f4f6;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .notif-item:hover {
+      background: #f9fafb;
+    }
+    .notif-item.unread {
+      background: #fef3c7;
+    }
+    .notif-item.unread:hover {
+      background: #fde68a;
+    }
+    .notif-message {
+      font-size: 14px;
+      color: #374151;
+      margin-bottom: 4px;
+    }
+    .notif-time {
+      font-size: 12px;
+      color: #6b7280;
+    }
   </style>
   <style id="assessments-mobile-overrides">
     /* Mobile overrides copied from assessments.html to ensure exact parity */
@@ -1708,14 +1778,12 @@
     <div style="display:flex; align-items:center; gap:1rem; position:relative;">
       <div class="notif-wrapper" onclick="toggleNotif()">
         <span class="icon-btn">🔔</span>
-        <div class="notif-badge" style="position:absolute;right:4px;bottom:8px;width:8px;height:8px;background:#ef4444;border-radius:50%;border:2px solid var(--green)"></div>
+        <div class="notif-badge hidden" style="position:absolute;right:4px;bottom:8px;width:8px;height:8px;background:#ef4444;border-radius:50%;border:2px solid var(--green)"></div>
       </div>
       <div id="notifDropdown" class="notif-dropdown">
         <div class="notif-header">Notifications</div>
         <div class="notif-list">
-          <div class="notif-item" onclick="goToSection('appointments')">🔔 New counseling slots available</div>
-          <div class="notif-item" onclick="goToSection('messages')">📩 You have a new message from your counselor</div>
-          <div class="notif-item" onclick="goToSection('assessments')">⚠ Reminder: Complete your assessment</div>
+          <div id="no-notifs" class="notif-item" style="text-align: center; color: #666;">No new notifications</div>
         </div>
       </div>
       <div class="profile" onclick="window.location.href='profile.html'"></div>
@@ -1752,12 +1820,6 @@
         </div>
         
         <!-- Additional Resources Card -->
-        <div class="resources-card">
-          <h3><i class="fas fa-lightbulb"></i> Quick Tips</h3>
-          <div id="otherList" class="resource-list">
-            <!-- Other resources (tips, videos, audio) will be injected here from Firebase (node: 'files'). -->
-          </div>
-        </div>
       </div>
     </div>
     
@@ -1791,6 +1853,7 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
   <script src="firebase_config.js"></script>
+  <script src="notification.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', function() {
     enforceAuthRedirect();
@@ -1879,12 +1942,20 @@
     // --- END: NEW ADMIN SYNC SIDEBAR SCRIPT ---
 
     // Notification toggle
-    function toggleNotif() {
-      const dropdown = document.getElementById("notifDropdown");
-      const badge = document.querySelector(".notif-badge");
-      dropdown.classList.toggle("active");
-      if (dropdown.classList.contains("active")) { badge.classList.add("hidden"); }
-    }
+    window.toggleNotif = function() {
+      const dropdown = document.getElementById('notifDropdown');
+      if (dropdown) {
+        dropdown.classList.toggle('active');
+        if (dropdown.classList.contains('active')) {
+          // Opening: hide badge
+          const badge = document.querySelector('.notif-badge');
+          if (badge) badge.classList.add('hidden');
+        } else {
+          // Closing: show badge if has notifications
+          NotificationUtils.updateBadgeVisibility();
+        }
+      }
+    };
 
     // Close notification dropdown when clicking outside
     document.addEventListener("click", function(e){
@@ -1951,7 +2022,23 @@
             snapshot.forEach(function(child){
               const data = child.val() || {};
               const topbarStudentId = document.querySelector('.portal-title small');
-              if (topbarStudentId) topbarStudentId.textContent = 'ID: ' + (data.student_id || data.student_id_number || 'N/A');
+              if (topbarStudentId) {
+                // Helper to resolve student ID
+                const resolveStudentId = (src) => {
+                  if (!src) return '';
+                  const keys = ['student_id','studentId','id','stid'];
+                  for (const k of keys) {
+                    if (src[k] !== undefined && src[k] !== null) return src[k];
+                  }
+                  return '';
+                };
+                const sid = resolveStudentId(data) || child.key || 'N/A';
+                topbarStudentId.textContent = 'ID: ' + sid;
+                // expose a JS variable and a data-* attribute so other scripts can read it
+                try { window.currentStudentId = resolveStudentId(data) || child.key || null; } catch (e) { /* ignore */ }
+                try { window.currentStudentKey = child.key; } catch (e) { /* ignore */ }
+                try { document.documentElement.dataset.studentId = resolveStudentId(data) || child.key || ''; } catch (e) { /* ignore */ }
+              }
 
               const topbarProfile = document.querySelector('.profile');
               if (topbarProfile) {
@@ -1962,6 +2049,10 @@
                   topbarProfile.textContent = initials;
                 }
               }
+
+              // Load notification settings
+              const notifSettings = data.notificationSettings || { appointment: true, message: true };
+              window.notificationSettings = notifSettings;
             });
           }
         }).catch(function(err){ console.warn('Failed to load student for topbar', err); });
@@ -2088,81 +2179,84 @@
         // Primary action: open or download
         // Priority: external URL, then Firebase Storage path (on-demand), then base64 data
         if (file.url) {
-          const fileName = file.filename || file.name || '';
+          const fileName = (file.filename || file.name || '').trim();
           const isYouTube = file.url.includes('youtube.com') || file.url.includes('youtu.be');
           const isExternalPDF = /\.pdf$/i.test(file.url) || /\.pdf/i.test(fileName);
           const isExternalDocx = /\.docx$/i.test(file.url) || /\.docx$/i.test(fileName);
           const isExternalText = /\.(txt|rtf|csv|json|xml|html?)$/i.test(file.url) || /\.(txt|rtf|csv|json|xml|html?)/i.test(fileName);
+          const isExternalOffice = /\.(docx?|xlsx?|pptx?)$/i.test(file.url) || /\.(docx?|xlsx?|pptx?)$/i.test(fileName) ||
+            (file.url.includes('docs.google.com') && (file.url.includes('/document/') || file.url.includes('/spreadsheets/') || file.url.includes('/presentation/')));
 
-          const openBtn = document.createElement('button');
-          openBtn.className = 'resource-link';
-          openBtn.innerHTML = `<i class="fas fa-eye"></i> View`;
-          openBtn.addEventListener('click', () => {
-            if (isYouTube) {
-              const videoId = getYouTubeVideoId(file.url);
-              if (videoId) {
-                const embedUrl = `https://www.youtube.com/embed/${videoId}`;
-                openResourceModal(file.filename || file.name || 'YouTube Video', `<iframe src="${embedUrl}" allowfullscreen></iframe>`);
+          if (!isExternalOffice) {
+            const openBtn = document.createElement('button');
+            openBtn.className = 'resource-link';
+            openBtn.innerHTML = `<i class="fas fa-eye"></i> View`;
+            openBtn.addEventListener('click', () => {
+              if (isYouTube) {
+                const videoId = getYouTubeVideoId(file.url);
+                if (videoId) {
+                  const embedUrl = `https://www.youtube.com/embed/${videoId}`;
+                  openResourceModal(file.filename || file.name || 'YouTube Video', `<iframe src="${embedUrl}" allowfullscreen></iframe>`);
+                  return;
+                }
+              }
+              if (isExternalPDF) {
+                const viewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(file.url)}&embedded=true`;
+                const content = `
+                  <div style="width: 100%; height: 100%; position: relative;">
+                    <iframe src="${viewerUrl}" style="width: 100%; height: 100%; border: none;" onload="this.style.opacity='1'" style="opacity: 0; transition: opacity 0.3s;"></iframe>
+                    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #666; font-size: 16px;">
+                      <i class="fas fa-spinner fa-spin"></i> Loading document...
+                    </div>
+                  </div>
+                `;
+                openResourceModal(fileName, content);
+                setTimeout(() => {
+                  const iframe = document.querySelector('#resourceViewerContent iframe');
+                  if (iframe && iframe.style.opacity !== '1') {
+                    openResourceModal(fileName, `
+                      <div style="text-align: center; padding: 40px;">
+                        <i class="fas fa-exclamation-triangle" style="font-size: 48px; color: #f39c12; margin-bottom: 20px;"></i>
+                        <h3 style="color: #333; margin-bottom: 15px;">Unable to preview this document</h3>
+                        <p style="color: #666; margin-bottom: 20px;">The document viewer is unable to load this file. You can try opening it directly.</p>
+                        <button onclick="closeResourceModal(); window.open('${file.url}', '_blank');" style="padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                          <i class="fas fa-external-link-alt"></i> Open in New Tab
+                        </button>
+                      </div>
+                    `);
+                  }
+                }, 10000);
                 return;
               }
-            }
-            if (isExternalPDF) {
-              const viewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(file.url)}&embedded=true`;
-              const content = `
-                <div style="width: 100%; height: 100%; position: relative;">
-                  <iframe src="${viewerUrl}" style="width: 100%; height: 100%; border: none;" onload="this.style.opacity='1'" style="opacity: 0; transition: opacity 0.3s;"></iframe>
-                  <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #666; font-size: 16px;">
-                    <i class="fas fa-spinner fa-spin"></i> Loading document...
-                  </div>
-                </div>
-              `;
-              openResourceModal(fileName, content);
-              setTimeout(() => {
-                const iframe = document.querySelector('#resourceViewerContent iframe');
-                if (iframe && iframe.style.opacity !== '1') {
-                  openResourceModal(fileName, `
-                    <div style="text-align: center; padding: 40px;">
-                      <i class="fas fa-exclamation-triangle" style="font-size: 48px; color: #f39c12; margin-bottom: 20px;"></i>
-                      <h3 style="color: #333; margin-bottom: 15px;">Unable to preview this document</h3>
-                      <p style="color: #666; margin-bottom: 20px;">The document viewer is unable to load this file. You can try opening it directly.</p>
-                      <button onclick="closeResourceModal(); window.open('${file.url}', '_blank');" style="padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer;">
-                        <i class="fas fa-external-link-alt"></i> Open in New Tab
-                      </button>
-                    </div>
-                  `);
-                }
-              }, 10000);
-              return;
-            }
-            if (isExternalDocx) {
-              openResourceModal(fileName, `<div style='padding:20px;text-align:center;'><i class='fas fa-spinner fa-spin'></i> Loading document...</div>`);
-              fetch(file.url)
-                .then(response => response.arrayBuffer())
-                .then(arrayBuffer => mammoth.convertToHtml({arrayBuffer}))
-                .then(result => {
-                  openResourceModal(fileName, `<div style='padding:20px;max-height:80vh;overflow:auto;'>${result.value}</div>`);
-                })
-                .catch(err => {
-                  openResourceModal(fileName, `<div style='padding:20px;color:red;'>Failed to preview .docx file.<br>${err}</div>`);
+              if (isExternalDocx) {
+                openResourceModal(fileName, `<div style='padding:20px;text-align:center;'><i class='fas fa-spinner fa-spin'></i> Loading document...</div>`);
+                fetch(file.url)
+                  .then(response => response.arrayBuffer())
+                  .then(arrayBuffer => mammoth.convertToHtml({arrayBuffer}))
+                  .then(result => {
+                    openResourceModal(fileName, `<div style='padding:20px;max-height:80vh;overflow:auto;'>${result.value}</div>`);
+                  })
+                  .catch(err => {
+                    openResourceModal(fileName, `<div style='padding:20px;color:red;'>Failed to preview .docx file.<br>${err}</div>`);
+                  });
+                return;
+              }
+              if (isExternalText) {
+                fetch(file.url).then(response => response.text()).then(text => {
+                  openResourceModal(fileName, `<pre style="white-space: pre-wrap; font-family: monospace; padding: 20px; margin: 0; background: #f8f9fa; border-radius: 8px; max-height: 100%; overflow-y: auto;">${text}</pre>`);
+                }).catch(err => {
+                  console.error('Failed to load external text file:', err);
+                  window.open(file.url, '_blank'); // Fallback
                 });
-              return;
-            }
-            if (isExternalText) {
-              fetch(file.url).then(response => response.text()).then(text => {
-                openResourceModal(fileName, `<pre style="white-space: pre-wrap; font-family: monospace; padding: 20px; margin: 0; background: #f8f9fa; border-radius: 8px; max-height: 100%; overflow-y: auto;">${text}</pre>`);
-              }).catch(err => {
-                console.error('Failed to load external text file:', err);
-                window.open(file.url, '_blank'); // Fallback
-              });
-              return;
-            }
-            window.open(file.url, '_blank');
-          });
-          actions.appendChild(openBtn);
+                return;
+              }
+              window.open(file.url, '_blank');
+            });
+            actions.appendChild(openBtn);
+          }
         } else if (file.storagePath || (file.storage && file.storage.path)) {
-          // storagePath could be stored directly or under file.storage.path
           const path = file.storagePath || (file.storage && file.storage.path) || file.storage;
-          const fileName = file.filename || file.name || '';
+          const fileName = (file.filename || file.name || '').trim();
           const mimeType = file.mimeType || '';
 
           // Conservative viewable file detection - only files that reliably display inline
@@ -2198,110 +2292,97 @@
           // Final safeguard: explicitly exclude only truly non-viewable files
           const finalIsViewable = isViewableInModal;
 
-          // Debug logging
-          console.log('File processing:', {
-            fileName,
-            mimeType,
-            isDocument,
-            isTextFile,
-            isOfficeDoc,
-            isVideo,
-            isImage,
-            isPDF,
-            isViewable,
-            isViewableInModal,
-            finalIsViewable
-          });
-
-          const openBtn = document.createElement('button');
-          openBtn.className = 'resource-link';
-          openBtn.innerHTML = `<i class="fas fa-eye"></i> View`;
-          openBtn.addEventListener('click', (ev) => {
-            openBtn.disabled = true; openBtn.innerHTML = `<i class=\"fas fa-spinner fa-spin\"></i> Loading...`;
-            getStorageUrl(path).then(url => {
-              if (isVideo) {
-                openResourceModal(fileName, `<video controls><source src=\"${url}\" type=\"${mimeType || 'video/mp4'}\">Your browser does not support the video tag.</video>`);
-              } else if (isImage) {
-                openResourceModal(fileName, `<img src=\"${url}\" alt=\"${fileName}\" style=\"max-width: 100%; max-height: 100%; object-fit: contain;\" />`);
-              } else if (/\.docx$/i.test(fileName) || mimeType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
-                openResourceModal(fileName, `<div style='padding:20px;text-align:center;'><i class='fas fa-spinner fa-spin'></i> Loading document...</div>`);
-                fetch(url)
-                  .then(response => response.arrayBuffer())
-                  .then(arrayBuffer => mammoth.convertToHtml({arrayBuffer}))
-                  .then(result => {
-                    openResourceModal(fileName, `<div style='padding:20px;max-height:80vh;overflow:auto;'>${result.value}</div>`);
+          if (!isOfficeDoc) {
+            const openBtn = document.createElement('button');
+            openBtn.className = 'resource-link';
+            openBtn.innerHTML = `<i class="fas fa-eye"></i> View`;
+            openBtn.addEventListener('click', (ev) => {
+              openBtn.disabled = true; openBtn.innerHTML = `<i class=\"fas fa-spinner fa-spin\"></i> Loading...`;
+              getStorageUrl(path).then(url => {
+                if (isVideo) {
+                  openResourceModal(fileName, `<video controls><source src=\"${url}\" type=\"${mimeType || 'video/mp4'}\">Your browser does not support the video tag.</video>`);
+                } else if (isImage) {
+                  openResourceModal(fileName, `<img src=\"${url}\" alt=\"${fileName}\" style=\"max-width: 100%; max-height: 100%; object-fit: contain;\" />`);
+                } else if (/\.docx$/i.test(fileName) || mimeType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+                  openResourceModal(fileName, `<div style='padding:20px;text-align:center;'><i class='fas fa-spinner fa-spin'></i> Loading document...</div>`);
+                  fetch(url)
+                    .then(response => response.arrayBuffer())
+                    .then(arrayBuffer => mammoth.convertToHtml({arrayBuffer}))
+                    .then(result => {
+                      openResourceModal(fileName, `<div style='padding:20px;max-height:80vh;overflow:auto;'>${result.value}</div>`);
+                      openBtn.disabled = false; openBtn.innerHTML = `<i class='fas fa-eye'></i> View`;
+                    })
+                    .catch(err => {
+                      console.error('Failed to render .docx:', err);
+                      openResourceModal(fileName, `<div style='padding:20px;color:red;'>Failed to preview .docx file.<br>${err}</div>`);
+                      openBtn.disabled = false; openBtn.innerHTML = `<i class='fas fa-eye'></i> View`;
+                    });
+                } else if (isOfficeDoc) {
+                  fetch(url).then(response => response.blob()).then(blob => {
+                    const objectUrl = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = objectUrl;
+                    a.target = '_blank';
+                    a.rel = 'noopener noreferrer';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
                     openBtn.disabled = false; openBtn.innerHTML = `<i class='fas fa-eye'></i> View`;
-                  })
-                  .catch(err => {
-                    console.error('Failed to render .docx:', err);
-                    openResourceModal(fileName, `<div style='padding:20px;color:red;'>Failed to preview .docx file.<br>${err}</div>`);
+                  }).catch(err => {
+                    console.error('Failed to download Office document:', err);
+                    window.open(url, '_blank');
                     openBtn.disabled = false; openBtn.innerHTML = `<i class='fas fa-eye'></i> View`;
                   });
-              } else if (isOfficeDoc) {
-                fetch(url).then(response => response.blob()).then(blob => {
-                  const objectUrl = URL.createObjectURL(blob);
-                  const a = document.createElement('a');
-                  a.href = objectUrl;
-                  a.target = '_blank';
-                  a.rel = 'noopener noreferrer';
-                  document.body.appendChild(a);
-                  a.click();
-                  document.body.removeChild(a);
-                  setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
-                  openBtn.disabled = false; openBtn.innerHTML = `<i class='fas fa-eye'></i> View`;
-                }).catch(err => {
-                  console.error('Failed to download Office document:', err);
-                  window.open(url, '_blank');
-                  openBtn.disabled = false; openBtn.innerHTML = `<i class='fas fa-eye'></i> View`;
-                });
-              } else if (isPDF) {
-                // Use Google Docs viewer for PDFs as well
-                const viewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`;
-                const content = `
-                  <div style="width: 100%; height: 100%; position: relative;">
-                    <iframe src="${viewerUrl}" style="width: 100%; height: 100%; border: none;" onload="this.style.opacity='1'" style="opacity: 0; transition: opacity 0.3s;"></iframe>
-                    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #666; font-size: 16px;">
-                      <i class="fas fa-spinner fa-spin"></i> Loading document...
-                    </div>
-                  </div>
-                `;
-                openResourceModal(fileName, content);
-                // Fallback after 10 seconds if iframe doesn't load
-                setTimeout(() => {
-                  const iframe = document.querySelector('#resourceViewerContent iframe');
-                  if (iframe && iframe.style.opacity !== '1') {
-                    openResourceModal(fileName, `
-                      <div style="text-align: center; padding: 40px;">
-                        <i class="fas fa-exclamation-triangle" style="font-size: 48px; color: #f39c12; margin-bottom: 20px;"></i>
-                        <h3 style="color: #333; margin-bottom: 15px;">Unable to preview this document</h3>
-                        <p style="color: #666; margin-bottom: 20px;">The document viewer is unable to load this file. You can try downloading it instead.</p>
-                        <button onclick="closeResourceModal(); window.open('${url}', '_blank');" style="padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer;">
-                          <i class="fas fa-external-link-alt"></i> Open in New Tab
-                        </button>
+                } else if (isPDF) {
+                  // Use Google Docs viewer for PDFs as well
+                  const viewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`;
+                  const content = `
+                    <div style="width: 100%; height: 100%; position: relative;">
+                      <iframe src="${viewerUrl}" style="width: 100%; height: 100%; border: none;" onload="this.style.opacity='1'" style="opacity: 0; transition: opacity 0.3s;"></iframe>
+                      <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #666; font-size: 16px;">
+                        <i class="fas fa-spinner fa-spin"></i> Loading document...
                       </div>
-                    `);
-                  }
-                }, 10000);
-              } else if (isTextFile) {
-                // Display text files inline in modal
-                fetch(url).then(response => response.text()).then(text => {
-                  openResourceModal(fileName, `<pre style="white-space: pre-wrap; font-family: monospace; padding: 20px; margin: 0; background: #f8f9fa; border-radius: 8px; max-height: 100%; overflow-y: auto;">${text}</pre>`);
-                }).catch(err => {
-                  console.error('Failed to load text file:', err);
-                  window.open(url, '_blank'); // Fallback to opening in new tab
-                });
-              } else {
-                // For truly non-viewable files, open directly in new tab
-                window.open(url, '_blank');
+                    </div>
+                  `;
+                  openResourceModal(fileName, content);
+                  // Fallback after 10 seconds if iframe doesn't load
+                  setTimeout(() => {
+                    const iframe = document.querySelector('#resourceViewerContent iframe');
+                    if (iframe && iframe.style.opacity !== '1') {
+                      openResourceModal(fileName, `
+                        <div style="text-align: center; padding: 40px;">
+                          <i class="fas fa-exclamation-triangle" style="font-size: 48px; color: #f39c12; margin-bottom: 20px;"></i>
+                          <h3 style="color: #333; margin-bottom: 15px;">Unable to preview this document</h3>
+                          <p style="color: #666; margin-bottom: 20px;">The document viewer is unable to load this file. You can try downloading it instead.</p>
+                          <button onclick="closeResourceModal(); window.open('${url}', '_blank');" style="padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                            <i class="fas fa-external-link-alt"></i> Open in New Tab
+                          </button>
+                        </div>
+                      `);
+                    }
+                  }, 10000);
+                } else if (isTextFile) {
+                  // Display text files inline in modal
+                  fetch(url).then(response => response.text()).then(text => {
+                    openResourceModal(fileName, `<pre style="white-space: pre-wrap; font-family: monospace; padding: 20px; margin: 0; background: #f8f9fa; border-radius: 8px; max-height: 100%; overflow-y: auto;">${text}</pre>`);
+                  }).catch(err => {
+                    console.error('Failed to load text file:', err);
+                    window.open(url, '_blank'); // Fallback to opening in new tab
+                  });
+                } else {
+                  // For truly non-viewable files, open directly in new tab
+                  window.open(url, '_blank');
+                  openBtn.disabled = false; openBtn.innerHTML = `<i class="fas fa-eye"></i> View`;
+                }
+              }).catch(err => {
+                console.error('Storage URL failed', err);
+                alert('Failed to load file.');
                 openBtn.disabled = false; openBtn.innerHTML = `<i class="fas fa-eye"></i> View`;
-              }
-            }).catch(err => {
-              console.error('Storage URL failed', err);
-              alert('Failed to load file.');
-              openBtn.disabled = false; openBtn.innerHTML = `<i class="fas fa-eye"></i> View`;
+              });
             });
-          });
-          actions.appendChild(openBtn);
+            actions.appendChild(openBtn);
+          }
           const dlBtn = document.createElement('button');
           dlBtn.className = 'resource-link';
           dlBtn.style.marginLeft = '8px';
@@ -2323,7 +2404,7 @@
           actions.appendChild(dlBtn);
         } else if (file.data) {
           // Base64 payload: defer conversion until user clicks View
-          const fileName = file.filename || file.name || 'File';
+          const fileName = (file.filename || file.name || '').trim();
           const mimeType = file.mimeType || '';
 
           // Conservative viewable file detection for base64 data
@@ -2349,48 +2430,45 @@
           const isViewable = (isImage || isOfficeDoc || isPDF || isTextFile) && !isDocument;
 
           // Final safeguard: explicitly exclude only truly non-viewable files
-          const finalIsViewable = isViewable;
+          const finalIsViewable = isViewable && !isOfficeDoc;
 
-          const viewBtn = document.createElement('button');
-          viewBtn.className = 'resource-link';
-          viewBtn.innerHTML = `<i class="fas fa-eye"></i> View`;
-          viewBtn.addEventListener('click', () => {
-            viewBtn.disabled = true; viewBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Loading...`;
-            setTimeout(() => {
-              const dataUrl = 'data:' + (mimeType || 'application/octet-stream') + ';base64,' + file.data;
+          if (!isOfficeDoc) {
+            const viewBtn = document.createElement('button');
+            viewBtn.className = 'resource-link';
+            viewBtn.innerHTML = `<i class="fas fa-eye"></i> View`;
+            viewBtn.addEventListener('click', () => {
+              viewBtn.disabled = true; viewBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Loading...`;
+              setTimeout(() => {
+                const dataUrl = 'data:' + (mimeType || 'application/octet-stream') + ';base64,' + file.data;
 
-              if (isImage) {
-                openResourceModal(fileName, `<img src="${dataUrl}" alt="${fileName}" style="max-width: 100%; max-height: 100%; object-fit: contain;" />`);
-              } else if (isPDF) {
-                // Display PDF inline in modal
-                openResourceModal(fileName, `<iframe src="${dataUrl}" style="width: 100%; height: 100%; border: none;"></iframe>`);
-              } else if (isTextFile) {
-                // Display text files inline in modal
-                try {
-                  const text = atob(file.data);
-                  openResourceModal(fileName, `<pre style="white-space: pre-wrap; font-family: monospace; padding: 20px; margin: 0; background: #f8f9fa; border-radius: 8px; max-height: 100%; overflow-y: auto;">${text}</pre>`);
-                } catch (err) {
-                  console.error('Failed to decode base64 text:', err);
-                  // Fallback to opening in new window
+                if (isImage) {
+                  openResourceModal(fileName, `<img src="${dataUrl}" alt="${fileName}" style="max-width: 100%; max-height: 100%; object-fit: contain;" />`);
+                } else if (isPDF) {
+                  // Display PDF inline in modal
+                  openResourceModal(fileName, `<iframe src="${dataUrl}" style="width: 100%; height: 100%; border: none;"></iframe>`);
+                } else if (isTextFile) {
+                  // Display text files inline in modal
+                  try {
+                    const text = atob(file.data);
+                    openResourceModal(fileName, `<pre style="white-space: pre-wrap; font-family: monospace; padding: 20px; margin: 0; background: #f8f9fa; border-radius: 8px; max-height: 100%; overflow-y: auto;">${text}</pre>`);
+                  } catch (err) {
+                    console.error('Failed to decode base64 text:', err);
+                    // Fallback to opening in new window
+                    const w = window.open('about:blank');
+                    if (!w) { alert('Popup blocked — allow popups to open files.'); viewBtn.disabled = false; viewBtn.innerHTML = `<i class="fas fa-eye"></i> View`; return; }
+                    w.document.write('<iframe src="' + dataUrl + '" frameborder="0" style="width:100%;height:100%;"></iframe>');
+                  }
+                } else {
+                  // For other base64 files, open in new window
                   const w = window.open('about:blank');
                   if (!w) { alert('Popup blocked — allow popups to open files.'); viewBtn.disabled = false; viewBtn.innerHTML = `<i class="fas fa-eye"></i> View`; return; }
                   w.document.write('<iframe src="' + dataUrl + '" frameborder="0" style="width:100%;height:100%;"></iframe>');
                 }
-              } else if (isOfficeDoc) {
-                // For base64 Office documents, open in new window since Google Docs viewer needs a URL
-                const w = window.open('about:blank');
-                if (!w) { alert('Popup blocked — allow popups to open files.'); viewBtn.disabled = false; viewBtn.innerHTML = `<i class="fas fa-eye"></i> View`; return; }
-                w.document.write('<iframe src="' + dataUrl + '" frameborder="0" style="width:100%;height:100%;"></iframe>');
-              } else {
-                // For other base64 files, open in new window
-                const w = window.open('about:blank');
-                if (!w) { alert('Popup blocked — allow popups to open files.'); viewBtn.disabled = false; viewBtn.innerHTML = `<i class="fas fa-eye"></i> View`; return; }
-                w.document.write('<iframe src="' + dataUrl + '" frameborder="0" style="width:100%;height:100%;"></iframe>');
-              }
-              viewBtn.disabled = false; viewBtn.innerHTML = `<i class="fas fa-eye"></i> View`;
-            }, 50);
-          });
-          actions.appendChild(viewBtn);
+                viewBtn.disabled = false; viewBtn.innerHTML = `<i class="fas fa-eye"></i> View`;
+              }, 50);
+            });
+            actions.appendChild(viewBtn);
+          }
           const dlBtn = document.createElement('button');
           dlBtn.className = 'resource-link';
           dlBtn.innerHTML = '<i class="fas fa-download"></i> Download';
@@ -2554,4 +2632,3 @@
 </body>
 
 </html>
-
