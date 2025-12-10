@@ -254,7 +254,7 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
   <!-- Shared project Firebase initializer (keeps keys out of HTML) -->
   <script src="firebase_config.js"></script>
-  
+
   <script>
     // Use database reference exposed by firebase_config.js if available.
     // Fallback to firebase.database() if not.
@@ -322,32 +322,38 @@ document.getElementById('verifyForm').addEventListener('submit', async function(
     const snapshot = await studentsRef.orderByChild("student_id").equalTo(studentId).once("value");
 
     if (snapshot.exists()) {
-      let found = null;
+      let matchingRecord = null;
+      let recordWithMatchingLastName = null;
       let alreadyVerified = false;
 
       snapshot.forEach(child => {
         const data = child.val();
 
-        if (
-          data.email_address === email &&
-          data.last_name.toLowerCase() === lastname.toLowerCase() &&
-          data.activation_code === code
-        ) {
-          // Already verified check
-          if (data.status === 2) {
-            alreadyVerified = true;
-            showModal("Student Account already verified. Redirecting to sign in...", function() {
-              window.location.href = "signin.html";
-            });
-            return;
-          }
-          // Validate expiry_date (assumed to be timestamp in ms)
-          const now = Date.now();
-          if (data.expiry_date && now <= data.expiry_date) {
-            found = { key: child.key, ...data };
-          } else {
-            alreadyVerified = true;
-            showModal("Your activation code has expired.");
+        // Check if this record has the matching last name
+        if (data.last_name && data.last_name.toLowerCase() === lastname.toLowerCase()) {
+          recordWithMatchingLastName = { key: child.key, ...data };
+
+          // Check if all details match (email, lastname, code)
+          if (data.email_address === email && data.activation_code === code) {
+            matchingRecord = { key: child.key, ...data };
+
+            // Check if already verified
+            if (data.status === 2) {
+              alreadyVerified = true;
+              showModal("Student Account already verified. Redirecting to sign in...", function() {
+                window.location.href = "signin.html";
+              });
+              return;
+            }
+
+            // Check if code is expired
+            const now = Date.now();
+            if (data.expiry_date && now > data.expiry_date) {
+              showModal("Your activation code has expired. Please contact support for a new code.");
+              btn.classList.remove('loading');
+              btn.innerHTML = 'Verify & Continue';
+              return;
+            }
           }
         }
       });
@@ -358,16 +364,26 @@ document.getElementById('verifyForm').addEventListener('submit', async function(
         return;
       }
 
-      if (found) {
-        // Redirect to signup page with key + email
-        window.location.href = `signup.html?key=${found.key}&email=${encodeURIComponent(found.email_address)}`;
+      if (matchingRecord) {
+        // All details match and code is valid - proceed to signup
+        window.location.href = `signup.html?key=${matchingRecord.key}&email=${encodeURIComponent(matchingRecord.email_address)}`;
+      } else if (recordWithMatchingLastName) {
+        // Last name matches but email or code doesn't
+        if (recordWithMatchingLastName.email_address !== email) {
+          showModal("The email address doesn't match our records for this Student ID. Please check your email.");
+        } else {
+          showModal("The invitation code is incorrect. Please check your code and try again.");
+        }
+        btn.classList.remove('loading');
+        btn.innerHTML = 'Verify & Continue';
       } else {
-        showModal("No valid match found. Please check your details.");
+        // Student ID exists but last name doesn't match
+        showModal("The last name doesn't match our records for this Student ID. Please check your last name.");
         btn.classList.remove('loading');
         btn.innerHTML = 'Verify & Continue';
       }
     } else {
-      showModal("No record found with that Student ID.");
+      showModal("No record found with that Student ID. Please check your Student ID.");
       btn.classList.remove('loading');
       btn.innerHTML = 'Verify & Continue';
     }
@@ -390,5 +406,3 @@ document.getElementById('verifyForm').addEventListener('submit', async function(
   </script>
 </body>
 </html>
-
-
