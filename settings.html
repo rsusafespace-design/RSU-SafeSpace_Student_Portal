@@ -1,0 +1,2327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Settings - SafeSpace</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI', sans-serif; }
+    body { 
+      background:#f4f6f9; 
+      color:#333; 
+      overflow-x:hidden;
+    }
+
+    /* ===== Sidebar ===== */
+    .sidebar {
+      width: 250px;
+      background: #f0f3f6;
+      border-right: 1px solid rgba(0,0,0,0.06);
+      position: fixed;
+      top: 60px;
+      left: 0;
+      height: calc(100vh - 60px);
+      z-index: 999;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .sidebar .brand {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 250px;
+      height: 60px;
+      background-color: #1e8e3e;
+      color: white;
+      display: flex;
+      align-items: center;
+      padding: 10px 20px;
+      z-index: 1002;
+      transition: width 0.3s ease;
+    }
+    
+    .sidebar .brand .logo {
+      height: 40px;
+      width: 40px;
+      background: #fff;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #1e8e3e;
+      font-weight: bold;
+    }
+
+    .sidebar .brand .logo {
+    height: 40px;
+    width: 40px;
+    background: transparent url("safespace.png") center/contain no-repeat;
+    color: transparent;
+    border-radius: 8px;
+  }
+    
+    .sidebar .brand span {
+      font-weight: bold;
+      font-size: 1.2rem;
+      color: white;
+      margin-left: 10px;
+      transition: opacity 0.3s ease;
+    }
+    
+    .sidebar a {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: #1f2937;
+      text-decoration: none;
+      padding: 12px 10px;
+      border-radius: 8px;
+      transition: background 0.2s, color 0.2s;
+      font-size: 15px;
+    }
+    
+    .sidebar a:hover,
+    .sidebar a.active {
+      background: rgba(15,122,52,0.08);
+      color: #0f7a34;
+    }
+    
+    .sidebar a.active {
+      background: rgba(15,122,52,0.12);
+      font-weight: 600;
+    }
+    
+    .topbar {
+      position: fixed;
+      top: 0;
+      left: 250px;
+      right: 0;
+      height: 60px;
+      background-color: #1e8e3e;
+      color: white;
+      padding: 10px 30px;
+      z-index: 1000;
+      transition: left 0.3s ease;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    /* Collapsed Sidebar */
+    .sidebar.collapsed {
+      width: 80px;
+    }
+    
+    .sidebar.collapsed .brand {
+      width: 80px;
+      justify-content: center;
+    }
+    
+    .sidebar.collapsed .brand span {
+      opacity: 0;
+    }
+    
+    .sidebar.collapsed a span {
+      display: none;
+    }
+    
+    .sidebar.collapsed a {
+      justify-content: center;
+    }
+    
+    .topbar.shifted {
+      left: 80px;
+    }
+    
+    .content.shifted {
+      margin-left: 80px;
+    }
+
+    @media (max-width: 768px) {
+      .topbar, .topbar.shifted {
+        left: 0;
+        right: 0;
+        padding: 8px 12px;
+      }
+    }
+
+    /* Topbar elements */
+    .topbar-left { display:flex; align-items:center; gap:0.6rem; }
+    .hamburger {
+      font-size: 1.2rem;
+      cursor: pointer;
+      padding: 0.3rem;
+      border-radius: 4px;
+      transition: background 0.2s;
+      margin-left: 0; /* Added this line */
+    }
+    .hamburger:hover { background: rgba(255,255,255,0.1); }
+    .portal-title { display:flex; flex-direction:column; line-height:1.2; }
+    .portal-title strong { font-size: 1.1rem; }
+    .portal-title strong span.safespace { display:inline; margin-right:0.3rem; }
+    .portal-title small { font-size:0.75rem; opacity:0.9; }
+
+    /* Mobile logo styling */
+    .mobile-logo {
+      display: none;
+      width: 28px;
+      height: 28px;
+      background: white;
+      border-radius: 50%;
+      align-items: center;
+      justify-content: center;
+      color: #00723f;
+      font-weight: bold;
+      font-size: 0.8rem;
+      margin-right: 0.5rem;
+    }
+
+    /* Profile + Notifications */
+    .profile { width:38px; height:38px; border-radius:50%; background:#004c27;
+      display:flex; align-items:center; justify-content:center; font-weight:bold; cursor:pointer; }
+    .notif-wrapper { position:relative; cursor:pointer; font-size:1.3rem; color:white; }
+    .notif-badge {
+      position:absolute; bottom:0; right:0;
+      width:10px; height:10px; background:red;
+      border-radius:50%; border:2px solid #00723f;
+    }
+    .notif-badge.hidden { display:none; }
+
+    .notif-dropdown {
+      position:absolute; top:48px; right:0;
+      background:white; color:#333;
+      width:260px; border-radius:8px;
+      box-shadow:0 4px 10px rgba(0,0,0,0.15);
+      display:none; flex-direction:column;
+      overflow:hidden; z-index:2000;
+    }
+    .notif-dropdown.active { display:flex; }
+    .notif-header { background:#00723f; color:white; padding:0.6rem; font-weight:bold; }
+    .notif-list { max-height:220px; overflow-y:auto; }
+    .notif-item {
+      padding:0.6rem 0.8rem; border-bottom:1px solid #eee;
+      font-size:0.9rem; cursor:pointer;
+    }
+    .notif-item:hover { background:#f1f1f1; }
+
+    /* Settings Content */
+    .settings-container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .settings-section {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      margin-bottom: 1.5rem;
+    }
+
+    .settings-section h3 {
+      margin-bottom: 1.5rem;
+      font-size: 1.2rem;
+      color: #00723f;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .settings-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 0;
+      border-bottom: 1px solid #f0f0f0;
+      cursor: pointer;
+    }
+
+    .settings-item:hover {
+      background-color: #f9f9f9;
+    }
+
+    .settings-item:last-child {
+      border-bottom: none;
+    }
+
+    .settings-label {
+      color: #333;
+      font-weight: 500;
+    }
+
+    .settings-description {
+      color: #666;
+      font-size: 0.9rem;
+      margin-top: 0.3rem;
+    }
+
+    .settings-item i {
+      color: #00723f;
+    }
+
+    /* Toggle Switch */
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 50px;
+      height: 24px;
+    }
+
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      transition: .4s;
+      border-radius: 24px;
+    }
+
+    .toggle-slider:before {
+      position: absolute;
+      content: "";
+      height: 16px;
+      width: 16px;
+      left: 4px;
+      bottom: 4px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+
+    input:checked + .toggle-slider {
+      background-color: #00723f;
+    }
+
+    input:checked + .toggle-slider:before {
+      transform: translateX(26px);
+    }
+
+    /* Action Card */
+    .action-card {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 9999;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .action-card-content {
+      background: #fff;
+      border-radius: 10px;
+      padding: 2rem;
+      max-width: 400px;
+      width: 90%;
+      text-align: center;
+      position: relative;
+    }
+
+    .close-btn {
+      position: absolute;
+      top: 10px;
+      right: 15px;
+      font-size: 1.5rem;
+      cursor: pointer;
+      background: none;
+      border: none;
+      color: #333;
+    }
+
+    /* Mobile Styles */
+    @media (max-width: 768px) {
+      .sidebar {
+        transform: translateX(-100%);
+      }
+      
+      .topbar {
+        left: 0;
+        margin-left: 0;
+      }
+      
+      .content {
+        left: 0;
+        margin-left: 0;
+        padding-bottom: 120px;
+      }
+      
+      .mobile-logo {
+        display: flex;
+        width: 28px;
+        height: 28px;
+        background: white;
+        border-radius: 50%;
+        align-items: center;
+        justify-content: center;
+        color: #00723f;
+        font-weight: bold;
+        font-size: 0.8rem;
+        margin-right: 0.5rem;
+      }
+      
+      /* topbar: simplify and show mobile logo */
+      .topbar { left: 0 !important; right: 0 !important; padding: 8px 12px !important; }
+      .mobile-logo { display: flex !important; }
+      /* Make the mobile topbar logo larger and override inline sizes */
+      .mobile-logo img { height: 40px !important; width: auto !important; object-fit: contain !important; }
+      
+      .bottom-nav {
+        display: none;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: #004c27;
+        justify-content: space-around;
+        padding: 0.6rem 0;
+        height: 64px;
+        z-index: 1000;
+        box-shadow: 0 -6px 20px rgba(0, 0, 0, 0.18);
+      }
+      
+      .bottom-nav a {
+        flex: 1;
+        text-align: center;
+        color: white;
+        text-decoration: none;
+        font-size: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        opacity: 1;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        padding: 8px 6px;
+        border-radius: 8px;
+      }
+      
+      .bottom-nav a.active {
+        color: #fff;
+        background: rgba(255,255,255,0.06);
+        transform: translateY(-4px);
+        box-shadow: 0 6px 14px rgba(0,0,0,0.12);
+      }
+      
+      .bottom-nav a:hover:not(.active) {
+        background: rgba(255, 255, 255, 0.03);
+      }
+      
+      .bottom-nav a i {
+        font-size: 22px;
+        line-height:1;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        color: #ffffff;
+        text-shadow: 0 1px 0 rgba(0,0,0,0.15);
+      }
+      
+      .bottom-nav a:hover i {
+        transform: scale(1.05);
+      }
+      
+      /* Emoji style for colorful bottom nav icons */
+      .bottom-nav a .emoji {
+        font-size: 28px;
+        line-height: 1;
+        display: inline-block;
+        transform-origin: center;
+        transition: transform .18s ease;
+        filter: drop-shadow(0 1px 0 rgba(0,0,0,0.12));
+      }
+      .bottom-nav a:hover .emoji { transform: translateY(-2px) scale(1.05); }
+      
+      .content {
+        padding-bottom: 8rem;
+      }
+      
+      .settings-section:last-child {
+        margin-bottom: 60px;
+      }
+
+      .dark-mode-toggle {
+        position: fixed;
+        bottom: 70px;
+        right: 20px;
+        top: auto;
+      }
+    }
+
+    /* Hide mobile elements on desktop */
+    @media (min-width: 769px) {
+      .mobile-logo, .bottom-nav {
+        display: none;
+      }
+    }
+
+    /* --- Mobile Overlay & Sidebar --- */
+    .sidebar-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 998;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    
+    .sidebar-overlay.active {
+        display: block;
+        opacity: 1;
+    }
+    
+    @media (max-width: 768px) {
+        .sidebar {
+            top: 0;
+            height: 100vh;
+            width: 280px;
+            transform: translateX(-100%);
+            box-shadow: 4px 0 15px rgba(0, 0, 0, 0.2);
+            z-index: 1200;
+            padding-top: 72px;
+        }
+    
+        .sidebar.mobile-open {
+            transform: translateX(0);
+        }
+    
+        .sidebar.collapsed {
+            width: 280px;
+            transform: translateX(-100%);
+        }
+    
+        .sidebar .brand {
+            width: 280px;
+        }
+    
+        .sidebar .brand.collapsed {
+            width: 280px;
+            justify-content: flex-start;
+        }
+    
+        .sidebar .brand.collapsed span {
+            opacity: 1;
+            pointer-events: auto;
+            width: auto;
+        }
+    
+        .topbar, .topbar.shifted {
+            left: 0;
+        }
+        .content, .content.shifted {
+            margin-left: 0;
+        }
+    }
+
+    /* Keep emoji icons visible when collapsed */
+    .sidebar.collapsed a::before {
+      content: attr(data-emoji);
+      font-size: 1.3rem;
+    }
+
+    .sidebar a::before {
+      content: attr(data-emoji);
+      margin-right: 8px;
+    }
+
+    .sidebar.collapsed a::before {
+      margin-right: 0;
+    }
+
+    /* Policy Modal Styles */
+    #securityPolicyCard .action-card-content,
+    #dataPrivacyPolicyCard .action-card-content,
+    #aboutSafeSpaceCard .action-card-content,
+    #aboutDevelopersCard .action-card-content {
+      max-width: 90vw;
+      width: 90vw;
+      max-height: 90vh;
+      height: 90vh;
+      display: flex;
+      flex-direction: column;
+      padding: 0;
+      overflow: hidden;
+    }
+
+    .policy-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
+      border-bottom: 1px solid #e0e0e0;
+      background: #f8f9fa;
+    }
+
+    .policy-header h2 {
+      margin: 0;
+      font-size: 1.5rem;
+      color: #333;
+    }
+
+    .policy-body {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .policy-content {
+      flex: 2;
+      padding: 1rem 2rem;
+      overflow-y: auto;
+      border-right: 1px solid #e0e0e0;
+    }
+
+    .faq-sidebar {
+      flex: 1;
+      padding: 1rem;
+      background: #f8f9fa;
+      overflow-y: auto;
+    }
+
+    .faq-title {
+      font-size: 1.2rem;
+      font-weight: bold;
+      margin-bottom: 1rem;
+      color: #333;
+    }
+
+    .faq-list {
+      list-style: none;
+      padding: 0;
+    }
+
+    .faq-list li {
+      margin-bottom: 0.5rem;
+    }
+
+    .faq-link {
+      color: #00723f;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .faq-link:hover {
+      color: #005a2a;
+      text-decoration: underline;
+    }
+
+    .accordion {
+      margin-bottom: 1rem;
+    }
+
+    .accordion-header {
+      background: #e9ecef;
+      padding: 1rem;
+      cursor: pointer;
+      border: none;
+      width: 100%;
+      text-align: left;
+      font-size: 1rem;
+      font-weight: bold;
+      border-radius: 5px;
+    }
+
+    .accordion-header:hover {
+      background: #d6d8db;
+    }
+
+    .accordion-content {
+      max-height: 0;
+      overflow: hidden;
+      padding: 0 1rem;
+      background: #f8f9fa;
+      border-radius: 0 0 5px 5px;
+      margin-top: -5px;
+      border: 1px solid #e9ecef;
+      border-top: none;
+    }
+
+    .accordion.active .accordion-content {
+      max-height: 1000px;
+      padding: 1rem;
+    }
+
+    .faq-link {
+      cursor: pointer;
+      color: #007bff;
+      text-decoration: none;
+    }
+
+    .faq-link:hover {
+      text-decoration: underline;
+    }
+
+    .policy-footer {
+      padding: 1rem 2rem;
+      border-top: 1px solid #e0e0e0;
+      background: #f8f9fa;
+      text-align: center;
+    }
+
+    .contact-info {
+      margin-top: 1rem;
+      font-size: 0.9rem;
+      color: #666;
+    }
+
+    /* Mobile Styles for Policy Modal */
+    @media (max-width: 768px) {
+      #securityPolicyCard .action-card-content,
+      #dataPrivacyPolicyCard .action-card-content,
+      #aboutSafeSpaceCard .action-card-content,
+      #aboutDevelopersCard .action-card-content {
+        max-width: 95vw;
+        width: 95vw;
+        max-height: 95vh;
+        height: 95vh;
+      }
+
+      .policy-body {
+        flex-direction: column;
+      }
+
+      .policy-content {
+        border-right: none;
+        border-bottom: 1px solid #e0e0e0;
+      }
+
+      .faq-sidebar {
+        order: -1;
+        border-bottom: 1px solid #e0e0e0;
+        background: #f8f9fa;
+      }
+
+      .policy-header {
+        padding: 1rem;
+      }
+
+      .policy-content, .faq-sidebar {
+        padding: 1rem;
+      }
+
+      .policy-footer {
+        padding: 1rem;
+      }
+    }
+  </style>
+  <style id="appointments-copy">
+    :root {
+      --primary: #0f7a34;
+      --primary-light: #e8f5e9;
+      --primary-dark: #0a5a26;
+      --topbar-bg: #1e8e3e;
+      --secondary: #4361ee;
+      --accent: #7209b7;
+      --text: #2d3748;
+      --text-light: #718096;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      --card-shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.12);
+      --radius: 16px;
+      --radius-sm: 8px;
+      --sidebar-width: 280px;
+      --collapsed-width: 80px;
+      --topbar-height: 70px;
+      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      --transition-slow: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      font-size: 16px;
+      color: var(--text);
+    }
+
+    body {
+      background: var(--bg);
+      overflow-x: hidden;
+    }
+
+    /* ===== Sidebar (admin-like style) ===== */
+    .sidebar {
+      position:fixed; top:0; left:0;
+      width:250px; height:100%;
+      background:#f0f3f6; color:#1f2937;
+      padding:12px;
+      border-right: 1px solid rgba(0,0,0,0.06);
+      display:flex; flex-direction:column;
+      transition:width 0.3s ease, transform 0.3s ease;
+      z-index:1200;
+    }
+
+    .sidebar .brand {
+      display:flex; align-items:center; gap:0.6rem;
+      margin-bottom:1rem; padding:8px 4px;
+    }
+
+    .sidebar .logo {
+      width:40px; height:40px; background:transparent;
+      border-radius:8px; display:flex; align-items:center; justify-content:center;
+      color:#10b981; font-weight:700; font-size:0.95rem;
+      flex-shrink:0; box-shadow:0 1px 2px rgba(0,0,0,0.04);
+    }
+
+    .sidebar .brand span { font-weight:700; font-size:1rem; color:#374151; }
+
+    /* collapsed (narrow) sidebar */
+    .sidebar.shrink { width:80px; padding:12px 8px; }
+    .sidebar.shrink .brand span { display:none; }
+    .sidebar.shrink a { text-align:center; font-size:1.1rem; }
+    .sidebar.shrink a span { display:none; }
+
+    /* nav items (anchors) styled similar to admin .nav-item */
+    .sidebar a {
+      display:flex; align-items:center; gap:12px; color:#1f2937;
+      text-decoration:none; margin:8px 0; font-size:15px;
+      padding:12px 10px; border-radius:8px; background:transparent;
+      transition:background 0.18s ease, color 0.18s ease;
+    }
+
+  .sidebar a .fa,
+  .sidebar a i { width:28px; text-align:center; font-size:18px; color:#1f2937; background:transparent; }
+
+    .sidebar a span { color:inherit; display:inline-block; white-space:nowrap; overflow:hidden; }
+
+    .sidebar a:hover,
+    .sidebar a.active {
+      background: rgba(15,122,52,0.08); color:#0f7a34; font-weight:600;
+    }
+
+    /* Admin-like header & sidebar overrides (no HTML changes) */
+    .header-and-sidebar-top {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      z-index: 1000;
+      display: flex;
+      background-color: #1e8e3e;
+      color: white;
+      height: 60px;
+      transition: left 0.3s ease;
+    }
+
+    .sidebar-top {
+      width: 250px;
+      display: flex;
+      align-items: center;
+      padding: 10px 20px;
+      box-sizing: border-box;
+      border-right: 1px solid rgba(255, 255, 255, 0.3);
+      height: 60px;
+      transition: width 0.3s ease;
+    }
+
+    .sidebar {
+      position: fixed; /* ensure sidebar spans full height and brand sits at top */
+      top: 0;
+      left: 0;
+      width: 250px;
+      height: 100vh;
+      background: #f0f3f6;
+      border-right: none; /* remove full-height border so brand can appear flush */
+      z-index: 1002; /* sit above topbar so brand overlays header area */
+      overflow: auto;
+    }
+
+    /* Hide the native scrollbar for the sidebar while keeping content scrollable */
+    .sidebar {
+      scrollbar-width: none; /* Firefox */
+      -ms-overflow-style: none; /* IE 10+ */
+    }
+    .sidebar::-webkit-scrollbar {
+      width: 0px;
+      height: 0px;
+      background: transparent;
+    }
+
+    /* vertical divider only below the brand area */
+    .sidebar::after {
+      content: '';
+      position: absolute;
+      left: 249px; /* 1px inside right edge */
+      top: 60px; /* start after brand/topbar */
+      width: 1px;
+      height: calc(100vh - 60px);
+      background: rgba(0,0,0,0.06);
+      z-index: 1001;
+    }
+
+    .nav-item, .sidebar a {
+      color: #1f2937;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 10px;
+      border-radius: 8px;
+      background: transparent;
+      cursor: pointer;
+      font-weight: 400;
+      font-size: 15px;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .nav-item:hover, .sidebar a:hover {
+      background: rgba(15,122,52,0.08) !important;
+      color: #0f7a34 !important;
+      font-weight: 400 !important;
+    }
+
+    .nav-item.active {
+      background: rgba(15,122,52,0.12) !important;
+      color: #0f7a34 !important;
+      font-weight: 600 !important;
+    }
+
+    /* adjust content to sit below the fixed topbar and to the right of the sidebar */
+    .content { margin-top: 60px; margin-left: 250px; }
+    .content.shrink { margin-left: 80px; }
+
+    /* Logo and brand name styling to mirror admin */
+    .sidebar .logo {
+      background: transparent;
+      width:72px; height:72px; border-radius:6px; box-shadow:none; color:transparent;
+      display:flex; align-items:center; justify-content:center; overflow:hidden; padding:0; border:0;
+    }
+    .sidebar .logo img{
+      width:auto; height:64px; max-width:100%; max-height:64px; object-fit:contain; display:block;
+      background:transparent; /* in case image has transparency preserve it */
+      image-rendering: -webkit-optimize-contrast;
+    }
+
+    /* keep brand/logo aligned with topbar height (60px) */
+    .sidebar .brand {
+      height: 60px;
+      align-items: center;
+      padding: 0 12px;
+      background: #1e8e3e; /* match topbar background for a seamless look */
+      color: white;
+      gap: 12px;
+    }
+
+    .sidebar .brand span { color: white; font-weight:700; margin-left:4px; }
+
+    /* push nav content below the brand area */
+    #nav { padding-top: 12px; margin-top: 60px; }
+
+    /* make the small top-area logo visible in header-like layout */
+    .header-and-sidebar-top .sidebar-logo span { color: white; font-weight:700; font-size:1.1rem; }
+
+    /* ===== Topbar (admin-like appearance) ===== */
+    .topbar {
+      position: fixed;
+      top: 0;
+      left: 250px; /* sit to the right of the fixed sidebar */
+      right: 0;
+      height: 60px;
+      background-color: var(--topbar-bg);
+      color: white;
+      padding: 10px 30px;
+      display: flex; justify-content: space-between; align-items: center;
+      z-index: 1001;
+      transition: left 0.3s ease, margin-left 0.3s ease;
+    }
+    .topbar.shrink { left: 80px; }
+
+    .topbar-left { display:flex; align-items:center; gap:0.6rem; }
+    .hamburger {
+      font-size: 1.2rem;
+      cursor: pointer;
+      padding: 0.3rem;
+      border-radius: 4px;
+      transition: background 0.2s;
+      margin-left: 0; /* Added this line */
+    }
+    .hamburger:hover { background: rgba(255,255,255,0.1); }
+    .portal-title { display:flex; flex-direction:column; line-height:1.2; }
+    .portal-title strong { font-size: 1.1rem; }
+    .portal-title strong span.safespace { display:inline; margin-right:0.3rem; }
+    .portal-title small { font-size:0.75rem; opacity:0.9; }
+
+    /* Mobile logo styling */
+    .mobile-logo {
+      display: none;
+      width: 44px;
+      height: 44px;
+      background: transparent; /* remove white circular background */
+      border-radius: 6px;
+      align-items: center;
+      justify-content: center;
+      color: #00723f;
+      font-weight: bold;
+      font-size: 0.8rem;
+      margin-right: 0.5rem;
+      padding:0;
+      overflow:hidden;
+    }
+  .mobile-logo img{ width:auto; height:34px; object-fit:contain; display:block; background:transparent }
+
+    /* Profile + Notifications */
+    .profile { width:38px; height:38px; border-radius:50%; background:#004c27;
+      display:flex; align-items:center; justify-content:center; font-weight:bold; cursor:pointer; }
+    .notif-wrapper { position:relative; cursor:pointer; font-size:1.3rem; color:white; }
+    .notif-badge {
+      position:absolute; bottom:0; right:0;
+      width:10px; height:10px; background:red;
+      border-radius:50%; border:2px solid #00723f;
+    }
+    .notif-badge.hidden { display:none; }
+
+    .notif-dropdown {
+      position:absolute; top:48px; right:0;
+      background:white; color:#333;
+      width:260px; border-radius:8px;
+      box-shadow:0 4px 10px rgba(0,0,0,0.15);
+      display:none; flex-direction:column;
+      overflow:hidden; z-index:2000;
+    }
+    .notif-dropdown.active { display:flex; }
+    .notif-header { background:#00723f; color:white; padding:0.6rem; font-weight:bold; }
+    .notif-list { max-height:220px; overflow-y:auto; }
+    .notif-item {
+      padding:0.6rem 0.8rem; border-bottom:1px solid #eee;
+      font-size:0.9rem; cursor:pointer;
+    }
+    .notif-item:hover { background:#f1f1f1; }
+
+    /* ===== Content ===== */
+    .content {
+      padding:1rem;
+      max-width:1200px; margin:auto;
+      margin-left:250px;
+      transition:margin-left 0.3s ease;
+    }
+    .content.shrink { margin-left:70px; }
+    .grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(350px,1fr)); gap:1rem; }
+    .card { background:white; border-radius:10px; padding:1rem; box-shadow:0 2px 6px rgba(0,0,0,0.1); }
+    .card h3 { margin-bottom:0.8rem; }
+
+    /* Hide hamburger on mobile */
+    @media (max-width:768px) {
+      .hamburger { display: none; }
+      .portal-title strong span.safespace { display: inline; }
+      .mobile-logo { background: transparent; }
+    }
+
+    /* ===== Mobile Bottom Nav ===== */
+    @media (max-width:768px) {
+      .sidebar { 
+        display: none !important;
+        transform: translateX(-100%);
+      }
+      .topbar { margin-left:0; }
+      .content { margin-left:0; }
+      .hamburger { display: none; }
+      
+      /* Show mobile logo and SafeSpace text */
+      .mobile-logo { display: flex; }
+      .portal-title strong span.safespace { display: inline; }
+      
+      .bottom-nav {
+        position:fixed; bottom:0; left:0; width:100%;
+        background:#004c27; display:flex; justify-content:space-around;
+        padding:0.5rem 0; z-index:2000;
+      }
+      .bottom-nav a {
+        flex:1; text-align:center; color:white; text-decoration:none; font-size:0.9rem;
+        display:flex; align-items:center; justify-content:center; gap:0.25rem;
+        padding:0.6rem 0; opacity:1; background:transparent; border-radius:8px;
+      }
+      .bottom-nav a i { font-size:22px; line-height:1; }
+      .bottom-nav a.active { color:#ffc107; }
+    }
+    
+    /* Hide bottom nav on larger screens */
+    .bottom-nav { display: none; }
+
+    @media (max-width: 768px) {
+      .bottom-nav { 
+        display: flex !important;
+        position: fixed;
+        bottom: 0; left: 0; right: 0;
+        background: #1e8e3e; /* solid colored bar */
+        justify-content: space-around;
+        padding: 0.6rem 0; height:64px; z-index: 2000;
+      }
+    }
+
+    /* ===== Misc ===== */
+    .hidden {
+      display: none !important;
+    }
+
+    /* --- START: NEW ADMIN SYNC STYLES --- */
+    .sidebar {
+        width: 250px;
+        background: #f0f3f6;
+        border-right: 1px solid rgba(0,0,0,0.06);
+        position: fixed;
+        top: 60px; /* Starts below the header */
+        left: 0;
+        height: calc(100vh - 60px);
+        z-index: 999;
+        padding: 12px;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        transition: width 0.3s ease, transform 0.3s ease;
+    }
+    
+    .sidebar .brand {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 250px;
+        height: 60px;
+        background-color: #1e8e3e;
+        color: white;
+        display: flex;
+        align-items: center;
+        padding: 10px 20px;
+        box-sizing: border-box;
+        z-index: 1002;
+        border-right: 1px solid rgba(255, 255, 255, 0.3);
+        transition: width 0.3s ease;
+    }
+    
+  .sidebar .brand .logo {
+    height: 40px;
+    width: 40px;
+    background: transparent url("safespace.png") center/contain no-repeat;
+    color: transparent;
+    border-radius: 8px;
+  }
+    
+    .sidebar .brand span {
+        font-weight: bold;
+        font-size: 1.2rem;
+        color: white;
+        white-space: nowrap;
+        margin-left: 10px;
+        transition: opacity 0.3s ease, width 0.3s ease;
+    }
+    
+    .sidebar a {
+        margin: 0; /* Nav links start at the top of the sidebar container */
+    }
+    
+    .topbar {
+        position: fixed;
+        top: 0;
+        left: 250px;
+        right: 0;
+        height: 60px;
+        background-color: #1e8e3e;
+        color: white;
+        padding: 10px 30px;
+        z-index: 1000;
+        transition: left 0.3s ease;
+    }
+    
+    .content {
+        margin-top: 60px;
+        margin-left: 250px;
+        transition: margin-left 0.3s ease;
+    }
+    
+   /* --- Collapsed State --- */
+.sidebar.collapsed {
+  width: 80px;
+  padding: 12px 8px;
+}
+
+.sidebar.collapsed .brand {
+  width: 80px;
+  justify-content: center;
+}
+
+.sidebar.collapsed .brand span {
+  opacity: 0;
+  pointer-events: none;
+  width: 0;
+}
+
+.sidebar.collapsed a span {
+  display: none;
+}
+.sidebar.collapsed a {
+  justify-content: center;
+}
+
+/* ADD THIS NEW CODE RIGHT HERE - Keep emoji icons visible when collapsed */
+.sidebar.collapsed a::before {
+  content: attr(data-emoji);
+  font-size: 1.3rem;
+}
+
+.sidebar a::before {
+  content: attr(data-emoji);
+  margin-right: 8px;
+}
+
+.sidebar.collapsed a::before {
+  margin-right: 0;
+}
+/* END OF NEW CSS CODE */
+    
+  </style>
+  <style>
+    /* Ensure topbar title matches assessments.html sizing */
+    .topbar .portal-title strong { font-size: 16px !important; font-weight: 700 !important; }
+    
+    /* Mobile content alignment fix */
+    @media (max-width: 768px) {
+      .topbar, .topbar.shifted {
+        left: 0;
+        right: 0;
+        padding: 8px 12px;
+      }
+      .content, .content.shifted {
+        margin-left: 0 !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar (copied exactly from assessments.html) -->
+  <div class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="logo"><img src="safespace.png" alt="SafeSpace logo"></div>
+      <span>SafeSpace</span>
+    </div>
+    <a href="index.html" data-emoji="📅"><span>Appointments</span></a>
+    <a href="history.html" data-emoji="📋"><span>History</span></a>
+    <a href="assessments.html" data-emoji="📝"><span>Assessments</span></a>
+    <a href="resources.html" data-emoji="📚"><span>Resources</span></a>
+    <a href="messages.html" data-emoji="💬"><span>Messages</span></a>
+    <a href="settings.html" class="active" data-emoji="⚙️"><span>Settings</span></a>
+  </div>
+
+  <!-- Topbar (copied exactly from assessments.html) -->
+  <div class="topbar" id="topbar">
+    <div class="topbar-left">
+      <div class="hamburger" onclick="toggleSidebar()">
+        <i class="fas fa-bars"></i>
+      </div>
+      <div class="mobile-logo"><img src="safespace.png" alt="SafeSpace" style="width:24px;height:24px;object-fit:contain"></div>
+      <div class="portal-title">
+        <strong><span class="safespace">RSU SafeSpace: </span>Student Portal</strong>
+        <small id="topbarStudentId"></small>
+      </div>
+    </div>
+    <div style="display:flex; align-items:center; gap:1rem; position:relative;">
+      <div class="notif-wrapper" onclick="toggleNotif()">
+        <span class="icon-btn">🔔</span>
+        <div class="notif-badge" style="position:absolute;bottom:0;right:0;width:10px;height:10px;background:red;border-radius:50%;border:2px solid #00723f"></div>
+      </div>
+      <div id="notifDropdown" class="notif-dropdown">
+        <div class="notif-header">Notifications</div>
+        <div class="notif-list">
+          <div id="no-notifs" class="notif-item" style="text-align: center; color: #666;">No new notifications</div>
+        </div>
+      </div>
+  <div class="profile" id="topbarProfile" onclick="window.location.href='profile.html'"></div>
+    </div>
+  </div>
+
+  <!-- Content -->
+  <div class="content" id="content">
+    <div class="settings-container">
+      <!-- Notification Settings -->
+      <div class="settings-section">
+        <h3><i class="fas fa-bell"></i> Notifications</h3>
+        <div class="settings-item">
+          <div>
+            <div class="settings-label">Allow notifications when appointment</div>
+            <div class="settings-description">Get notified for upcoming appointments</div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="appointmentNotifications">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="settings-item">
+          <div>
+            <div class="settings-label">Allow notifications when new messages</div>
+            <div class="settings-description">Get notified for new messages</div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="messageNotifications">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Privacy Settings -->
+      <div class="settings-section">
+        <h3><i class="fas fa-shield-alt"></i> Privacy & Security</h3>
+        <div class="settings-item" id="changePasswordItem">
+          <div>
+            <div class="settings-label">Change Password</div>
+            <div class="settings-description">Update your account password</div>
+          </div>
+          <i class="fas fa-chevron-right"></i>
+        </div>
+        <div class="settings-item">
+          <div>
+            <div class="settings-label">2MFA Email</div>
+            <div class="settings-description">Enable two-factor authentication via email</div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="email2FA">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="settings-item" id="dataPrivacyItem">
+          <div>
+            <div class="settings-label">Data Privacy</div>
+            <div class="settings-description">Learn about our data privacy policy</div>
+          </div>
+          <i class="fas fa-chevron-right"></i>
+        </div>
+        <div class="settings-item" id="securityPolicyItem">
+          <div>
+            <div class="settings-label">Security and Policy</div>
+            <div class="settings-description">Learn about our security measures</div>
+          </div>
+          <i class="fas fa-chevron-right"></i>
+        </div>
+      </div>
+
+      <!-- App Preferences -->
+      <div class="settings-section">
+        <h3><i class="fas fa-cog"></i> App Preferences</h3>
+        <div class="settings-item">
+          <div>
+            <div class="settings-label">Auto Logout</div>
+            <div class="settings-description">Automatically log out after inactivity</div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="autoLogout">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Support -->
+      <div class="settings-section">
+        <h3><i class="fas fa-headset"></i> Support</h3>
+        <div class="settings-item" id="helpCenterItem">
+          <div>
+            <div class="settings-label">Help Center</div>
+            <div class="settings-description">rsusafespace@gmail.com</div>
+          </div>
+          <i class="fas fa-chevron-right"></i>
+        </div>
+        <div class="settings-item" id="aboutSafeSpaceItem">
+          <div>
+            <div class="settings-label">About RSU SafeSpace</div>
+            <div class="settings-description">Learn more about our mission</div>
+          </div>
+          <i class="fas fa-chevron-right"></i>
+        </div>
+        <div class="settings-item" id="aboutDevelopersItem">
+          <div>
+            <div class="settings-label">About Developers</div>
+            <div class="settings-description">Meet the team behind SafeSpace</div>
+          </div>
+          <i class="fas fa-chevron-right"></i>
+        </div>
+      </div>
+
+
+
+
+      <!-- Account Section -->
+      <div class="settings-section">
+        <h3><i class="fas fa-user-circle"></i>Account</h3>
+        <div class="settings-item" id="signOutButton" style="cursor: pointer;">
+          <div>
+            <div class="settings-label" style="color: #dc3545; font-weight: bold;">Sign Out</div>
+            <div class="settings-description">You will be returned to the sign-in page.</div>
+          </div>
+          <i class="fas fa-chevron-right" style="color: #dc3545;"></i>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Bottom Nav (Mobile Only) -->
+  <div class="bottom-nav">
+    <a href="index.html" aria-label="Appointments"><span class="emoji" aria-hidden="true">📅</span></a>
+    <a href="history.html" aria-label="History"><span class="emoji" aria-hidden="true">📋</span></a>
+    <a href="assessments.html" aria-label="Assessments"><span class="emoji" aria-hidden="true">📝</span></a>
+    <a href="resources.html" aria-label="Resources"><span class="emoji" aria-hidden="true">📚</span></a>
+    <a href="messages.html" aria-label="Messages"><span class="emoji" aria-hidden="true">💬</span></a>
+    <a href="settings.html" aria-label="Settings" class="active"><span class="emoji" aria-hidden="true">⚙️</span></a>
+  </div>
+
+  <!-- Action Card -->
+  <div class="action-card" id="actionCard">
+    <div class="action-card-content">
+      <button class="close-btn" onclick="closeActionCard()">&times;</button>
+      <h3 id="actionTitle"></h3>
+      <p id="actionMessage"></p>
+      <button onclick="closeActionCard()" style="background:#00723f;color:white;border:none;padding:0.5rem 1.5rem;border-radius:6px;margin-top:1rem;cursor:pointer;">
+        OK
+      </button>
+    </div>
+  </div>
+
+  <!-- Action Cards for settings -->
+  <div class="action-card" id="changePasswordCard">
+      <div class="action-card-content">
+        <button class="close-btn" onclick="closeActionCard()">&times;</button>
+        <h2>Change Password</h2>
+        <form id="changePasswordForm">
+          <div style="margin-bottom: 1rem;">
+            <label for="currentPassword" style="display: block; margin-bottom: 0.5rem;">Current Password</label>
+            <input type="password" id="currentPassword" required style="width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px;">
+          </div>
+          <div style="margin-bottom: 1rem;">
+            <label for="newPassword" style="display: block; margin-bottom: 0.5rem;">New Password</label>
+            <input type="password" id="newPassword" required style="width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px;">
+          </div>
+          <div style="margin-bottom: 1rem;">
+            <label for="confirmPassword" style="display: block; margin-bottom: 0.5rem;">Confirm New Password</label>
+            <input type="password" id="confirmPassword" required style="width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px;">
+          </div>
+          <button type="submit" style="background:#00723f;color:white;border:none;padding:0.5rem 1.5rem;border-radius:6px;cursor:pointer;">Change Password</button>
+        </form>
+      </div>
+    </div>
+
+  <!-- Data Privacy Policy Card -->
+  <div class="action-card" id="dataPrivacyPolicyCard">
+    <div class="action-card-content">
+      <div class="policy-header">
+        <h2 style="color: green;">Data Privacy Policy</h2>
+        <button class="close-btn" onclick="closeActionCard()">&times;</button>
+      </div>
+      <div class="policy-body">
+        <div class="policy-content">
+          <div class="accordion" id="privacy-act">
+            <button class="accordion-header" style="color: green;" onclick="toggleAccordion('privacy-act'); return false;">Data Privacy Act of 2012 (Republic Act No. 10173)</button>
+            <div class="accordion-content">
+              <p style="text-align: left;">The Data Privacy Act of 2012 is the Philippines' comprehensive law on data privacy and protection. It governs the collection, processing, storage, and sharing of personal information, ensuring that individuals' privacy rights are respected and protected.</p>
+            </div>
+          </div>
+
+          <div class="accordion" id="safespace-ensures">
+            <button class="accordion-header" style="color: green;" onclick="toggleAccordion('safespace-ensures'); return false;">RSU SafeSpace Ensures</button>
+            <div class="accordion-content">
+              <p style="text-align: left;">RSU SafeSpace ensures that all personal and sensitive data are collected, processed, and stored in compliance with the Data Privacy Act of 2012 and other relevant laws. We implement strict security measures to protect user information from unauthorized access, disclosure, alteration, or destruction.</p>
+            </div>
+          </div>
+
+          <div class="accordion" id="principles">
+            <button class="accordion-header" style="color: green;" onclick="toggleAccordion('principles'); return false;">Principles We Uphold</button>
+            <div class="accordion-content">
+              <div style="list-style: none; padding: 0; text-align: left;">
+                <div><strong>Lawfulness, Fairness, and Transparency:</strong> Data processing is done legally, fairly, and transparently.</div>
+                <div><strong>Purpose Limitation:</strong> Personal data is collected for specified, legitimate purposes.</div>
+                <div><strong>Data Minimization:</strong> Only necessary data is collected and processed.</div>
+                <div><strong>Accuracy:</strong> Personal data is kept up-to-date and accurate.</div>
+                <div><strong>Storage Limitation:</strong> Data is retained only as long as necessary.</div>
+                <div><strong>Integrity and Confidentiality:</strong> Data is protected against unauthorized access.</div>
+                <div><strong>Accountability:</strong> We are responsible for complying with data protection principles.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion" id="data-collected">
+            <button class="accordion-header" style="color: green;" onclick="toggleAccordion('data-collected'); return false;">Data Collected by SafeSpace</button>
+            <div class="accordion-content">
+              <p style="text-align: left;">SafeSpace collects and stores the following student-related data:</p>
+              <div style="list-style: none; padding: 0; text-align: left;">
+                <div>Basic profile information (name, student ID, email, contact details)</div>
+                <div>Academic information (course, year level, enrollment status)</div>
+                <div>Mental health assessment results and counseling session notes</div>
+                <div>Communication logs and messages within the platform</div>
+                <div>Usage data for improving service quality</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion" id="sensitive-info">
+            <button class="accordion-header" style="color: green;" onclick="toggleAccordion('sensitive-info'); return false;">Treatment of Sensitive Personal Information</button>
+            <div class="accordion-content">
+              <p style="text-align: left;">All student messages — including mental health–related communications — are treated as Sensitive Personal Information (SPI) as defined by the National Privacy Commission (NPC). SPI receives the highest level of protection and can only be processed under strict conditions, including explicit consent from the data subject.</p>
+            </div>
+          </div>
+
+          <div class="accordion" id="data-sharing">
+            <button class="accordion-header" style="color: green;" onclick="toggleAccordion('data-sharing'); return false;">Data Sharing Policy</button>
+            <div class="accordion-content">
+              <p style="text-align: left;">RSU SafeSpace does not share or sell any counseling data to third parties. Disclosure may only occur:</p>
+              <div style="list-style: none; padding: 0; text-align: left;">
+                <div>With explicit consent from the counselor or client</div>
+                <div>When required by law or university policy</div>
+                <div>When necessary to protect the rights, safety, or welfare of the user or institution</div>
+              </div>
+              <p style="text-align: left;">Only minimal and relevant information is disclosed on a "need-to-know" basis.</p>
+            </div>
+          </div>
+
+          <div class="accordion" id="user-rights">
+            <button class="accordion-header" style="color: green;" onclick="toggleAccordion('user-rights'); return false;">User Rights (RA 10173)</button>
+            <div class="accordion-content">
+              <p style="text-align: left;">Under the Data Privacy Act, you have the following rights:</p>
+              <div style="list-style: none; padding: 0; text-align: left;">
+                <div><strong>Right to be Informed:</strong> Be notified about the collection and processing of your personal data.</div>
+                <div><strong>Right to Access:</strong> Request access to your personal data and information about its processing.</div>
+                <div><strong>Right to Rectification:</strong> Request correction of inaccurate or incomplete data.</div>
+                <div><strong>Right to Erasure:</strong> Request deletion of your personal data under certain conditions.</div>
+                <div><strong>Right to Data Portability:</strong> Request transfer of your data to another controller.</div>
+                <div><strong>Right to Object:</strong> Object to processing of your personal data.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion" id="retention">
+            <button class="accordion-header" style="color: green;" onclick="toggleAccordion('retention'); return false;">Data Retention and Disposal</button>
+            <div class="accordion-content">
+              <p style="text-align: left;">Personal data is retained only for as long as necessary to fulfill the purposes for which it was collected or as required by law. Counseling records are typically retained for 5-7 years after the last session, after which they are securely disposed of through shredding or digital deletion methods that prevent recovery.</p>
+            </div>
+          </div>
+
+          <div class="accordion" id="accountability">
+            <button class="accordion-header" style="color: green;" onclick="toggleAccordion('accountability'); return false;">Accountability and Contact</button>
+            <div class="accordion-content">
+              <p style="text-align: left;">RSU SafeSpace is committed to accountability in data protection. We maintain records of our data processing activities and conduct regular audits to ensure compliance. For any data privacy concerns or to exercise your rights, please contact our Data Protection Officer.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-sidebar">
+          <div class="faq-title" style="color: green;">Frequently Asked Questions</div>
+          <ul class="faq-list" style="list-style: none; padding: 0;">
+            <li><span class="faq-link" onclick="toggleAccordion('privacy-act')">What is the Data Privacy Act?</span></li>
+            <li><span class="faq-link" onclick="toggleAccordion('safespace-ensures')">What does RSU SafeSpace ensure?</span></li>
+            <li><span class="faq-link" onclick="toggleAccordion('principles')">What principles do you uphold?</span></li>
+            <li><span class="faq-link" onclick="toggleAccordion('data-collected')">What data does SafeSpace collect?</span></li>
+            <li><span class="faq-link" onclick="toggleAccordion('sensitive-info')">How is sensitive information treated?</span></li>
+            <li><span class="faq-link" onclick="toggleAccordion('data-sharing')">Do you share my data?</span></li>
+            <li><span class="faq-link" onclick="toggleAccordion('user-rights')">What are my rights?</span></li>
+            <li><span class="faq-link" onclick="toggleAccordion('retention')">How long is data retained?</span></li>
+            <li><span class="faq-link" onclick="toggleAccordion('accountability')">How to contact for privacy concerns?</span></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="policy-footer">
+        <p style="text-align: left;">For questions or concerns, contact us at: <strong>rsusafespace@gmail.com</strong></p>
+        <div class="contact-info">
+          RSU SafeSpace - Committed to Your Privacy and Mental Health Support
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Security Policy Card -->
+  <div class="action-card" id="securityPolicyCard">
+    <div class="action-card-content">
+      <div class="policy-header">
+        <h2 style="color: green;">Security and Policy</h2>
+        <button class="close-btn" onclick="closeActionCard()">&times;</button>
+      </div>
+      <div class="policy-body">
+        <div class="policy-content">
+          <div class="accordion" id="security-measures">
+            <button class="accordion-header" style="color: green;" onclick="toggleAccordion('security-measures'); return false;">Security Measures Implemented</button>
+            <div class="accordion-content">
+              <p style="text-align: left;">We implement multiple layers of security to protect your data:</p>
+              <div style="list-style: none; padding: 0; text-align: left;">
+                <div><strong>Firebase Authentication:</strong> Secure login with encrypted credentials managed by Google.</div>
+                <div><strong>TLS Encryption:</strong> All communications between client and Firebase are encrypted in transit.</div>
+                <div><strong>Role-Based Access:</strong> Only authenticated students can access student and message data.</div>
+                <div><strong>Data Isolation:</strong> Each counselor session is authenticated; unauthorized users are redirected to login.</div>
+                <div><strong>Session Management:</strong> sessionStorage and localStorage are cleared upon logout or user switch.</div>
+                <div><strong>Cloud Data Security:</strong> Firebase Realtime Database and Firestore enforce access control rules and comply with ISO/IEC 25010 standards for cloud privacy.</div>
+                <div><strong>Audit Trail Readiness:</strong> System logs and message timestamps provide traceability for accountability.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion" id="user-responsibilities">
+            <button class="accordion-header" style="color: green;" onclick="toggleAccordion('user-responsibilities'); return false;">User Responsibilities for Security</button>
+            <div class="accordion-content">
+              <p style="text-align: left;">As a user of RSU SafeSpace, you play a crucial role in maintaining the security of the platform. Please adhere to the following responsibilities:</p>
+              <div style="list-style: none; padding: 0; text-align: left;">
+                <div><strong>Strong Passwords:</strong> Use complex passwords and change them regularly.</div>
+                <div><strong>Account Protection:</strong> Do not share your login credentials with anyone.</div>
+                <div><strong>Device Security:</strong> Keep your devices updated and use antivirus software.</div>
+                <div><strong>Suspicious Activity:</strong> Report any unusual account activity immediately.</div>
+                <div><strong>Logout:</strong> Always log out when finished using the platform.</div>
+                <div><strong>Privacy:</strong> Be mindful of the information you share in counseling sessions.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion" id="incident-response">
+            <button class="accordion-header" style="color: green;" onclick="toggleAccordion('incident-response'); return false;">Incident Reporting and Response</button>
+            <div class="accordion-content">
+              <p style="text-align: left;">In the event of a security incident, RSU SafeSpace has established procedures to respond quickly and effectively:</p>
+              <div style="list-style: none; padding: 0; text-align: left;">
+                <div><strong>Reporting:</strong> Contact our security team immediately at rsusafespace@gmail.com if you suspect a breach.</div>
+                <div><strong>Response Time:</strong> We aim to acknowledge reports within 24 hours and provide updates as the investigation progresses.</div>
+                <div><strong>Investigation:</strong> All incidents are thoroughly investigated, and affected users are notified.</div>
+                <div><strong>Recovery:</strong> We provide support to restore access and secure accounts.</div>
+                <div><strong>Prevention:</strong> Lessons learned are used to improve our security measures.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion" id="security-best-practices">
+            <button class="accordion-header" style="color: green;" onclick="toggleAccordion('security-best-practices'); return false;">Security Best Practices</button>
+            <div class="accordion-content">
+              <p style="text-align: left;">Follow these best practices to enhance your online security while using RSU SafeSpace:</p>
+              <div style="list-style: none; padding: 0; text-align: left;">
+                <div><strong>Enable 2FA:</strong> Use two-factor authentication for an extra layer of protection.</div>
+                <div><strong>Regular Updates:</strong> Keep your browser and operating system up to date.</div>
+                <div><strong>Public Wi-Fi Caution:</strong> Avoid accessing sensitive information on public networks.</div>
+                <div><strong>Phishing Awareness:</strong> Be wary of suspicious emails or links claiming to be from SafeSpace.</div>
+                <div><strong>Secure Connections:</strong> Ensure you're using HTTPS when accessing the platform.</div>
+                <div><strong>Monitor Activity:</strong> Regularly check your account for unauthorized access.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion" id="acceptable-use">
+            <button class="accordion-header" style="color: green;" onclick="toggleAccordion('acceptable-use'); return false;">Acceptable Use Policy</button>
+            <div class="accordion-content">
+              <p style="text-align: left;">RSU SafeSpace is committed to providing a safe and respectful environment. Users must adhere to the following acceptable use guidelines:</p>
+              <div style="list-style: none; padding: 0; text-align: left;">
+                <div><strong>Respectful Communication:</strong> Treat counselors and other users with respect.</div>
+                <div><strong>Appropriate Content:</strong> Do not share harmful, offensive, or illegal content.</div>
+                <div><strong>Confidentiality:</strong> Maintain the confidentiality of counseling sessions.</div>
+                <div><strong>System Integrity:</strong> Do not attempt to hack, disrupt, or misuse the platform.</div>
+                <div><strong>Compliance:</strong> Follow all applicable laws and university policies.</div>
+                <div><strong>Reporting:</strong> Report any violations of this policy to the administrators.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-sidebar">
+          <div class="faq-title" style="color: green;">Frequently Asked Questions</div>
+          <ul class="faq-list" style="list-style: none; padding: 0;">
+            <li><span class="faq-link" onclick="toggleAccordion('security-measures')">How is my data secured?</span></li>
+            <li><span class="faq-link" onclick="toggleAccordion('user-responsibilities')">What are my security responsibilities?</span></li>
+            <li><span class="faq-link" onclick="toggleAccordion('incident-response')">How do I report a security incident?</span></li>
+            <li><span class="faq-link" onclick="toggleAccordion('security-best-practices')">What are security best practices?</span></li>
+            <li><span class="faq-link" onclick="toggleAccordion('acceptable-use')">What is the acceptable use policy?</span></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="policy-footer">
+        <p style="text-align: left;">For questions or concerns, contact us at: <strong>rsusafespace@gmail.com</strong></p>
+        <div class="contact-info">
+          RSU SafeSpace - Committed to Your Privacy and Mental Health Support
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- About RSU SafeSpace Card -->
+  <div class="action-card" id="aboutSafeSpaceCard">
+    <div class="action-card-content">
+      <div class="policy-header">
+        <h2 style="color: green;">About RSU SafeSpace</h2>
+        <button class="close-btn" onclick="closeActionCard()">&times;</button>
+      </div>
+      <div class="policy-body">
+        <div class="policy-content">
+          <div class="accordion" id="mission">
+            <button class="accordion-header" style="color: green;" onclick="toggleAccordion('mission'); return false;">Our Mission</button>
+            <div class="accordion-content">
+              <p style="text-align: left;">RSU shall nurture an academic environment that provides advanced education, higher technological and professional instruction, and technical expertise in agriculture and fishery, forestry, engineering and technology, education, arts and sciences, and other relevant fields of study and collaborate with other institutions and communities through responsive, relevant, and research-based extension services.</p>
+            </div>
+          </div>
+
+          <div class="accordion" id="vision">
+            <button class="accordion-header" style="color: green;" onclick="toggleAccordion('vision'); return false;">Our Vision</button>
+            <div class="accordion-content">
+              <p style="text-align: left;">A research-based academic institution committed to excellence and service nurturing globally competitive workforce towards sustainable development.</p>
+            </div>
+          </div>
+
+          <div class="accordion" id="core-values">
+            <button class="accordion-header" style="color: green;" onclick="toggleAccordion('core-values'); return false;">Our Core Values (SCRIBES)</button>
+            <div class="accordion-content">
+              <p style="text-align: left;">Our brand of leadership shall be guided by these seven core values:</p>
+              <div style="list-style: none; padding: 0; text-align: left;">
+                <div><strong>STEWARDSHIP:</strong> Everything that we have today is borrowed. Our influence, our power, our environment, and our lives. Let us make use of them responsibly and conscientiously because we will never pass this world again.</div>
+                <div><strong>COMPETENCE:</strong> An academic institution run by competent people will never go astray. Competence is knowing our job and doing it beyond what is expected of us.</div>
+                <div><strong>RESILIENCE:</strong> We must be strong in trying times, never surrender nor believe in defeat. Let failure be our defining moments.</div>
+                <div><strong>INTEGRITY:</strong> To be persuasive, we must be believable. To be believable, we must be credible; and to be credible, we must be truthful. This is integrity.</div>
+                <div><strong>BALANCE:</strong> Life is best lived in harmony. Balance then is crucial to a good life. RSU embraces the concept of understanding life and how to keep it best in balance. When there is balance, there is order. This is our holistic approach to the total development of man.</div>
+                <div><strong>EXCELLENCE:</strong> There is still no substitute for excellence. It is hard to achieve, but it can start as a habit.</div>
+                <div><strong>SERVICE:</strong> Community service and development is what makes a University, otherwise, we become an academic institution for nothing.</div>
+              </div>
+              <p style="text-align: left;">These core values will be called altogether as SCRIBES as these will be the university's guiding principles in our efforts to make Romblon State University a recognized Higher Education Institution (HEI) in the region and beyond in the coming years.</p>
+            </div>
+          </div>
+
+          <div class="accordion" id="services">
+            <button class="accordion-header" style="color: green;" onclick="toggleAccordion('services'); return false;">Our Services</button>
+            <div class="accordion-content">
+              <p style="text-align: left;">RSU SafeSpace offers services based on counselor availability to support student mental health:</p>
+              <div style="list-style: none; padding: 0; text-align: left;">
+                <div><strong>Individual Counseling:</strong> One-on-one sessions with licensed counselors</div>
+                <div><strong>Mental Health Assessments:</strong> Self-assessment tools and professional evaluations</div>
+                <div><strong>Educational Resources:</strong> Articles, videos, and workshops on mental health topics</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion" id="team">
+            <button class="accordion-header" style="color: green;" onclick="toggleAccordion('team'); return false;">Our Team</button>
+            <div class="accordion-content">
+              <p style="text-align: left;">Our dedicated team consists of licensed psychologists, counselors, mental health professionals, and advocates who are committed to providing compassionate care. We maintain the highest standards of confidentiality and adhere to ethical guidelines in all our interactions.</p>
+            </div>
+          </div>
+
+          <div class="accordion" id="approach">
+            <button class="accordion-header" style="color: green;" onclick="toggleAccordion('approach'); return false;">Our Approach</button>
+            <div class="accordion-content">
+              <p style="text-align: left;">We take a holistic, student-centered approach to mental health support:</p>
+              <div style="list-style: none; padding: 0; text-align: left;">
+                <div><strong>Confidentiality:</strong> All communications are strictly confidential</div>
+                <div><strong>Cultural Sensitivity:</strong> Services tailored to diverse backgrounds and experiences</div>
+                <div><strong>Prevention Focus:</strong> Emphasis on early intervention and mental health education</div>
+                <div><strong>Collaboration:</strong> Working with university staff, faculty, and external partners</div>
+                <div><strong>Evidence-Based:</strong> Practices grounded in current research and best practices</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion" id="commitment">
+            <button class="accordion-header" style="color: green;" onclick="toggleAccordion('commitment'); return false;">Our Commitment</button>
+            <div class="accordion-content">
+              <p style="text-align: left;">RSU SafeSpace is committed to reducing the stigma surrounding mental health in academia, promoting help-seeking behaviors, and creating a campus culture that prioritizes mental wellness. We continuously evaluate and improve our services to meet the evolving needs of our students.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-sidebar">
+          <div class="faq-title" style="color: green;">Learn More</div>
+          <ul class="faq-list" style="list-style: none; padding: 0;">
+            <li><span class="faq-link" onclick="toggleAccordion('mission')">What is our mission?</span></li>
+            <li><span class="faq-link" onclick="toggleAccordion('vision')">What is our vision?</span></li>
+            <li><span class="faq-link" onclick="toggleAccordion('core-values')">What are our core values?</span></li>
+            <li><span class="faq-link" onclick="toggleAccordion('services')">What services do we offer?</span></li>
+            <li><span class="faq-link" onclick="toggleAccordion('team')">Who is our team?</span></li>
+            <li><span class="faq-link" onclick="toggleAccordion('approach')">What is our approach?</span></li>
+            <li><span class="faq-link" onclick="toggleAccordion('commitment')">What are we committed to?</span></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="policy-footer">
+        <p style="text-align: left;">For more information or to get involved, contact us at: <strong>rsusafespace@gmail.com</strong></p>
+        <div class="contact-info">
+          RSU SafeSpace - Supporting Student Mental Health Since 2023
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- About Developers Modal -->
+  <div class="action-card" id="aboutDevelopersCard">
+    <div class="action-card-content">
+      <div class="policy-header">
+        <h2 style="color: green;">About the Developers</h2>
+        <button class="close-btn" onclick="closeActionCard()">&times;</button>
+      </div>
+      <div class="policy-body">
+        <div class="policy-content">
+          <p style="text-align: left; margin-bottom: 2rem;">Meet the talented team behind RSU SafeSpace:</p>
+          <div style="display: flex; flex-wrap: wrap; gap: 2rem; justify-content: center;">
+            <div style="text-align: center; flex: 1 1 200px; min-width: 150px;">
+              <img src="image1.png" alt="Rian Nicole F. Deocades" style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover; margin-bottom: 1rem; border: 3px solid #00723f;">
+              <h3 style="color: green; margin: 0.5rem 0;">Rian Nicole F. Deocades</h3>
+            </div>
+            <div style="text-align: center; flex: 1 1 200px; min-width: 150px;">
+              <img src="image1.png" alt="Mary Joy Ermino" style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover; margin-bottom: 1rem; border: 3px solid #00723f;">
+              <h3 style="color: green; margin: 0.5rem 0;">Mary Joy Ermino</h3>
+            </div>
+            <div style="text-align: center; flex: 1 1 200px; min-width: 150px;">
+              <img src="image1.png" alt="Jean Denise G. Dalisay" style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover; margin-bottom: 1rem; border: 3px solid #00723f;">
+              <h3 style="color: green; margin: 0.5rem 0;">Jean Denise G. Dalisay</h3>
+            </div>
+            <div style="text-align: center; flex: 1 1 200px; min-width: 150px;">
+              <img src="image1.png" alt="Cristine Joy G. Bonifacio" style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover; margin-bottom: 1rem; border: 3px solid #00723f;">
+              <h3 style="color: green; margin: 0.5rem 0;">Cristine Joy G. Bonifacio</h3>
+            </div>
+            <div style="text-align: center; flex: 1 1 200px; min-width: 150px;">
+              <img src="image1.png" alt="Divine F. Fradejas" style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover; margin-bottom: 1rem; border: 3px solid #00723f;">
+              <h3 style="color: green; margin: 0.5rem 0;">Divine F. Fradejas</h3>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="policy-footer">
+        <p style="text-align: center;">Thank you for using RSU SafeSpace!</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sign Out Confirmation Modal -->
+    <div id="signOutModal" class="action-card">
+      <div class="action-card-content">
+        <button id="closeSignOutModal" class="close-btn">&times;</button>
+        <h3>Sign Out</h3>
+        <p>Are you sure you want to sign out?</p>
+        <div style="margin-top: 1.5rem; display: flex; justify-content: center; gap: 1rem;">
+          <button id="cancelSignOut" style="padding: 0.5rem 1rem; border-radius: 5px; border: 1px solid #ccc; background: #f0f0f0; cursor: pointer;">Cancel</button>
+          <button id="confirmSignOut" style="padding: 0.5rem 1rem; border-radius: 5px; border: none; background: #dc3545; color: white; cursor: pointer;">Sign Out</button>
+        </div>
+      </div>
+    </div>
+
+  <!-- 2FA Confirmation Modal -->
+    <div id="twoFAConfirmModal" class="action-card">
+      <div class="action-card-content">
+        <button id="closeTwoFAConfirmModal" class="close-btn">&times;</button>
+        <h3>Confirm 2FA Change</h3>
+        <p id="twoFAConfirmMessage">Are you sure you want to enable/disable 2FA?</p>
+        <div style="margin-top: 1.5rem; display: flex; justify-content: center; gap: 1rem;">
+          <button id="cancelTwoFAConfirm" style="padding: 0.5rem 1rem; border-radius: 5px; border: 1px solid #ccc; background: #f0f0f0; cursor: pointer;">Cancel</button>
+          <button id="confirmTwoFAConfirm" style="padding: 0.5rem 1rem; border-radius: 5px; border: none; background: #00723f; color: white; cursor: pointer;">Confirm</button>
+        </div>
+      </div>
+    </div>
+
+  <!-- Add Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-messaging.js"></script>
+<script src="firebase_config.js"></script>
+<script src="notification.js"></script>
+<script>
+  // Global functions for inline onclick
+  window.closeActionCard = function() {
+    document.getElementById('actionCard').style.display = 'none';
+    document.getElementById('changePasswordCard').style.display = 'none';
+    document.getElementById('dataPrivacyPolicyCard').style.display = 'none';
+    document.getElementById('securityPolicyCard').style.display = 'none';
+    document.getElementById('aboutSafeSpaceCard').style.display = 'none';
+    document.getElementById('aboutDevelopersCard').style.display = 'none';
+    document.body.style.overflow = '';
+  };
+
+  // Toggle sidebar collapse
+  window.toggleSidebar = function() {
+    const sidebar = document.getElementById('sidebar');
+    const topbar = document.getElementById('topbar');
+    const content = document.getElementById('content');
+    sidebar.classList.toggle('collapsed');
+    topbar.classList.toggle('shifted');
+    content.classList.toggle('shifted');
+  };
+
+  // Toggle notification dropdown
+  window.toggleNotif = function() {
+    const dropdown = document.getElementById('notifDropdown');
+    if (dropdown) {
+      dropdown.classList.toggle('active');
+      if (dropdown.classList.contains('active')) {
+        // Opening: hide badge
+        const badge = document.querySelector('.notif-badge');
+        if (badge) badge.classList.add('hidden');
+      } else {
+        // Closing: show badge if has notifications
+        updateBadgeVisibility();
+      }
+    }
+  };
+</script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+    enforceAuthRedirect();
+    // Load in-app notifications from database (loaded in firebase_config.js)
+    setTimeout(() => { // Wait for firebase_config to load
+      const notifications = window.inAppNotifications || [];
+      const list = document.querySelector('.notif-list');
+      const noNotifs = document.getElementById('no-notifs');
+      if (list && noNotifs && notifications.length > 0) {
+        noNotifs.style.display = 'none';
+        notifications.forEach(notif => {
+          const item = document.createElement('div');
+          item.className = 'notif-item';
+          item.textContent = notif.message;
+          item.dataset.id = notif.id;
+          item.onclick = function() {
+            window.location.href = 'messages.html'; // Assume message notifications
+            item.remove();
+            if (window.inAppNotifications) {
+              window.inAppNotifications = window.inAppNotifications.filter(n => n.id != notif.id);
+              const user = firebase.auth().currentUser;
+              if (user) {
+                const updatedSettings = { ...window.notificationSettings, inAppNotifications: window.inAppNotifications };
+                firebase.database().ref('student_notif').child(user.uid).set(updatedSettings);
+              }
+            }
+            updateBadgeVisibility();
+          };
+          list.appendChild(item);
+        });
+        updateBadgeVisibility();
+      }
+    }, 1000); // Delay to ensure loaded
+  });
+</script>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    // Auto Logout Toggle
+    const autoLogoutSwitch = document.getElementById('autoLogout');
+    let isAutoLogoutEnabled = false; // will be set from db
+    autoLogoutSwitch.addEventListener('change', function() {
+      isAutoLogoutEnabled = this.checked;
+      // Save to database
+      const user = firebase.auth().currentUser;
+      if (user) {
+        const uid = user.uid;
+        firebase.database().ref('students').orderByChild('uid').equalTo(uid).once('value').then(function(snapshot) {
+          if (snapshot.exists()) {
+            snapshot.forEach(function(child) {
+              const key = child.key;
+              firebase.database().ref('students/' + key).update({ autoLogout: isAutoLogoutEnabled });
+            });
+          }
+        });
+      }
+      if (isAutoLogoutEnabled) {
+        startAutoLogoutTimer();
+      } else {
+        clearTimeout(autoLogoutTimer);
+      }
+    });
+
+    // Appointment Notifications Toggle
+    const appointmentNotificationsSwitch = document.getElementById('appointmentNotifications');
+    appointmentNotificationsSwitch.checked = true; // default true, will be overridden by DB
+    // Listener will be added after DB load
+
+    // Message Notifications Toggle
+    const messageNotificationsSwitch = document.getElementById('messageNotifications');
+    messageNotificationsSwitch.checked = true; // default true, will be overridden by DB
+    // Listener will be added after DB load
+
+    // Auto Logout Timer
+    let autoLogoutTimer;
+    const AUTO_LOGOUT_TIME = 30 * 60 * 1000; // 30 minutes
+
+    function startAutoLogoutTimer() {
+      clearTimeout(autoLogoutTimer);
+      autoLogoutTimer = setTimeout(() => {
+        if (isAutoLogoutEnabled) {
+          firebase.auth().signOut().then(() => {
+            window.location.href = 'signin.html';
+          });
+        }
+      }, AUTO_LOGOUT_TIME);
+    }
+
+    function resetAutoLogoutTimer() {
+      if (isAutoLogoutEnabled) {
+        startAutoLogoutTimer();
+      }
+    }
+
+    // Track user activity
+    ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'].forEach(event => {
+      document.addEventListener(event, resetAutoLogoutTimer, true);
+    });
+
+    // Load user profile from database
+    firebase.auth().onAuthStateChanged(function(user) {
+      if (user) {
+        // Populate topbar profile and student ID
+        try {
+          firebase.database().ref('students').orderByChild('uid').equalTo(user.uid).once('value').then(function(snapshot) {
+            if (snapshot.exists()) {
+              snapshot.forEach(function(child) {
+                const data = child.val();
+                const key = child.key;
+                // Update profile image in topbar
+                const topbarProfile = document.getElementById('topbarProfile');
+                if (topbarProfile) {
+                  if (data.photo_url) {
+                    topbarProfile.innerHTML = `<img src="${data.photo_url}" alt="Profile Photo" style="width:38px;height:38px;border-radius:50%;object-fit:cover;">`;
+                  } else {
+                    topbarProfile.textContent = (data.username || data.first_name || 'U')[0].toUpperCase();
+                  }
+                }
+                // Update student ID in topbar
+                const topbarStudentId = document.querySelector('.portal-title small');
+                if (topbarStudentId) {
+                  // Helper to resolve student ID
+                  const resolveStudentId = (src) => {
+                    if (!src) return '';
+                    const keys = ['student_id','studentId','id','stid'];
+                    for (const k of keys) {
+                      if (src[k] !== undefined && src[k] !== null) return src[k];
+                    }
+                    return '';
+                  };
+                  const sid = resolveStudentId(data) || key || 'N/A';
+                  topbarStudentId.textContent = "ID: " + sid;
+                  // expose a JS variable and a data-* attribute so other scripts can read it
+                  try { window.currentStudentId = resolveStudentId(data) || key || null; } catch (e) { /* ignore */ }
+                  try { window.currentStudentKey = key; } catch (e) { /* ignore */ }
+                  try { document.documentElement.dataset.studentId = resolveStudentId(data) || key || ''; } catch (e) { /* ignore */ }
+                }
+                // Load auto logout setting
+                isAutoLogoutEnabled = data.autoLogout === true;
+                autoLogoutSwitch.checked = isAutoLogoutEnabled;
+                if (isAutoLogoutEnabled) {
+                  startAutoLogoutTimer();
+                }
+                // Load email 2FA setting
+                isEmail2FAEnabled = data.email2FA === true;
+                email2FASwitch.checked = isEmail2FAEnabled;
+
+                // Load notification settings from student_notif
+                firebase.database().ref('student_notif').child(user.uid).once('value').then(function(notifSnapshot) {
+                  const notifSettings = notifSnapshot.val() || { appointment: true, message: true };
+                  window.notificationSettings = notifSettings;
+
+                  // Set toggle states
+                  const appointmentNotificationsSwitch = document.getElementById('appointmentNotifications');
+                  const messageNotificationsSwitch = document.getElementById('messageNotifications');
+                  if (appointmentNotificationsSwitch) {
+                    appointmentNotificationsSwitch.checked = notifSettings.appointment !== false;
+                    appointmentNotificationsSwitch.addEventListener('change', function() {
+                      const newSettings = { ...window.notificationSettings, appointment: this.checked };
+                      window.notificationSettings = newSettings;
+                      firebase.database().ref('student_notif').child(user.uid).set(newSettings);
+                      if (this.checked) {
+                        NotificationUtils.requestNotificationPermission();
+                      }
+                    });
+                  }
+                  if (messageNotificationsSwitch) {
+                    messageNotificationsSwitch.checked = notifSettings.message !== false;
+                    messageNotificationsSwitch.addEventListener('change', function() {
+                      const newSettings = { ...window.notificationSettings, message: this.checked };
+                      window.notificationSettings = newSettings;
+                      firebase.database().ref('student_notif').child(user.uid).set(newSettings);
+                      if (this.checked) {
+                        NotificationUtils.requestNotificationPermission();
+                      }
+                    });
+                  }
+
+                  // Request permission if any notifications are enabled
+                  if (notifSettings.appointment || notifSettings.message) {
+                    NotificationUtils.requestNotificationPermission();
+                  }
+                });
+              });
+            }
+          }).catch(function(err){ console.warn('Failed to load student profile', err); });
+        } catch(e) { console.warn('Error while populating profile', e); }
+      }
+    });
+
+    const signOutButton = document.getElementById('signOutButton');
+    const signOutModal = document.getElementById('signOutModal');
+    const closeSignOutModal = document.getElementById('closeSignOutModal');
+    const cancelSignOut = document.getElementById('cancelSignOut');
+    const confirmSignOut = document.getElementById('confirmSignOut');
+
+    if (signOutButton) {
+      signOutButton.addEventListener('click', () => {
+        signOutModal.style.display = 'flex';
+      });
+    }
+
+    const changePasswordItem = document.getElementById('changePasswordItem');
+    if (changePasswordItem) {
+      changePasswordItem.addEventListener('click', showChangePasswordCard);
+    }
+
+    const dataPrivacyItem = document.getElementById('dataPrivacyItem');
+    if (dataPrivacyItem) {
+      dataPrivacyItem.addEventListener('click', showDataPrivacyPolicyCard);
+    }
+
+    const securityPolicyItem = document.getElementById('securityPolicyItem');
+    if (securityPolicyItem) {
+      securityPolicyItem.addEventListener('click', showSecurityPolicyCard);
+    }
+
+    const helpCenterItem = document.getElementById('helpCenterItem');
+    if (helpCenterItem) {
+      helpCenterItem.addEventListener('click', () => showActionCard('Help Center', 'Contact us at <a href="mailto:rsusafespace@gmail.com">rsusafespace@gmail.com</a> for assistance.'));
+    }
+
+    const aboutSafeSpaceItem = document.getElementById('aboutSafeSpaceItem');
+    if (aboutSafeSpaceItem) {
+      aboutSafeSpaceItem.addEventListener('click', showAboutSafeSpaceCard);
+    }
+
+    const aboutDevelopersItem = document.getElementById('aboutDevelopersItem');
+    if (aboutDevelopersItem) {
+      aboutDevelopersItem.addEventListener('click', showAboutDevelopersCard);
+    }
+
+    if (closeSignOutModal) {
+      closeSignOutModal.addEventListener('click', () => {
+        signOutModal.style.display = 'none';
+      });
+    }
+
+    if (cancelSignOut) {
+      cancelSignOut.addEventListener('click', () => {
+        signOutModal.style.display = 'none';
+      });
+    }
+
+    if (confirmSignOut) {
+      confirmSignOut.addEventListener('click', () => {
+        firebase.auth().signOut().then(() => {
+          console.log('User signed out successfully.');
+          window.location.href = 'signin.html';
+        }).catch((error) => {
+          console.error('Sign out error:', error);
+          alert('An error occurred during sign out. Please try again.');
+        });
+      });
+    }
+
+    const twoFAConfirmModal = document.getElementById('twoFAConfirmModal');
+    const closeTwoFAConfirmModal = document.getElementById('closeTwoFAConfirmModal');
+    const cancelTwoFAConfirm = document.getElementById('cancelTwoFAConfirm');
+    const confirmTwoFAConfirm = document.getElementById('confirmTwoFAConfirm');
+
+    if (closeTwoFAConfirmModal) {
+      closeTwoFAConfirmModal.addEventListener('click', () => {
+        twoFAConfirmModal.style.display = 'none';
+        // Revert the switch
+        email2FASwitch.checked = isEmail2FAEnabled;
+      });
+    }
+
+    if (cancelTwoFAConfirm) {
+      cancelTwoFAConfirm.addEventListener('click', () => {
+        twoFAConfirmModal.style.display = 'none';
+        // Revert the switch
+        email2FASwitch.checked = isEmail2FAEnabled;
+      });
+    }
+
+    if (confirmTwoFAConfirm) {
+      confirmTwoFAConfirm.addEventListener('click', () => {
+        const intendedState = twoFAConfirmModal.dataset.intendedState === 'true';
+        isEmail2FAEnabled = intendedState;
+        // Save to database
+        const user = firebase.auth().currentUser;
+        if (user) {
+          const uid = user.uid;
+          firebase.database().ref('students').orderByChild('uid').equalTo(uid).once('value').then(function(snapshot) {
+            if (snapshot.exists()) {
+              snapshot.forEach(function(child) {
+                const key = child.key;
+                firebase.database().ref('students/' + key).update({ email2FA: isEmail2FAEnabled });
+              });
+            }
+          });
+        }
+        twoFAConfirmModal.style.display = 'none';
+        showActionCard('Success', intendedState ? 'Email 2FA enabled.' : 'Email 2FA disabled.');
+      });
+    }
+
+    // Close modal if clicking outside of it
+    window.addEventListener('click', (event) => {
+      if (event.target == signOutModal) {
+        signOutModal.style.display = 'none';
+      }
+      if (event.target == document.getElementById('actionCard')) {
+        closeActionCard();
+      }
+      if (event.target == document.getElementById('changePasswordCard')) {
+        closeActionCard();
+      }
+      if (event.target == document.getElementById('dataPrivacyPolicyCard')) {
+        closeActionCard();
+      }
+      if (event.target == document.getElementById('securityPolicyCard')) {
+        closeActionCard();
+      }
+      if (event.target == document.getElementById('aboutSafeSpaceCard')) {
+        closeActionCard();
+      }
+      if (event.target == document.getElementById('aboutDevelopersCard')) {
+        closeActionCard();
+      }
+      if (event.target == twoFAConfirmModal) {
+        twoFAConfirmModal.style.display = 'none';
+        // Revert the switch
+        email2FASwitch.checked = isEmail2FAEnabled;
+      }
+    });
+
+    // Change Password Functionality
+    function showActionCard(title, description) {
+      document.getElementById('actionTitle').textContent = title;
+      document.getElementById('actionMessage').innerHTML = description;
+      document.getElementById('actionCard').style.display = 'flex';
+    }
+
+    function showChangePasswordCard() {
+      document.getElementById('changePasswordCard').style.display = 'flex';
+    }
+
+    document.getElementById('changePasswordForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const currentPassword = document.getElementById('currentPassword').value;
+      const newPassword = document.getElementById('newPassword').value;
+      const confirmPassword = document.getElementById('confirmPassword').value;
+
+      if (newPassword !== confirmPassword) {
+        showActionCard('Error', 'New passwords do not match.');
+        return;
+      }
+
+      if (newPassword.length < 6) {
+        showActionCard('Error', 'New password must be at least 6 characters long.');
+        return;
+      }
+
+      const user = firebase.auth().currentUser;
+      if (!user) {
+        showActionCard('Error', 'No user is signed in.');
+        return;
+      }
+
+      // Check if user has password provider
+      const hasPasswordProvider = user.providerData.some(provider => provider.providerId === 'password');
+      if (!hasPasswordProvider) {
+        showActionCard('Error', 'Password change is not available for this account type. Please use the sign-in method you used to create this account.');
+        return;
+      }
+
+      const credential = firebase.auth.EmailAuthProvider.credential(user.email, currentPassword);
+
+      user.reauthenticateWithCredential(credential).then(() => {
+        user.updatePassword(newPassword).then(() => {
+          showActionCard('Success', 'Password changed successfully.');
+          document.getElementById('changePasswordCard').style.display = 'none';
+          document.getElementById('changePasswordForm').reset();
+        }).catch((error) => {
+          showActionCard('Error', 'Error changing password: ' + error.message);
+        });
+      }).catch((error) => {
+        showActionCard('Error', 'Current password is incorrect.');
+      });
+    });
+
+    // Email 2FA Toggle
+    const email2FASwitch = document.getElementById('email2FA');
+    let isEmail2FAEnabled = false; // will be set from db
+    email2FASwitch.addEventListener('change', function() {
+      const intendedState = this.checked;
+      const message = intendedState ? 'Are you sure you want to enable 2FA? You will need to enter a code from your email during sign-in.' : 'Are you sure you want to disable 2FA?';
+      document.getElementById('twoFAConfirmMessage').textContent = message;
+      document.getElementById('twoFAConfirmModal').style.display = 'flex';
+
+      // Store the intended state
+      document.getElementById('twoFAConfirmModal').dataset.intendedState = intendedState;
+    });
+
+    // Data Privacy Functions
+    function showDataPrivacyPolicyCard() {
+      document.getElementById('dataPrivacyPolicyCard').style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+    }
+
+    // Security Policy Function
+    function showSecurityPolicyCard() {
+      document.getElementById('securityPolicyCard').style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+    }
+
+    // About RSU SafeSpace Function
+    function showAboutSafeSpaceCard() {
+      document.getElementById('aboutSafeSpaceCard').style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+    }
+
+    // About Developers Function
+    function showAboutDevelopersCard() {
+      document.getElementById('aboutDevelopersCard').style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+    }
+
+    // Accordion Toggle Function
+    window.toggleAccordion = function(accordionId) {
+      const accordion = document.getElementById(accordionId);
+      const header = accordion.querySelector('.accordion-header');
+      const content = accordion.querySelector('.accordion-content');
+      
+      // Close all other accordions
+      document.querySelectorAll('.accordion').forEach(acc => {
+        if (acc !== accordion) {
+          acc.classList.remove('active');
+        }
+      });
+      
+      // Toggle current accordion
+      accordion.classList.toggle('active');
+      
+      // Scroll to the accordion within the modal
+      if (accordion.classList.contains('active')) {
+        accordion.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+
+    // Update closeActionCard to close all cards
+    function closeActionCard() {
+      document.getElementById('actionCard').style.display = 'none';
+      document.getElementById('changePasswordCard').style.display = 'none';
+      document.getElementById('dataPrivacyPolicyCard').style.display = 'none';
+      document.getElementById('securityPolicyCard').style.display = 'none';
+      document.body.style.overflow = '';
+    }
+
+    // Add event listeners for close buttons
+    document.querySelectorAll('.close-btn').forEach(btn => {
+      btn.addEventListener('click', closeActionCard);
+    });
+  });
+</script>
+</body>
+</html>

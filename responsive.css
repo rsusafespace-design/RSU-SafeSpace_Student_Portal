@@ -1,0 +1,125 @@
+/* Global responsive stylesheet for SafeSpace System
+   Mobile-first utilities and overrides to make existing pages responsive
+   This file is intentionally non-invasive: it uses high-specificity overrides
+   sparingly and falls back to the page's own styles where possible.
+*/
+:root{
+  --sidebar-width:250px;
+  --collapsed-width:80px;
+  --topbar-height:60px;
+  --max-content-width:1200px;
+  --gap:1rem;
+  --primary:#0f7a34;
+}
+/* Reset and sensible defaults */
+*,*::before,*::after{box-sizing:border-box}
+html{font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;line-height:1.4;-webkit-font-smoothing:antialiased}
+body{margin:0;background:#f8fafc;color:#1f2937;overflow-x:hidden}
+img,svg,video{max-width:100%;height:auto;display:block}
+a{color:inherit}
+/* Fluid typography */nhtml{font-size:clamp(14px, 1.4vw, 16px)}
+/* Container */
+.content{padding:1rem;max-width:var(--max-content-width);margin:calc(var(--topbar-height) + 1rem) auto;transition:margin-left .25s ease;padding-bottom:80px}
+/* Many pages use .content with margin-left to account for sidebar; prefer CSS variable
+   Users can toggle .shifted/.shrink/collapsed on body or #sidebar to change margin-left
+*/
+body.sidebar-open .content{margin-left:var(--sidebar-width)}
+body.sidebar-collapsed .content{margin-left:var(--collapsed-width)}
+@media (max-width: 1024px){
+  .content{padding-left:1rem;padding-right:1rem}
+}
+@media (max-width: 768px){
+  .content{margin-left:0;margin-top:calc(var(--topbar-height) + 0.5rem);padding-bottom:90px}
+}
+/* Sidebar & Topbar helpers (non-invasive) */
+.sidebar{transition:transform .25s ease,width .25s ease}
+.topbar{position:fixed;top:0;left:0;right:0;height:var(--topbar-height);z-index:1200}
+/* Ensure content-footer isn't offset by inline styles: override */
+.content-footer{margin-left:0 !important;max-width:100% !important;box-sizing:border-box !important;padding:1rem 0}
+/* Make modals responsive */
+.modal-content{max-width:720px;width:94%;margin:0 auto}
+@media (max-width:480px){.modal-content{max-width:96%;padding:0.75rem}}
+/* Grid helpers */
+.row{display:flex;flex-wrap:wrap;gap:var(--gap)}
+.col{flex:1 1 0%;min-width:0}
+.col-1{flex:0 0 8.333333%}
+.col-2{flex:0 0 16.666667%}
+.col-3{flex:0 0 25%}
+.col-4{flex:0 0 33.333333%}
+.col-6{flex:0 0 50%}
+.col-12{flex:0 0 100%}
+/* Make appointment cards and lists adapt */
+.appointments-card, .calendar-card, .card{width:100%;box-sizing:border-box}
+.appointments-calendar-grid, .report-emergency-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+@media (max-width: 1024px){.appointments-calendar-grid,.report-emergency-grid{grid-template-columns:1fr}}
+/* Utility classes */
+.hide-mobile{display:inline-block}
+.show-mobile{display:none}
+@media (max-width:768px){.hide-mobile{display:none}.show-mobile{display:inline-block}}
+/* Buttons full width on small screens */
+button{cursor:pointer}
+@media (max-width:600px){button{min-width:0;width:100%}}
+/* Make calendar responsive */
+#calendar{width:100%}
+/* Force images in topbars/sidebars to be small and not break layout */
+.sidebar .logo, .topbar .mobile-logo, .profile img{max-width:100%;height:auto}
+/* Responsive tables - if any */
+.table-responsive{overflow-x:auto;width:100%}
+.table-responsive table{width:100%;border-collapse:collapse}
+/* Accessibility improvements */
+[role="dialog"]{outline:0}
+/* Small-screen bottom nav adjustments */
+.bottom-nav{display:none}
+@media (max-width:768px){.bottom-nav{display:flex;position:fixed;bottom:0;left:0;right:0;z-index:2000;justify-content:space-around;padding:.5rem 0;background:var(--primary);gap:.25rem}}
+/* Specific overrides to handle inline margin-lefts many files use */
+[style*="margin-left:250px"]{margin-left:0 !important}
+[style*="max-width:calc(100% - 250px)"]{max-width:100% !important}
+/* Make ephemeral fixed height calendars and appointment boxes adapt on small screens */
+.appointments-card .appointments-container, .appointments-card .appointments-list{max-height:none}
+.appointments-card .appointments-card, .appointments-card{min-height:0}
+@media (max-width:768px){.appointments-card .appointments-container{padding-right:0}}
+/* Minor visual helpers */
+.status-badge{white-space:nowrap}
+/* Provide a safe responsive image utility */
+.img-fluid{max-width:100%;height:auto}
+/* Provide container utility used by many pages */
+.container{max-width:var(--max-content-width);margin:0 auto;padding-left:1rem;padding-right:1rem}
+/* Ensure modal overlays center contents on small screens */
+.modal-overlay{display:flex;align-items:center;justify-content:center;padding:1rem}
+/* Tablet-specific adjustments: 769px — 1024px */
+@media (min-width:769px) and (max-width:1024px) {
+  /* Slightly taller topbar on tablets for comfortable tap targets */
+  :root { --topbar-height: 64px; }
+
+  /* Use collapsed sidebar space on tablets to keep content centered */
+  .sidebar { width: var(--collapsed-width); }
+  body.sidebar-open .content, .content { margin-left: var(--collapsed-width); padding-left:1rem; padding-right:1rem; }
+
+  /* Keep sidebar icons visible; hide longer label text to save horizontal space */
+  .sidebar .brand span, .sidebar a span { display: none !important; }
+
+  /* Two-column layout for appointments + calendar where space allows */
+  .appointments-calendar-grid, .report-emergency-grid { grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .appointments-card, .calendar-card { min-height: 0; padding: 1rem; }
+
+  /* Make FullCalendar toolbar wrap on tablets and keep buttons readable */
+  .calendar-card .fc { width: 100% !important; }
+  .calendar-card .fc .fc-toolbar { display:flex !important; flex-wrap:wrap !important; gap:8px !important; align-items:center !important; justify-content:space-between !important; }
+  .calendar-card .fc .fc-button { padding:6px 10px !important; }
+  #calendar { min-height: 360px; }
+
+  /* Appointment layout: horizontal with a fixed action column on the right */
+  .appointment { display:flex !important; flex-direction:row !important; gap:12px !important; align-items:flex-start !important; }
+  .appointment .appointment-info { flex:1 1 auto; }
+  .appointment-actions { flex: 0 0 200px; display:flex; flex-direction:column; gap:8px; }
+  .start-session-wrapper { position: static !important; margin-top: 8px; }
+
+  /* Tablet UX: hide mobile bottom-nav and keep a compact footer */
+  .bottom-nav { display: none !important; }
+  .content-footer { padding: 0.75rem 0 !important; }
+
+  /* Slight typographic tweaks for tablet readability */
+  .page-title { font-size: 1.35rem; }
+}
+
+/* End of responsive.css */

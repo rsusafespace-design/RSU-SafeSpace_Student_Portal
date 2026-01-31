@@ -1,0 +1,795 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Complete Profile - SafeSpace</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="responsive.css">
+  <style>
+    body{font-family:Segoe UI,Arial,sans-serif;background:#f5f7fb;color:#222;margin:0}
+    .container{max-width:860px;margin:24px auto;background:#fff;border-radius:12px;padding:20px;box-shadow:0 6px 24px rgba(10,20,40,0.06)}
+    h1{margin:0 0 8px}
+    .steps{display:flex;gap:8px;margin:12px 0 18px}
+    .step{flex:1;padding:8px 10px;border-radius:8px;background:#f1f5f9;color:#6b7280;text-align:center}
+    .step.active{background:#0f7a34;color:#fff;font-weight:700}
+    .form-section{min-height:260px}
+    .row{display:flex;gap:12px}
+    .col{flex:1}
+    label{display:block;font-size:0.95rem;margin-bottom:6px}
+  input[type=text], input[type=date], select, textarea{width:100%;padding:8px 10px;border:1px solid #d6d8dd;border-radius:8px;box-sizing:border-box}
+  .read-display{width:100%;padding:8px 10px;background:#f8fafc;border:1px solid #e6e9ee;border-radius:8px;box-sizing:border-box}
+    .actions{display:flex;gap:8px;justify-content:space-between;margin-top:16px}
+    .primary{background:#0f7a34;color:#fff;border:none;padding:10px 14px;border-radius:8px;cursor:pointer}
+  .primary[disabled]{opacity:0.6;cursor:not-allowed}
+    .secondary{background:#f1f3f5;border:1px solid #e6e9ee;padding:10px 14px;border-radius:8px;cursor:pointer}
+    .small{font-size:0.9rem;color:#666}
+    .avatar-preview{width:120px;height:120px;border-radius:8px;background:#f3f4f6;border:1px dashed #d0d5db;display:flex;align-items:center;justify-content:center;overflow:hidden}
+    .avatar-preview img{width:100%;height:100%;object-fit:cover}
+    .help{font-size:0.9rem;color:#666;margin-top:8px}
+    @media (max-width: 768px) {
+      .container { margin: 12px; padding: 16px; }
+      .steps { gap: 4px; }
+      .step { flex: 0 0 auto; width: calc(20% - 6.4px); font-size: 0.75rem; padding: 4px 6px; }
+      .row { flex-direction: column; gap: 16px; }
+      .actions { flex-direction: row; gap: 12px; align-items: stretch; }
+      .actions > div { flex: 1; }
+      .primary, .secondary { width: 100%; padding: 12px; }
+      .avatar-preview { width: 100px; height: 100px; }
+      .avatar-preview + div { flex: 1; }
+      .row .col .row { flex-direction: row; gap: 8px; align-items: center; }
+      input[type=text], input[type=date], select, textarea, .read-display { padding: 12px 10px; font-size: 16px; }
+      .step { padding: 10px 8px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Complete Your Profile</h1>
+  <div class="small">Please fill out the required sections.</div>
+
+    <div class="steps">
+      <div class="step" id="s1">1. Essential</div>
+      <div class="step" id="s2">2. Family</div>
+      <div class="step" id="s3">3. Special Groups</div>
+      <div class="step" id="s4">4. Sensitive (opt-in)</div>
+      <div class="step" id="s5">5. Coping & Review</div>
+    </div>
+
+    <div id="content" class="form-section">
+      <!-- dynamic content injected here -->
+    </div>
+
+    <div class="actions">
+      <div>
+        <button class="secondary" id="prevBtn">Previous</button>
+      </div>
+      <div>
+        <button class="primary" id="nextBtn">Next</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase SDKs + shared config -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
+  <script src="firebase_config.js"></script>
+
+  <script>
+    // Safe globals
+    const auth = window.auth || (window.firebase ? firebase.auth() : null);
+    const db = window.db || (window.firebase ? firebase.database() : null);
+    const storage = window.storage || (window.firebase && firebase.storage ? firebase.storage() : null);
+
+    const params = new URLSearchParams(window.location.search);
+    // allow optional legacy student key in URL but prefer the authenticated user's UID
+    let studentKey = params.get('key');
+
+    // UI state
+    let step = 1;
+    const maxStep = 5;
+    let draft = {};
+    const lockedFields = {};
+    let originalProfile = {};
+
+    function setActive(){
+      for (let i=1;i<=maxStep;i++){
+        const el = document.getElementById('s'+i);
+        if (el) el.classList.toggle('active', i===step);
+      }
+      renderStep();
+      // after rendering, attach validation listeners and update Next button state
+      attachValidationListeners();
+      updateNextButtonState();
+    }
+
+    function showSavingToast(){ /* placeholder */ }
+
+    // Load existing student record (and treat it as the canonical source)
+    async function loadDraft() {
+      if (!db) return;
+      try {
+        // read profile node if present, otherwise read the top-level student node
+        let p = null;
+        try{
+          const prof = await db.ref('students/' + studentKey + '/profile').once('value');
+          if (prof && prof.exists()) p = prof.val();
+        } catch(e){ console.warn('read profile node failed', e); }
+
+        if (!p) {
+          try{
+            const studentSnap = await db.ref('students/' + studentKey).once('value');
+            if (studentSnap && studentSnap.exists()) p = studentSnap.val();
+          } catch(e){ console.warn('read student node failed', e); }
+        }
+
+        if (p) {
+          // keep original canonical profile
+          originalProfile = Object.assign({}, p);
+          // merge profile into draft so UI reflects canonical values
+          draft = Object.assign({}, draft, p);
+
+          // Construct a readable full name from stored fields if fullName isn't already present
+          function buildFullNameFromProfile(obj){
+            if (!obj) return '';
+            if (obj.fullName) return obj.fullName;
+            const first = obj.first_name || obj.firstName || '';
+            const last = obj.last_name || obj.lastName || '';
+            const mi = obj.middle_initial || obj.middleInitial || '';
+            if (!first && !last) return '';
+            const miPart = mi ? ' ' + mi.replace(/\.?$/, '.') : '';
+            return (last + (last && first ? ', ' : '') + first + miPart).trim();
+          }
+
+          const builtName = buildFullNameFromProfile(p);
+          if (!draft.fullName && builtName) draft.fullName = builtName;
+
+          // pick up email from common keys
+          if (!draft.email) draft.email = p.email_address || p.email || p.emailAddress || '';
+
+          // pick up college, campus and course from common keys
+          draft.college = p.college || '';
+          draft.campus = p.campus || '';
+          if (!draft.course) draft.course = p.course || '';
+
+          // map numeric year_level to display string if needed
+          if (!draft.year_level && (p.year_level)){
+            const yl = String(p.year_level);
+            const map = { '1':'1st Year','2':'2nd Year','3':'3rd Year','4':'4th Year' };
+            draft.year_level = map[yl] || draft.year_level || '';
+          }
+
+          // if fullName/email were obtained from saved profile, lock editing for them
+          if (draft.fullName) lockedFields.fullName = true;
+          if (draft.email) lockedFields.email = true;
+        }
+      } catch (e) { console.warn('Failed to load draft', e); }
+    }
+
+    // Per-step renderers
+    function renderStep(){
+      const c = document.getElementById('content');
+      c.innerHTML = '';
+      if (step===1) renderEssential(c);
+      if (step===2) renderFamily(c);
+      if (step===3) renderSpecial(c);
+      if (step===4) renderSensitive(c);
+      if (step===5) renderCoping(c);
+    }
+
+    // Returns true if the given step has required fields filled (no alerts)
+    function isStepValid(s){
+      try{
+        const content = document.getElementById('content');
+        if (!content) return false;
+        // For step 1, require fields marked data-required inside the step
+        if (s===1){
+          // ensure stored full name exists
+          if (!draft.fullName || draft.fullName.trim().length<3) return false;
+          const required = content.querySelectorAll('[data-required]');
+          for (let i=0;i<required.length;i++){
+            const el = required[i];
+            if (el.disabled) continue;
+            if (el.tagName.toLowerCase() === 'select' || el.tagName.toLowerCase() === 'input' || el.tagName.toLowerCase() === 'textarea'){
+              const val = el.value || '';
+              if (!val || String(val).trim().length===0) return false;
+            }
+          }
+          return true;
+        }
+        // other steps: currently no required fields
+        return true;
+      }catch(e){ console.warn('isStepValid err', e); }
+      return false;
+    }
+
+    function updateNextButtonState(){
+      const next = document.getElementById('nextBtn');
+      if (!next) return;
+      if (isStepValid(step)) { next.removeAttribute('disabled'); }
+      else { next.setAttribute('disabled','disabled'); }
+    }
+
+    // Attach input/change listeners to all inputs inside the content area to update Next button state live
+    function attachValidationListeners(){
+      const content = document.getElementById('content');
+      if (!content) return;
+      const inputs = content.querySelectorAll('input, select, textarea');
+      inputs.forEach(i=>{
+        // avoid adding duplicate listeners by using a dataset flag
+        if (i.dataset._hasValidation) return; i.dataset._hasValidation = '1';
+        i.addEventListener('input', updateNextButtonState);
+        i.addEventListener('change', updateNextButtonState);
+      });
+    }
+
+    function inputVal(id){ const el=document.getElementById(id); return el ? el.value : ''; }
+
+    // Campus / College lists and helpers (used to render dropdowns similar to admin_counselor_management)
+    // Use the same campus and college options as the admin UI
+    const campusList = [
+      'Main Campus',
+      'Cajidiocan Campus',
+      'San Fernando Campus',
+      'Romblon Campus',
+      'San Agustin Campus',
+      'Sta. Maria Campus',
+      'Sta. Fe Campus',
+      'Calatrava Campus'
+    ];
+
+    const collegesByCampus = {
+      'Main Campus': [
+        'College of Education',
+        'College of Business and Accountancy',
+        'College of Arts and Sciences',
+        'College of Engineering and Technology',
+        'College of Computing, Multimedia Arts and Digital Innovation'
+      ],
+      // other campuses do not expose college selection (handled by disabling the college dropdown)
+      'Cajidiocan Campus': [],
+      'San Fernando Campus': [],
+      'Romblon Campus': [],
+      'San Agustin Campus': [],
+      'Sta. Maria Campus': [],
+      'Sta. Fe Campus': [],
+      'Calatrava Campus': []
+    };
+
+    function populateCampusOptions() {
+      const el = document.getElementById('campus');
+      if (!el) return;
+      el.innerHTML = '<option value="">Select campus</option>' + campusList.map(c => {
+        const selected = draft.campus && String(draft.campus).toLowerCase() === c.toLowerCase() ? ' selected' : '';
+        return `<option value="${escapeHtml(c)}"${selected}>${escapeHtml(c)}</option>`;
+      }).join('');
+      // attach change handler
+      el.addEventListener('change', function(){
+        const cur = el.value || '';
+        populateCollegeOptions(cur, draft.college || '');
+        updateNextButtonState();
+      });
+    }
+
+    function populateCollegeOptions(campus, selectedCollege) {
+      const el = document.getElementById('college');
+      if (!el) return;
+      const list = (campus && collegesByCampus[campus]) ? collegesByCampus[campus] : [];
+      if (campus === 'Main Campus') {
+        el.disabled = false;
+        el.innerHTML = '<option value="">Select college</option>' + list.map(col => {
+          const sel = selectedCollege && String(selectedCollege).toLowerCase() === col.toLowerCase() ? ' selected' : '';
+          return `<option value="${escapeHtml(col)}"${sel}>${escapeHtml(col)}</option>`;
+        }).join('');
+      } else {
+        // For non-Main campuses, do not allow selecting a college
+        el.disabled = true;
+        // Provide an explicit 'No College' placeholder and ensure the select value is cleared
+        el.innerHTML = '<option value="">No College</option>';
+        try { el.value = ''; } catch(e) {}
+      }
+    }
+
+    function renderEssential(parent){
+      // Always display full name and email from the database as read-only text
+      const fullNameText = escapeHtml(draft.fullName || 'Not set');
+      const emailText = escapeHtml(draft.email || 'Not set');
+      parent.innerHTML = `
+        <div class="row">
+          <div class="col">
+            <label>Full Name</label>
+            <div id="fullNameDisplay" class="read-display">${fullNameText}</div>
+            <label style="margin-top:10px">Year Level</label>
+            <select id="year_level" data-required="1">
+              <option value="">Select</option>
+              <option ${draft.year_level==='1st Year'?'selected':''}>1st Year</option>
+              <option ${draft.year_level==='2nd Year'?'selected':''}>2nd Year</option>
+              <option ${draft.year_level==='3rd Year'?'selected':''}>3rd Year</option>
+              <option ${draft.year_level==='4th Year'?'selected':''}>4th Year</option>
+            </select>
+            <label style="margin-top:10px">Campus</label>
+            <select id="campus" data-required="1"></select>
+            <label style="margin-top:10px">College</label>
+            <select id="college" data-required="1"></select>
+            <label style="margin-top:10px">Course/Program</label>
+            <input type="text" id="course" data-required="1" placeholder="e.g. BS CE" value="${escapeHtml(draft.course||'')}" />
+          </div>
+          <div class="col">
+            <label>Mobile Number</label>
+            <input type="text" id="mobile" placeholder="09xxxxxxxxx" value="${escapeHtml(draft.mobile||'')}" />
+            <label style="margin-top:10px">Email</label>
+            <div id="emailDisplay" class="read-display">${emailText}</div>
+            <label style="margin-top:10px">Profile Photo</label>
+            <div style="display:flex;gap:12px;align-items:center">
+              <div class="avatar-preview" id="avatarPreview">${draft.photo_url?'<img src="'+escapeHtml(draft.photo_url)+'">':'<i class="fas fa-user fa-2x" style="color:#9ca3af"></i>'}</div>
+              <div>
+                <input type="file" id="photoInput" accept="image/*"><div class="help">Upload a clear face photo counselors can recognize.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      // wire file input
+      const photoInput = document.getElementById('photoInput');
+      if (photoInput) photoInput.addEventListener('change', handlePhoto);
+  // populate campus and college dropdowns and set initial state
+  populateCampusOptions();
+  populateCollegeOptions(draft.campus || '', draft.college || '');
+    }
+
+    function renderFamily(parent){
+      parent.innerHTML = `
+        <div class="row">
+          <div class="col">
+            <label>Father's Name</label>
+            <input id="father" type="text" value="${escapeHtml(draft.father||'')}" />
+            <label style="margin-top:10px">Father's Mobile</label>
+            <input id="fatherMobile" type="text" value="${escapeHtml(draft.fatherMobile||'')}" />
+            <label style="margin-top:10px">Mother's Name</label>
+            <input id="mother" type="text" value="${escapeHtml(draft.mother||'')}" />
+            <label style="margin-top:10px">Mother's Mobile</label>
+            <input id="motherMobile" type="text" value="${escapeHtml(draft.motherMobile||'')}" />
+          </div>
+          <div class="col">
+            <label>Primary Caretaker</label>
+            <input id="caretaker" type="text" value="${escapeHtml(draft.caretaker||'')}" />
+            <label style="margin-top:10px">Estimated Family Monthly Income</label>
+            <select id="income">
+              <option value="">Select</option>
+              <option ${draft.income==='Less than ₱10,957'?'selected':''}>Less than ₱10,957</option>
+              <option ${draft.income==='Between ₱9,520 to ₱21,194'?'selected':''}>Between ₱9,520 to ₱21,194</option>
+              <option ${draft.income==='Between ₱21,194 to ₱43,828'?'selected':''}>Between ₱21,194 to ₱43,828</option>
+              <option ${draft.income==='Between ₱43,828 to ₱76,669'?'selected':''}>Between ₱43,828 to ₱76,669</option>
+              <option ${draft.income==='Between ₱76,669 to ₱131,484'?'selected':''}>Between ₱76,669 to ₱131,484</option>
+              <option ${draft.income==='Between ₱131,484 to ₱219,140'?'selected':''}>Between ₱131,484 to ₱219,140</option>
+              <option ${draft.income==='At least ₱219,140 and up'?'selected':''}>At least ₱219,140 and up</option>
+            </select>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderSpecial(parent){
+      parent.innerHTML = `
+        <div>
+          <label>Are you a Person With Disability (PWD)?</label>
+          <select id="pwd">
+            <option value="">Select</option>
+            <option value="Yes" ${draft.pwd==='Yes'?'selected':''}>Yes</option>
+            <option value="No" ${draft.pwd==='No'?'selected':''}>No</option>
+            <option value="Not Sure" ${draft.pwd==='Not Sure'?'selected':''}>Not Sure</option>
+          </select>
+          <div style="margin-top:12px">
+            <label>Member of Indigenous People (IPs)?</label>
+            <select id="ips">
+              <option value="">Select</option>
+              <option value="Yes" ${draft.ips==='Yes'?'selected':''}>Yes</option>
+              <option value="No" ${draft.ips==='No'?'selected':''}>No</option>
+            </select>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderSensitive(parent){
+      parent.innerHTML = `
+        <div>
+          <label><input type="checkbox" id="sensitiveOptIn" ${draft.sensitiveOptIn? 'checked' : ''}> I consent to provide sensitive information (self-harm, abuse, bullying) and allow counselors to access it. *</label>
+          <div class="help">If you opt-in, the next fields will collect information that counselors may use for clinical support. If you do not opt-in, you may skip these questions.</div>
+          <div id="sensitiveFields" style="margin-top:12px;">${draft.sensitiveOptIn? renderSensitiveFieldsHtml(draft) : '<div class="small">Opt-in to show sensitive fields.</div>'}</div>
+        </div>
+      `;
+      const opt = document.getElementById('sensitiveOptIn');
+      opt.addEventListener('change', function(){
+        if (this.checked) document.getElementById('sensitiveFields').innerHTML = renderSensitiveFieldsHtml(draft);
+        else document.getElementById('sensitiveFields').innerHTML = '<div class="small">Opt-in to show sensitive fields.</div>';
+      });
+    }
+
+    function renderSensitiveFieldsHtml(d){
+      return `
+        <div style="margin-top:10px">
+          <label>Have you experienced bullying/abuse/self-harm?</label>
+          <select id="sensitiveExperienced">
+            <option value="">Select</option>
+            <option value="Bullying" ${d.sensitiveExperienced==='Bullying'?'selected':''}>Bullying</option>
+            <option value="Self-harm" ${d.sensitiveExperienced==='Self-harm'?'selected':''}>Self-harm</option>
+            <option value="Physical Abuse" ${d.sensitiveExperienced==='Physical Abuse'?'selected':''}>Physical Abuse</option>
+            <option value="Verbal Abuse" ${d.sensitiveExperienced==='Verbal Abuse'?'selected':''}>Verbal Abuse</option>
+            <option value="Sexual Abuse" ${d.sensitiveExperienced==='Sexual Abuse'?'selected':''}>Sexual Abuse</option>
+            <option value="Suicidal Thought" ${d.sensitiveExperienced==='Suicidal Thought'?'selected':''}>Suicidal Thought</option>
+            <option value="Suicide Attempt" ${d.sensitiveExperienced==='Suicide Attempt'?'selected':''}>Suicide Attempt</option>
+            <option value="Negative Emotions" ${d.sensitiveExperienced==='Negative Emotions'?'selected':''}>Negative Emotions</option>
+            <option value="Not applicable" ${d.sensitiveExperienced==='Not applicable'?'selected':''}>Not applicable</option>
+          </select>
+          <label style="margin-top:10px">If yes, describe (optional)</label>
+          <textarea id="sensitiveDesc" rows="4">${escapeHtml(d.sensitiveDesc||'')}</textarea>
+        </div>
+      `;
+    }
+
+    function renderCoping(parent){
+      parent.innerHTML = `
+        <div>
+          <label>Which coping mechanisms do you use? (comma separated)</label>
+          <input id="coping" type="text" value="${escapeHtml((draft.coping||[]).join(', '))}" placeholder="e.g. Sleeping, Reading" />
+          <label style="margin-top:10px">People you can seek help from (comma separated)</label>
+          <input id="helpPeople" type="text" value="${escapeHtml((draft.helpPeople||[]).join(', '))}" placeholder="e.g. Parents, Friends" />
+          <div class="help" style="margin-top:14px">When you finish all steps click Next on the bottom-right to submit your profile.</div>
+        </div>
+      `;
+      // No draft or separate save buttons — final submission is handled by the Next button on the last step.
+    }
+
+    // Utility
+    function escapeHtml(s){ if(!s) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+    // Save current step fields into local draft (no server-side draft persistence)
+    function saveStepDraft(){
+      const data = readCurrentStepData();
+      draft = Object.assign({}, draft, data);
+    }
+
+    function readCurrentStepData(){
+      try{
+        if (step===1) return {
+          // full name and email are read-only and taken from draft/profile — do not read from inputs
+          fullName: draft.fullName || '',
+          year_level: inputVal('year_level'), college: inputVal('college'), campus: inputVal('campus'), course: inputVal('course'), mobile: inputVal('mobile'), photo_url: draft.photo_url || '',
+          email: draft.email || ''
+        };
+        if (step===2) return { father: inputVal('father'), fatherMobile: inputVal('fatherMobile'), mother: inputVal('mother'), motherMobile: inputVal('motherMobile'), caretaker: inputVal('caretaker'), income: inputVal('income') };
+        if (step===3) return { pwd: inputVal('pwd'), ips: inputVal('ips') };
+        if (step===4) return { sensitiveOptIn: document.getElementById('sensitiveOptIn') ? document.getElementById('sensitiveOptIn').checked : false, sensitiveExperienced: inputVal('sensitiveExperienced'), sensitiveDesc: inputVal('sensitiveDesc') };
+        if (step===5) return { coping: (inputVal('coping')||'').split(',').map(s=>s.trim()).filter(Boolean), helpPeople: (inputVal('helpPeople')||'').split(',').map(s=>s.trim()).filter(Boolean) };
+      } catch(e){ console.warn('read step data err', e); }
+      return {};
+    }
+
+    // NOTE: draft persistence removed — final submit writes directly to students/<studentKey>
+
+    async function submitFinal(){
+      // collect all inputs from UI and draft
+      // Ensure auth user exists and uid mapping
+      if (!auth || !db) { alert('Firebase not initialized'); return; }
+      try {
+        // read remaining fields from step 5
+        saveStepDraft();
+        // merge draft into profile
+        const profile = Object.assign({}, draft);
+        // If user cropped an image in the modal but didn't persist it earlier, pick it up from the file input's last cropped data
+        try {
+          const picInput = document.getElementById('photoInput');
+          if (picInput && picInput._lastCroppedData) profile.photo_url = picInput._lastCroppedData;
+        } catch(e) { /* ignore */ }
+        // Ensure locked canonical fields are preserved from originalProfile
+        if (lockedFields.fullName && originalProfile.fullName) profile.fullName = originalProfile.fullName;
+        if (lockedFields.email && originalProfile.email) profile.email = originalProfile.email;
+  // write profile data directly into the students/<studentKey> node and mark profileCompleted
+  // Preserve campus and college casing when saving (trim whitespace)
+  try {
+    if (profile.campus) profile.campus = String(profile.campus).trim();
+    if (profile.college) profile.college = String(profile.college).trim();
+  } catch(e) { console.warn('Normalization failed', e); }
+
+  await db.ref('students/' + studentKey).update(Object.assign({}, profile, { profileCompleted: true, lastUpdated: Date.now(), photo_url: profile.photo_url || '' }));
+        alert('Profile saved successfully.');
+        window.location.href = 'signin.html';
+      } catch (e) { console.error('submit final', e); alert('Failed to submit profile: ' + e.message); }
+    }
+
+    // photo upload handler
+    async function handlePhoto(e){
+      // Open crop modal with selected image and then save cropped base64 to DB
+      const f = e.target.files && e.target.files[0];
+      if (!f) return;
+      if (!f.type || !f.type.startsWith('image/')) { alert('Please select a valid image file.'); return; }
+      try {
+        const reader = new FileReader();
+        reader.onload = function(evt){
+          // open crop modal with data URL
+          openCropModalFromDataUrl(evt.target.result);
+        };
+        reader.readAsDataURL(f);
+      } catch (err) {
+        console.error('handlePhoto error', err);
+        alert('Failed to read image file.');
+      }
+    }
+
+    // navigation
+    document.getElementById('nextBtn').addEventListener('click', async ()=>{
+      // Validate current step before advancing
+      if (!validateStep(step)) return;
+      saveStepDraft();
+      if (step < maxStep) { step++; setActive(); }
+      else { // if on last step, treat Next as finish
+        await submitFinal();
+      }
+    });
+  document.getElementById('prevBtn').addEventListener('click', ()=>{ if(step>1) { step--; setActive(); } });
+
+    // Simple per-step validation
+    function validateStep(s){
+      try{
+        if (s===1){
+          const full = document.getElementById('fullName');
+          const year = document.getElementById('year_level');
+          const course = document.getElementById('course');
+          if (full && (!full.value || full.value.trim().length<3)) { alert('Please enter your full name'); full.focus(); return false; }
+          if (year && !year.value) { alert('Please select your year level'); year.focus(); return false; }
+          if (course && (!course.value || course.value.trim().length<2)) { alert('Please enter your course'); course.focus(); return false; }
+        }
+        if (s===4){
+          const opt = document.getElementById('sensitiveOptIn');
+          if (opt && opt.checked){
+            // if opted-in, no strict requirement but ensure selection exists
+            const sel = document.getElementById('sensitiveExperienced');
+            if (sel && !sel.value) { if (!confirm('You opted-in for sensitive fields but did not select any option. Continue?')) return false; }
+          }
+        }
+      }catch(e){ console.warn('validate err', e); }
+      return true;
+    }
+
+    // initial
+    (async function init(){
+      // ensure user signed in
+      if (!auth) { alert('Auth not available.'); window.location.href='signin.html'; return; }
+      // Helper: try to resolve the correct student key for this authenticated user.
+      async function findStudentKeyForUser(user){
+        if (!db || !user) return null;
+        // 0) try searching by student_id if studentKey is provided
+        if (studentKey){
+          try{
+            const q0 = await db.ref('students').orderByChild('student_id').equalTo(studentKey).once('value');
+            if (q0 && q0.exists()) return Object.keys(q0.val())[0];
+          } catch(e){ console.warn('Lookup by student_id failed', e); }
+        }
+
+        // 1) try node keyed by uid
+        try{
+          const snap = await db.ref('students/' + user.uid).once('value');
+          if (snap && snap.exists()) return user.uid;
+        } catch(e){ console.warn('Lookup by uid node failed', e); }
+
+        // 2) try searching for a student record that has a child 'uid' equal to this uid
+        try{
+          const q = await db.ref('students').orderByChild('uid').equalTo(user.uid).once('value');
+          if (q && q.exists()) return Object.keys(q.val())[0];
+        } catch(e){ console.warn('Lookup by child uid failed', e); }
+
+        // 3) try searching by email_address (useful when DB keyed by school id and email is stored)
+        if (user.email){
+          try{
+            const q2 = await db.ref('students').orderByChild('email_address').equalTo(user.email).once('value');
+            if (q2 && q2.exists()) return Object.keys(q2.val())[0];
+          } catch(e){ console.warn('Lookup by email failed', e); }
+        }
+
+        return null;
+      }
+
+      auth.onAuthStateChanged(async function(user){
+        if (!user) { alert('Please sign in'); window.location.href='signin.html'; return; }
+
+        // try to resolve the canonical studentKey for this user. prefer uid but fall back to other lookups
+        try{
+          const resolved = await findStudentKeyForUser(user);
+          if (resolved) {
+            if (studentKey && studentKey !== resolved) console.warn('Resolved student key differs from URL key; using resolved=', resolved, 'urlKey=', studentKey);
+            studentKey = resolved;
+          } else if (studentKey && studentKey !== user.uid) {
+            // if nothing resolved, but URL key exists, keep it (legacy) and warn
+            console.warn('Could not resolve student record for uid/email; using URL key if present:', studentKey);
+          } else {
+            // no key available
+            alert('Student record not found for this account. Please contact support.');
+            window.location.href = 'signin.html';
+            return;
+          }
+        } catch(e){ console.warn('Error resolving student key', e); alert('Failed to resolve student record'); window.location.href='signin.html'; return; }
+
+        // load student and draft
+        try {
+          const snap = await db.ref('students/' + studentKey).once('value');
+          if (!snap.exists()) { alert('Student record not found'); window.location.href='signin.html'; return; }
+          const v = snap.val();
+          if (v.uid && v.uid !== user.uid) console.warn('Student key uid mismatch', v.uid, user.uid);
+        } catch(e){ console.warn('init load student', e); }
+
+        await loadDraft();
+        setActive();
+      });
+    })();
+  </script>
+  <!-- Crop modal (opened when user selects an image) -->
+  <div id="cropModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:9999;align-items:center;justify-content:center;">
+    <div style="background:#fff;border-radius:8px;padding:12px;max-width:900px;width:92%;margin:32px auto;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <strong>Crop profile photo</strong>
+        <button id="cropCancelBtn" style="background:transparent;border:0;font-size:18px;cursor:pointer">&times;</button>
+      </div>
+      <div style="display:flex;gap:12px;align-items:flex-start;">
+        <div style="flex:1;max-height:60vh;overflow:hidden;position:relative;">
+          <div style="position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden;">
+            <img id="cropImage" src="" alt="To crop" style="max-width:100%;max-height:60vh;width:auto;display:block;transform-origin:center center;cursor:grab;object-fit:contain;" />
+            <div id="cropOverlay" style="position:absolute; border:2px dashed #fff; box-shadow:0 2px 8px rgba(0,0,0,0.3); cursor:move; display:none; background:rgba(255,255,255,0)"></div>
+          </div>
+        </div>
+        <div style="width:180px;">
+          <div style="margin-bottom:8px;font-weight:600">Preview</div>
+          <div id="cropPreview" style="width:160px;height:160px;border:1px solid #ddd;border-radius:6px;overflow:hidden;background:#f7f7f7"></div>
+          <div style="margin-top:12px;text-align:right;"><button id="cropSaveBtn" style="background:#0f7a34;color:white;border:none;padding:8px 12px;border-radius:6px;cursor:pointer">Save</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function(){
+      const fileInput = document.getElementById('photoInput');
+      const cropModal = document.getElementById('cropModal');
+      const cropImage = document.getElementById('cropImage');
+      const cropOverlay = document.getElementById('cropOverlay');
+      const cropPreview = document.getElementById('cropPreview');
+      const cropSaveBtn = document.getElementById('cropSaveBtn');
+      const cropCancelBtn = document.getElementById('cropCancelBtn');
+      const avatarPreview = document.getElementById('avatarPreview');
+
+      let imgNaturalWidth = 0, imgNaturalHeight = 0;
+      let overlay = { x:0, y:0, w:120, h:120 };
+      let isMoving = false, startX=0, startY=0, startOverlayX=0, startOverlayY=0;
+
+      function openCropModalFromDataUrl(dataUrl){
+        // ensure image fits modal viewport
+        cropImage.style.maxHeight = '60vh';
+        cropImage.style.maxWidth = '100%';
+        cropImage.style.width = 'auto';
+        cropImage.style.objectFit = 'contain';
+        cropImage.src = dataUrl;
+        // reset any previous pan transform
+        imgOffset = { x: 0, y: 0 };
+        cropImage.style.transform = '';
+        cropOverlay.style.display = 'none';
+        cropPreview.innerHTML = '';
+        cropModal.style.display = 'flex';
+        cropImage.onload = function(){
+          imgNaturalWidth = cropImage.naturalWidth; imgNaturalHeight = cropImage.naturalHeight;
+          const rect = cropImage.getBoundingClientRect();
+          const size = Math.min(rect.width, rect.height) * 0.6;
+          overlay.w = overlay.h = Math.max(80, size);
+          overlay.x = Math.max(0, (rect.width - overlay.w) / 2);
+          overlay.y = Math.max(0, (rect.height - overlay.h) / 2);
+          positionOverlay();
+          cropOverlay.style.display = 'block';
+          updatePreview();
+        };
+      }
+
+      function closeCropModal(){ cropModal.style.display = 'none'; }
+
+      function positionOverlay(){
+        const imgRect = cropImage.getBoundingClientRect();
+        const parentRect = cropImage.parentElement.getBoundingClientRect();
+        overlay.w = Math.min(overlay.w, imgRect.width);
+        overlay.h = Math.min(overlay.h, imgRect.height);
+        overlay.x = Math.max(0, Math.min(imgRect.width - overlay.w, overlay.x));
+        overlay.y = Math.max(0, Math.min(imgRect.height - overlay.h, overlay.y));
+        const left = (imgRect.left - parentRect.left) + overlay.x;
+        const top = (imgRect.top - parentRect.top) + overlay.y;
+        cropOverlay.style.left = left + 'px';
+        cropOverlay.style.top = top + 'px';
+        cropOverlay.style.width = overlay.w + 'px';
+        cropOverlay.style.height = overlay.h + 'px';
+        cropOverlay.style.position = 'absolute';
+      }
+
+      function updatePreview(){
+        const imgRect = cropImage.getBoundingClientRect();
+        const scaleX = imgNaturalWidth / imgRect.width;
+        const scaleY = imgNaturalHeight / imgRect.height;
+        const sx = overlay.x * scaleX;
+        const sy = overlay.y * scaleY;
+        const sw = overlay.w * scaleX;
+        const sh = overlay.h * scaleY;
+        const canvas = document.createElement('canvas'); canvas.width = 160; canvas.height = 160;
+        const ctx = canvas.getContext('2d');
+        const tmpImg = new Image(); tmpImg.crossOrigin = 'anonymous'; tmpImg.src = cropImage.src;
+        tmpImg.onload = function(){
+          ctx.clearRect(0,0,canvas.width,canvas.height);
+          // draw cropped region scaled to preview
+          ctx.drawImage(tmpImg, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
+          cropPreview.innerHTML = '';
+          const imgEl = document.createElement('img'); imgEl.src = canvas.toDataURL('image/png'); imgEl.style.width='100%'; imgEl.style.height='100%'; cropPreview.appendChild(imgEl);
+        };
+      }
+
+  // Drag to move overlay OR pan the image (dragging the image moves the photo under the crop box)
+  let isPanning = false;
+  // track CSS translation applied to image
+  let imgOffset = { x: 0, y: 0 };
+  let startImgOffsetX = 0, startImgOffsetY = 0;
+
+  cropOverlay.addEventListener('mousedown', function(e){ e.preventDefault(); isMoving = true; startX = e.clientX; startY = e.clientY; startOverlayX = overlay.x; startOverlayY = overlay.y; });
+  // dragging the image should translate the image; we update overlay coords oppositely so the box stays visually fixed
+  cropImage.addEventListener('mousedown', function(e){ e.preventDefault(); isPanning = true; startX = e.clientX; startY = e.clientY; startOverlayX = overlay.x; startOverlayY = overlay.y; startImgOffsetX = imgOffset.x; startImgOffsetY = imgOffset.y; cropImage.style.cursor = 'grabbing'; });
+
+  // touch support
+  cropOverlay.addEventListener('touchstart', function(e){ if(!e.touches||!e.touches[0]) return; e.preventDefault(); isMoving = true; startX = e.touches[0].clientX; startY = e.touches[0].clientY; startOverlayX = overlay.x; startOverlayY = overlay.y; });
+  cropImage.addEventListener('touchstart', function(e){ if(!e.touches||!e.touches[0]) return; e.preventDefault(); isPanning = true; startX = e.touches[0].clientX; startY = e.touches[0].clientY; startOverlayX = overlay.x; startOverlayY = overlay.y; startImgOffsetX = imgOffset.x; startImgOffsetY = imgOffset.y; });
+
+  document.addEventListener('mousemove', function(e){ if (!isMoving && !isPanning) return; const imgRect = cropImage.getBoundingClientRect(); const dx = e.clientX - startX; const dy = e.clientY - startY; if (isMoving){ overlay.x = startOverlayX + dx; overlay.y = startOverlayY + dy; } else if (isPanning){ // translate image and adjust overlay coords opposite so overlay stays visually in place
+      imgOffset.x = startImgOffsetX + dx; imgOffset.y = startImgOffsetY + dy; cropImage.style.transform = 'translate(' + imgOffset.x + 'px,' + imgOffset.y + 'px)';
+      overlay.x = startOverlayX - dx; overlay.y = startOverlayY - dy;
+    } overlay.x = Math.max(0, Math.min(imgRect.width - overlay.w, overlay.x)); overlay.y = Math.max(0, Math.min(imgRect.height - overlay.h, overlay.y)); positionOverlay(); updatePreview(); });
+  document.addEventListener('mouseup', function(){ if (isMoving) isMoving = false; if (isPanning) { isPanning = false; cropImage.style.cursor = 'grab'; } });
+
+  document.addEventListener('touchmove', function(e){ if ((!isMoving && !isPanning) || !e.touches||!e.touches[0]) return; const imgRect = cropImage.getBoundingClientRect(); const dx = e.touches[0].clientX - startX; const dy = e.touches[0].clientY - startY; if (isMoving){ overlay.x = startOverlayX + dx; overlay.y = startOverlayY + dy; } else if (isPanning){ imgOffset.x = startImgOffsetX + dx; imgOffset.y = startImgOffsetY + dy; cropImage.style.transform = 'translate(' + imgOffset.x + 'px,' + imgOffset.y + 'px)'; overlay.x = startOverlayX - dx; overlay.y = startOverlayY - dy; } overlay.x = Math.max(0, Math.min(imgRect.width - overlay.w, overlay.x)); overlay.y = Math.max(0, Math.min(imgRect.height - overlay.h, overlay.y)); positionOverlay(); updatePreview(); }, { passive: false });
+  document.addEventListener('touchend', function(){ if (isMoving) isMoving = false; if (isPanning) { isPanning = false; cropImage.style.cursor = 'grab'; } });
+      // wheel to resize
+      cropOverlay.addEventListener('wheel', function(e){ e.preventDefault(); const delta = e.deltaY > 0 ? -10 : 10; overlay.w = Math.max(40, overlay.w + delta); overlay.h = overlay.w; positionOverlay(); updatePreview(); });
+
+      cropCancelBtn.addEventListener('click', function(){ closeCropModal(); });
+
+  cropSaveBtn.addEventListener('click', async function(){
+        try{
+          const imgRect = cropImage.getBoundingClientRect();
+          const scaleX = imgNaturalWidth / imgRect.width;
+          const scaleY = imgNaturalHeight / imgRect.height;
+          const sx = Math.max(0, overlay.x * scaleX);
+          const sy = Math.max(0, overlay.y * scaleY);
+          const sw = Math.max(1, overlay.w * scaleX);
+          const sh = Math.max(1, overlay.h * scaleY);
+          const canvas = document.createElement('canvas'); canvas.width = sw; canvas.height = sh; const ctx = canvas.getContext('2d');
+          const tmpImg = new Image(); tmpImg.crossOrigin = 'anonymous'; tmpImg.src = cropImage.src;
+          tmpImg.onload = async function(){
+            ctx.drawImage(tmpImg, sx, sy, sw, sh, 0, 0, sw, sh);
+            const finalCanvas = document.createElement('canvas'); finalCanvas.width = 400; finalCanvas.height = 400; const fctx = finalCanvas.getContext('2d');
+            fctx.drawImage(canvas, 0, 0, canvas.width, canvas.height, 0, 0, finalCanvas.width, finalCanvas.height);
+            const dataUrl = finalCanvas.toDataURL('image/png');
+            // update draft and preview
+            draft.photo_url = dataUrl;
+            if (avatarPreview) avatarPreview.innerHTML = '<img src="' + dataUrl + '">';
+            // store last cropped data on the file input for later reference
+            if (fileInput) fileInput._lastCroppedData = dataUrl;
+            // save to DB immediately
+            try {
+              if (db && studentKey) {
+                await db.ref('students/' + studentKey).update({ photo_url: dataUrl, photoUpdatedAt: Date.now() });
+              }
+            } catch(e) { console.warn('Failed to save cropped photo to DB', e); }
+            closeCropModal();
+            alert('Profile photo updated!');
+          };
+        } catch(e) { console.error('crop save failed', e); alert('Failed to crop image.'); }
+      });
+      // expose modal helpers to global scope so other scripts can open/close the modal
+      try { window.openCropModalFromDataUrl = openCropModalFromDataUrl; window.closeCropModal = closeCropModal; } catch(e){}
+    })();
+  </script>
+</body>
+</html>

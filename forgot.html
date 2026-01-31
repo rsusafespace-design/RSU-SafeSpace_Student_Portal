@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Forgot Password - SafeSpace Portal</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+    body {
+      background: #f4f6f9;
+      color: #333;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .header {
+      background: linear-gradient(135deg, #004c27, #00723f);
+      color: white;
+      padding: 2rem 1rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .header-content { position: relative; z-index: 1; }
+    .logo-section {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+    .logo {
+      width: 48px;
+      height: 48px;
+      background: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #00723f;
+      font-weight: bold;
+      font-size: 1.2rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    .header h1 { font-size: 2rem; font-weight: 600; margin-bottom: 0.5rem; }
+    .header p { font-size: 1rem; opacity: 0.9; font-weight: 300; }
+    .main-container {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1rem;
+    }
+    .container {
+      max-width: 420px;
+      width: 100%;
+      background: white;
+      padding: 2rem;
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+    .signin-title {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: #00723f;
+      text-align: center;
+    }
+    .signin-subtitle {
+      font-size: 0.9rem;
+      color: #666;
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    .form-group { margin-bottom: 1.5rem; }
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-size: 0.95rem;
+      font-weight: 500;
+      color: #333;
+    }
+    .input-wrapper { position: relative; }
+    input {
+      width: 100%;
+      padding: 0.875rem 1rem;
+      padding-left: 3rem;
+      border: 2px solid #e1e5e9;
+      border-radius: 10px;
+      font-size: 1rem;
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
+      background: #f9f9f9;
+    }
+    input:focus {
+      outline: none;
+      border-color: #00723f;
+      background: white;
+      box-shadow: 0 0 0 3px rgba(0, 114, 63, 0.1);
+    }
+    .input-icon {
+      position: absolute;
+      left: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #666;
+      font-size: 1rem;
+    }
+    .signin-btn {
+      width: 100%;
+      padding: 1rem;
+      font-size: 1.1rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #00723f, #004c27);
+      color: white;
+      cursor: pointer;
+      margin-bottom: 1.5rem;
+      transition: transform 0.2s ease, box-shadow 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .signin-btn.loading {
+      pointer-events: none;
+      opacity: 0.7;
+    }
+    .signin-btn.loading::after {
+      content: '';
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      margin: auto;
+      border: 2px solid transparent;
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+    @keyframes spin {
+      0% { transform: translate(-50%, -50%) rotate(0deg); }
+      100% { transform: translate(-50%, -50%) rotate(360deg); }
+    }
+    .footer {
+      background: #f8f9fa;
+      padding: 1rem;
+      text-align: center;
+      font-size: 0.85rem;
+      color: #666;
+      border-top: 1px solid #e1e5e9;
+    }
+    @media (max-width: 768px) {
+      .header { padding: 1.5rem 1rem; }
+      .header h1 { font-size: 1.8rem; }
+      .logo { width: 40px; height: 40px; font-size: 1rem; }
+      .main-container { padding: 1rem; }
+      .container {
+        padding: 1.5rem;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      }
+      .signin-title { font-size: 1.3rem; }
+      input {
+        padding: 0.75rem 1rem;
+        padding-left: 2.75rem;
+        font-size: 0.95rem;
+      }
+      .input-icon { left: 0.875rem; font-size: 0.9rem; }
+      .signin-btn { padding: 0.875rem; font-size: 1rem; }
+    }
+    @media (max-width: 480px) {
+      .header h1 { font-size: 1.6rem; }
+      .container {
+        margin: 0;
+        border-radius: 0;
+        box-shadow: none;
+        border: none;
+      }
+      .main-container { padding: 0.5rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="header-content">
+      <div class="logo-section">
+        <div class="logo">SS</div>
+        <h1>SafeSpace</h1>
+      </div>
+      <p>Your mental wellness companion</p>
+    </div>
+  </div>
+
+  <div class="main-container">
+    <div class="container">
+      <h2 class="signin-title">Forgot Password</h2>
+      <p class="signin-subtitle">Enter your email address to reset your password</p>
+      <form id="forgotForm">
+        <div class="form-group">
+          <label for="forgot-email">Email Address</label>
+          <div class="input-wrapper">
+            <i class="fas fa-envelope input-icon"></i>
+            <input type="email" id="forgot-email" placeholder="Enter your email address" required />
+          </div>
+        </div>
+        <button type="submit" class="signin-btn" id="forgotBtn">
+          Send Reset Link
+        </button>
+      </form>
+      <div class="signup-link">
+        Remembered your password? <a href="signin.html">Sign In</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <p>&copy; 2025 SafeSpace. Your privacy and mental wellness are our priority.</p>
+  </div>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+  <script src="firebase_config.js"></script>
+  
+  <script>
+    // Initialize Firebase with SafeSpace credentials
+    // Use shared firebase_config.js which sets window.auth and window.db
+    const auth = window.auth || (window.firebase ? firebase.auth() : null);
+    const db = window.db || (window.firebase ? firebase.database() : null);
+
+    document.getElementById('forgotForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+
+      const email = document.getElementById('forgot-email').value.trim();
+      const btn = document.getElementById('forgotBtn');
+
+      if (!email) {
+        alert('Please enter your email address.');
+        return;
+      }
+
+      btn.classList.add('loading');
+      btn.innerHTML = '';
+
+      try {
+        // Check if the email is registered in the database (check both 'email' and 'email_address')
+        let snap = await db.ref('students').orderByChild('email').equalTo(email).once('value');
+        if (!snap.exists()) {
+          snap = await db.ref('students').orderByChild('email_address').equalTo(email).once('value');
+        }
+        if (!snap.exists()) {
+          alert('This email is not registered with SafeSpace.');
+          btn.classList.remove('loading');
+          btn.innerHTML = 'Send Reset Link';
+          return;
+        }
+
+        // If registered, send the reset email
+        await auth.sendPasswordResetEmail(email);
+        alert('A password reset link has been sent to your email.');
+        btn.classList.remove('loading');
+        btn.innerHTML = 'Send Reset Link';
+      } catch (error) {
+        alert('Error: ' + error.message);
+        btn.classList.remove('loading');
+        btn.innerHTML = 'Send Reset Link';
+      }
+    });
+
+    // Add smooth focus animations
+    document.querySelectorAll('input').forEach(input => {
+      input.addEventListener('focus', function() {
+        this.parentElement.style.transform = 'scale(1.02)';
+      });
+      input.addEventListener('blur', function() {
+        this.parentElement.style.transform = 'scale(1)';
+      });
+    });
+  </script>
+</body>
+</html>
